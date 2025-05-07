@@ -10,7 +10,7 @@ Route::apiV1(function () {
         ->description('Perform liveness/health check.')
         ->requiredParams([]);
 
-    Route::get('ready', [ReadinessController::class, '__invoke'])
+    Route::get('ready', ReadinessController::class)
         ->name('ready')
         ->description('Perform readiness check (DB & cache).')
         ->requiredParams([]);
