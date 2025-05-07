@@ -3,7 +3,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Base page styles */
 body {
     font-family: 'Figtree', sans-serif;
     margin: 0;
