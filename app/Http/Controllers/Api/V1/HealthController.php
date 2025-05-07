@@ -8,6 +8,10 @@ class HealthController
 {
     public function __invoke()
     {
-        return ApiResponse::success(['status'=>'up'], 'API is healthy');
+        return ApiResponse::success(
+            ['status' => 'up'],
+            'API is healthy.',
+            'HEALTH_OK'
+        );
     }
 }

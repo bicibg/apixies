@@ -1,22 +1,17 @@
 <?php
-use App\Http\Controllers\Api\V1\HealthController;
+
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\ReadinessController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application.
-|
-*/
+Route::apiV1(function () {
+    Route::get('health', HealthController::class)
+        ->name('health')
+        ->description('Perform liveness/health check.')
+        ->requiredParams([]);
 
-Route::prefix('v1')
-    ->middleware('api')
-    ->group(function () {
-        // Health check endpoint
-        Route::get('health', HealthController::class)
-            ->name('health')
-            ->description('Perform a liveness/health check of the API')
-            ->requiredParams([]);
-    });
+    Route::get('ready', [ReadinessController::class, '__invoke'])
+        ->name('ready')
+        ->description('Perform readiness check (DB & cache).')
+        ->requiredParams([]);
+});

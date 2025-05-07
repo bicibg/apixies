@@ -4,43 +4,32 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use App\Exceptions\Handler;
+use App\Http\Middleware\CorrelationId;
+use App\Http\Middleware\ExceptionHandlerMiddleware;
+use App\Http\Middleware\LogRequests;
 
-// Create the application instance
 $app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        api: __DIR__.'/../routes/api.php',
+        web:    __DIR__ . '/../routes/web.php',
+        api:    __DIR__ . '/../routes/api.php',
         health: '/up'
     )
-    ->withMiddleware(function (Middleware $middleware) {
-        // Global middleware applied to all requests
-        $middleware->append([
+    ->withMiddleware(function (Middleware $mw) {
+        // Global middleware for every request
+        $mw->append([
+            CorrelationId::class,
             \Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class,
             \Illuminate\Foundation\Http\Middleware\TrimStrings::class,
             \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-            App\Http\Middleware\ExceptionHandlerMiddleware::class,
-            \App\Http\Middleware\LogRequests::class,
+            ExceptionHandlerMiddleware::class,
+            LogRequests::class,
         ]);
 
-        // Define the "api" middleware group
-        $middleware->group('api', [
-            'throttle:60,1',
-            \App\Http\Middleware\ForceJsonResponseMiddleware::class,
-            \App\Http\Middleware\CorsMiddleware::class,
-            \App\Http\Middleware\SanitizeInputMiddleware::class,
-            \App\Http\Middleware\TransformMiddleware::class,
-            \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-        ]);
-
-        // Group for routes requiring token and validation
-        $middleware->group('auth.validate', [
-            \App\Http\Middleware\EnsureApiKey::class,
-        ]);
+        // No more route-group definitions here
     })
+    ->withExceptions(fn($exceptions) => null)
     ->create();
 
-// Register the custom exception handler
 $app->singleton(
     ExceptionHandler::class,
     Handler::class

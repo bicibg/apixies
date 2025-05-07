@@ -11,7 +11,10 @@ class LogRequests
 {
     public function handle(Request $request, Closure $next)
     {
+        $requestId = app('X-Request-ID');
+
         Log::info('Incoming request', [
+            'id'=>$requestId,
             'method'  => $request->method(),
             'url'     => $request->fullUrl(),
             'payload' => $request->all(),
@@ -29,6 +32,7 @@ class LogRequests
             : '[non-string response]';
 
         Log::info('Outgoing response', [
+            'id'=>$requestId,
             'status'   => $status,
             'response' => $content,
         ]);
