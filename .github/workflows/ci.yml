@@ -24,10 +24,6 @@ jobs:
       - name: Run Tests
         run: vendor/bin/phpunit --coverage-text --colors=never
 
-      - name: Build API Docs
-        if: github.event_name == 'push'
-        run: php artisan scribe:generate
-
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v3
 
