@@ -14,7 +14,7 @@ class ReadinessController
         try {
             DB::connection()->getPdo();
             $dbOk = true;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $dbOk = false;
         }
 
@@ -23,12 +23,16 @@ class ReadinessController
             Cache::set('health_check', now(), 10);
             Cache::forget('health_check');
             $cacheOk = true;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $cacheOk = false;
         }
 
         if ($dbOk && $cacheOk) {
-            return ApiResponse::success([], 'API is ready', 'READY');
+            return ApiResponse::success(
+                ['status' => 'up'],
+                'API is ready',
+                'READY'
+            );
         }
 
         return ApiResponse::error(
