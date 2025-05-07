@@ -1,11 +1,103 @@
-@import 'tailwindcss';
+/* Tailwind directives stay */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+/* Base page styles */
+body {
+    font-family: 'Figtree', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f4f8;    /* very light, cool grey */
+    color: #102A43;                /* dark blue-grey for text */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+
+
+/* Header */
+header {
+    background: linear-gradient(90deg, #0A2240, #007C91); /* dark navy → teal */
+    width: 100%;
+    padding: 20px 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+header img {
+    max-width: 140px;      /* cap the logo width */
+    height: auto;          /* maintain aspect ratio */
+    margin-bottom: 10px;   /* space below */
+
+    background-color: rgba(255, 255, 255, 0.85);
+    padding: 6px 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+
+    position: relative;
+    z-index: 1;
+}
+
+
+
+header h1 {
+    color: #ffffff;
+    font-size: 2rem;
+    margin: 0;
+}
+
+/* Table container */
+.table-container {
+    width: 90%;
+    max-width: 1000px;
+    margin: 30px auto;
+    overflow-x: auto;
+}
+
+/* Table styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #e1e8ed; /* light grey-blue border */
+}
+
+th {
+    background-color: #0A2240;  /* match header dark */
+    color: #ffffff;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+
+tr:hover {
+    background-color: #E1F0F6;  /* very light teal-blue hover */
+}
+
+td {
+    font-size: 0.95rem;
+    color: #334E68;            /* medium blue-grey */
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    table {
+        font-size: 0.9rem;
+    }
 }
