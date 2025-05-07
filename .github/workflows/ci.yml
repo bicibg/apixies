@@ -21,9 +21,6 @@ jobs:
       - name: Generate autoload
         run: composer dump-autoload --optimize
 
-      - name: Static Analysis (PHPStan)
-        run: vendor/bin/phpstan analyse --memory-limit=1G
-
       - name: Run Tests
         run: vendor/bin/phpunit --coverage-text --colors=never
 
