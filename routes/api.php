@@ -5,66 +5,87 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\ReadinessController;
+use App\Http\Controllers\Api\V1\TestController;
 use Illuminate\Support\Facades\Route;
 
 Route::apiV1(function () {
+    // ==========================================
+    // PUBLIC ENDPOINTS (no authentication needed)
+    // ==========================================
+
     // 1) Liveness — no params
     Route::get('health', HealthController::class)
         ->name('health')
         ->description('Perform liveness/health check.')
+        ->requiredParams([])
         ->withoutMiddleware(\App\Http\Middleware\EnsureApiKey::class);
 
     // 2) Readiness — no params
     Route::get('ready', ReadinessController::class)
         ->name('ready')
         ->description('Perform readiness check (DB & cache).')
+        ->requiredParams([])
         ->withoutMiddleware(\App\Http\Middleware\EnsureApiKey::class);
 
-    // 3) User registration
-    Route::post('register', [AuthController::class, 'register'])
-        ->name('register')
-        ->description('Register a new user and return an API token.')
-        ->requiredParams([
-            'name',
-            'email',
-            'password',
-            'password_confirmation'
-        ]);
-
-    // 4) User login
+    // 3) User login
     Route::post('login', [AuthController::class, 'login'])
         ->name('login')
         ->description('Authenticate an existing user and return an API token.')
         ->requiredParams([
             'email',
             'password'
-        ]);
+        ])
+        ->withoutMiddleware(\App\Http\Middleware\EnsureApiKey::class);
 
-    // 5) Request password reset link
+    // 4) Request password reset link
     Route::post('password/forgot', [PasswordResetController::class, 'sendLink'])
         ->name('password.forgot')
         ->description('Send a password reset link to the given email address.')
         ->requiredParams([
             'email'
-        ]);
+        ])
+        ->withoutMiddleware(\App\Http\Middleware\EnsureApiKey::class);
 
-    // 6) Reset password
+    // 5) Reset password
     Route::post('password/reset', [PasswordResetController::class, 'reset'])
         ->name('password.reset')
-        ->description('Reset a user’s password using the token emailed to them.')
+        ->description('Reset a user\'s password using the token emailed to them.')
         ->requiredParams([
             'email',
             'token',
             'password',
             'password_confirmation'
-        ]);
+        ])
+        ->withoutMiddleware(\App\Http\Middleware\EnsureApiKey::class);
 
-    // 7+) Protected endpoints
+    // ==========================================
+    // TEST ENDPOINT (for API key testing)
+    // ==========================================
+
+    // Simple endpoint to test API key authentication
+    Route::get('test', function (\Illuminate\Http\Request $request) {
+        return \App\Helpers\ApiResponse::success([
+            'message' => 'API key is valid',
+            'user' => [
+                'id' => $request->user()->id,
+                'name' => $request->user()->name,
+                'email' => $request->user()->email,
+            ],
+        ], 'Authentication successful');
+    })
+    ->name('api.test')
+    ->description('Test endpoint to verify API key authentication.');
+
+    // ==========================================
+    // PROTECTED ENDPOINTS (require authentication)
+    // ==========================================
+
+    // All routes in this group require a valid API key
     Route::middleware('auth:sanctum')->group(function () {
         // Logout
         Route::post('logout', [AuthController::class, 'logout'])
             ->name('logout')
-            ->description('Revoke the current user’s access token.')
+            ->description('Revoke the current user\'s access token.')
             ->requiredParams([]);
 
         // List API keys
