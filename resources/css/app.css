@@ -1,7 +1,30 @@
-/* Tailwind directives stay */
+@import "tailwindcss";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+    .max-w-md {
+        max-width: 28rem;
+    }
+}
+
+@layer components {
+    .auth-card {
+        @apply mx-auto bg-white rounded-lg shadow-lg p-6;
+        max-width: 28rem; /* Direct CSS as fallback */
+    }
+
+    .form-input {
+        @apply block w-full px-4 py-2 border border-gray-300 rounded-md
+        focus:ring-2 focus:ring-teal-500 focus:border-transparent;
+    }
+
+    .btn-primary {
+        @apply w-full text-white font-semibold py-2 rounded-lg shadow-md transition;
+        background-image: linear-gradient(to right, #0694a2, #3182ce); /* from-teal-500 to-blue-600 */
+    }
+}
 
 body {
     font-family: 'Figtree', sans-serif;
@@ -15,11 +38,25 @@ body {
     min-height: 100vh;
 }
 
+button,
+[type='button'],
+[type='reset'],
+[type='submit'] {
+    cursor: pointer;
+}
 
+.modal-backdrop {
+    background-color: transparent !important;
+    backdrop-filter: blur(5px);
+}
+
+.btn-hover:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+}
 
 /* Header */
 header {
-    background: linear-gradient(90deg, #0A2240, #007C91); /* dark navy → teal */
+    background: linear-gradient(90deg, #0A2240, #007C91);
     width: 100%;
     padding: 20px 0;
     text-align: center;
@@ -29,9 +66,9 @@ header {
 }
 
 header img {
-    max-width: 140px;      /* cap the logo width */
-    height: auto;          /* maintain aspect ratio */
-    margin-bottom: 10px;   /* space below */
+    max-width: 140px;
+    height: auto;
+    margin-bottom: 10px;
 
     background-color: rgba(255, 255, 255, 0.85);
     padding: 6px 10px;
@@ -42,12 +79,101 @@ header img {
     z-index: 1;
 }
 
-
-
 header h1 {
     color: #ffffff;
     font-size: 2rem;
     margin: 0;
+}
+
+/* Method badge styling */
+.method-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    min-width: 4.5rem;
+    text-align: center;
+}
+
+.method-badge.get {
+    background-color: #E3F2FD;
+    color: #0D47A1;
+}
+
+.method-badge.post {
+    background-color: #E8F5E9;
+    color: #1B5E20;
+}
+
+.method-badge.put, .method-badge.patch {
+    background-color: #FFF8E1;
+    color: #F57F17;
+}
+
+.method-badge.delete {
+    background-color: #FFEBEE;
+    color: #B71C1C;
+}
+
+/* Tab styling */
+.tab-btn {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+    border-bottom-width: 2px;
+    font-weight: 500;
+}
+
+.tab-btn:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Code blocks */
+.code-block {
+    background-color: #1a202c;
+    color: #e2e8f0;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    overflow-x: auto;
+    font-family: monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+/* Table enhancements */
+.api-table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.api-table td {
+    vertical-align: middle;
+}
+
+/* Parameter badges */
+.param-badge {
+    display: inline-block;
+    background-color: #f3f4f6;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-family: monospace;
+    margin-bottom: 0.25rem;
+    margin-right: 0.25rem;
+}
+
+/* Hero section gradients */
+.api-hero {
+    background-image: linear-gradient(to right, #0A2240, #007C91);
+    color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* Table container */
@@ -71,23 +197,23 @@ table {
 th, td {
     padding: 15px;
     text-align: left;
-    border-bottom: 1px solid #e1e8ed; /* light grey-blue border */
+    border-bottom: 1px solid #e1e8ed;
 }
 
 th {
-    background-color: #0A2240;  /* match header dark */
+    background-color: #0A2240;
     color: #ffffff;
     text-transform: uppercase;
     font-size: 0.85rem;
 }
 
 tr:hover {
-    background-color: #E1F0F6;  /* very light teal-blue hover */
+    background-color: #E1F0F6;
 }
 
 td {
     font-size: 0.95rem;
-    color: #334E68;            /* medium blue-grey */
+    color: #334E68;
 }
 
 /* Responsive tweaks */

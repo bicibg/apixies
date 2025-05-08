@@ -25,10 +25,19 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
-        $token = $user->createToken('default')->plainTextToken;
+        // Only create a token if request comes from the API and not the web interface
+        if ($req->expectsJson()) {
+            $token = $user->createToken('default')->plainTextToken;
+            return ApiResponse::success(
+                ['token' => $token],
+                'Registration successful',
+                'REGISTERED'
+            );
+        }
 
+        // For web requests, don't create a token, let the user create one explicitly
         return ApiResponse::success(
-            ['token' => $token],
+            [],
             'Registration successful',
             'REGISTERED'
         );
@@ -50,10 +59,19 @@ class AuthController extends Controller
             ]);
         }
 
-        $token = $user->createToken('default')->plainTextToken;
+        // Only create a token if request comes from the API and not the web interface
+        if ($req->expectsJson()) {
+            $token = $user->createToken('default')->plainTextToken;
+            return ApiResponse::success(
+                ['token' => $token],
+                'Login successful',
+                'LOGGED_IN'
+            );
+        }
 
+        // For web requests, don't create a token
         return ApiResponse::success(
-            ['token' => $token],
+            [],
             'Login successful',
             'LOGGED_IN'
         );
