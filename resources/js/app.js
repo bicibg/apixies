@@ -6,8 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAuthToken();
 
     // Set up form handlers
-    setupSignupForm();
-    setupLoginForm();
     setupLogoutForm();
 
     // Initialize API documentation tabs
@@ -16,55 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize API endpoint search
     initApiEndpointSearch();
 
-    /**
-     * Handle signup form submission
-     */
-    function setupSignupForm() {
-        const signupForm = document.getElementById('signup-form');
-        if (!signupForm) return;
-
-        const errorBox = document.getElementById('signup-error');
-        signupForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            errorBox.textContent = '';
-
-            try {
-                const formData = Object.fromEntries(new FormData(signupForm));
-                const response = await apiRequest('/api/v1/register', 'POST', formData);
-
-                // Create web session and redirect
-                await createWebSession(response.data?.token || null);
-                window.location = '/';
-            } catch (err) {
-                displayError(err, errorBox);
-            }
-        });
-    }
-
-    /**
-     * Handle login form submission
-     */
-    function setupLoginForm() {
-        const loginForm = document.getElementById('login-form');
-        if (!loginForm) return;
-
-        const errorBox = document.getElementById('login-error');
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            errorBox.textContent = '';
-
-            try {
-                const formData = Object.fromEntries(new FormData(loginForm));
-                const response = await apiRequest('/api/v1/login', 'POST', formData);
-
-                // Create web session and redirect
-                await createWebSession(response.data?.token || null);
-                window.location = '/';
-            } catch (err) {
-                displayError(err, errorBox);
-            }
-        });
-    }
+    // Set up copy functionality for API tokens
+    setupCopyApiToken();
 
     /**
      * Handle logout form submission
@@ -79,76 +30,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Centralized API request function
-     * @param {string} url - API endpoint
-     * @param {string} method - HTTP method
-     * @param {Object} data - Request payload
-     * @returns {Promise<Object>} - Response data
+     * Set up copy functionality for API tokens
      */
-    async function apiRequest(url, method, data) {
-        const response = await fetch(url, {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(data),
+    function setupCopyApiToken() {
+        const copyButton = document.querySelector('.copy-token-btn');
+        if (!copyButton) return;
+
+        copyButton.addEventListener('click', () => {
+            const tokenElement = document.querySelector('.token-display');
+            if (!tokenElement) return;
+
+            // Copy token to clipboard
+            navigator.clipboard.writeText(tokenElement.textContent.trim())
+                .then(() => {
+                    // Show success message
+                    const originalText = copyButton.textContent;
+                    copyButton.textContent = 'Copied!';
+
+                    // Reset button text after 2 seconds
+                    setTimeout(() => {
+                        copyButton.textContent = originalText;
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
         });
-
-        const json = await response.json();
-
-        if (!response.ok) {
-            throw json;
-        }
-
-        return json;
-    }
-
-    /**
-     * Display error message in the specified element
-     * @param {Object} err - Error object
-     * @param {HTMLElement} errorElement - Element to display error
-     */
-    function displayError(err, errorElement) {
-        const message = err.errors?.name?.[0] ||
-            err.errors?.email?.[0] ||
-            err.errors?.password?.[0] ||
-            err.message ||
-            'An error occurred';
-
-        errorElement.textContent = message;
-    }
-
-    /**
-     * Create a web session using the provided token
-     * @param {string|null} token - API token
-     */
-    async function createWebSession(token) {
-        if (!token) return;
-
-        try {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            if (!csrfToken) {
-                console.error('CSRF token not found');
-                return;
-            }
-
-            const response = await fetch('/auth/session', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({ token }),
-            });
-
-            if (!response.ok) {
-                console.error('Failed to create web session');
-            }
-        } catch (err) {
-            console.error('Error creating web session:', err);
-        }
     }
 
     /**
@@ -158,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('APIToken');
         if (token) {
             console.log('User has API token');
-            // Additional UI updates can be added here if needed
         }
     }
 

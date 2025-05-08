@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Sanctum\PersonalAccessToken;
+use Illuminate\Support\Facades\Hash;
 
 class WebAuthController extends Controller
 {
@@ -13,46 +14,57 @@ class WebAuthController extends Controller
         return view('auth.register');
     }
 
+    public function register(Request $request)
+    {
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = User::create([
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'password' => Hash::make($validatedData['password']),
+        ]);
+
+        // Log the user in
+        Auth::login($user);
+
+        return redirect()->route('api-keys.index')
+            ->with('status', 'Account created successfully! Create an API key to get started.');
+    }
+
     public function showLogin()
     {
         return view('auth.login');
     }
 
-    public function createSession(Request $request)
+    public function login(Request $request)
     {
-        $token = $request->input('token');
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
 
-        // Extract token ID from token string
-        $tokenParts = explode('|', $token);
-        if (count($tokenParts) < 2) {
-            return response()->json(['error' => 'Invalid token format'], 401);
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
+
+            return redirect()->intended(route('api-keys.index'));
         }
 
-        $tokenId = $tokenParts[0];
-        $personalAccessToken = PersonalAccessToken::find($tokenId);
-
-        if (!$personalAccessToken) {
-            return response()->json(['error' => 'Invalid token'], 401);
-        }
-
-        // Get the user associated with the token
-        $user = $personalAccessToken->tokenable;
-
-        // Login the user using Laravel's session-based auth
-        Auth::login($user);
-
-        return response()->json(['success' => true]);
+        return back()->withErrors([
+            'email' => 'The provided credentials do not match our records.',
+        ])->onlyInput('email');
     }
 
     public function logout(Request $request)
     {
-        // Log out of web session
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // Clear JavaScript token (done via JS)
         return redirect('/');
     }
 }

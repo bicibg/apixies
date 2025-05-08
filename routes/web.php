@@ -12,14 +12,17 @@ Route::middleware('web')->group(function() {
 
     // Auth routes
     Route::get('/register', [WebAuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [WebAuthController::class, 'register'])->name('register.submit');
+
     Route::get('/login', [WebAuthController::class, 'showLogin'])->name('login');
-    Route::post('/auth/session', [WebAuthController::class, 'createSession'])->name('auth.session');
+    Route::post('/login', [WebAuthController::class, 'login'])->name('login.submit');
+
     Route::post('/logout', [WebAuthController::class, 'logout'])->name('logout');
 
     // API Keys - protected by auth middleware
     Route::middleware('auth')->group(function() {
         Route::get('/api-keys', [WebApiKeyController::class, 'index'])->name('api-keys.index');
-        Route::post('/api-keys', [WebApiKeyController::class, 'store'])->name('api-keys.store');
+        Route::post('/api-keys', [WebApiKeyController::class, 'store'])->name('api-keys.store'); // Fixed
         Route::delete('/api-keys/{id}', [WebApiKeyController::class, 'destroy'])->name('api-keys.destroy');
     });
 });

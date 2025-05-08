@@ -4,59 +4,87 @@ namespace App\Http\Middleware;
 
 use App\Helpers\ApiResponse;
 use Closure;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Sanctum\PersonalAccessToken;
+use Symfony\Component\HttpFoundation\Response;
 
 class EnsureApiKey
 {
-    public function handle($request, Closure $next)
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @return mixed
+     */
+    public function handle(Request $request, Closure $next)
     {
-        // Skip API key check for authentication endpoints
-        if ($this->isAuthEndpoint($request)) {
+        // Check if this route should skip API key validation
+        if ($this->shouldSkipValidation($request)) {
             return $next($request);
         }
 
-        // Check if user is already authenticated via session
-        if (Auth::check()) {
-            return $next($request);
-        }
-
-        // Check for API key in the header
-        $apiKey = $request->header('Authorization');
-
-        // If no API key, try X-API-KEY header for backward compatibility
-        if (!$apiKey && $request->header('X-API-KEY')) {
-            $apiKey = 'Bearer ' . $request->header('X-API-KEY');
-        }
+        // Get token from various sources
+        $apiKey = $this->getApiKey($request);
 
         if (!$apiKey) {
-            return ApiResponse::error('API key is required', 401);
+            return ApiResponse::error(
+                'API key is required',
+                Response::HTTP_UNAUTHORIZED,
+                [],
+                'ERROR'
+            );
         }
 
-        // Extract the token from the Bearer format
-        $tokenValue = str_replace('Bearer ', '', $apiKey);
-
-        // Find the token in the database
-        $token = PersonalAccessToken::findToken($tokenValue);
+        // Validate the token
+        $token = $this->validateToken($apiKey);
 
         if (!$token) {
-            return ApiResponse::error('Invalid API key', 401);
+            return ApiResponse::error(
+                'Invalid API key',
+                Response::HTTP_UNAUTHORIZED,
+                [],
+                'ERROR'
+            );
         }
 
-        // Get the user associated with the token
-        $user = $token->tokenable;
+        // Set the authenticated user on the request
+        $request->setUserResolver(function () use ($token) {
+            return $token->tokenable;
+        });
 
-        if (!$user) {
-            return ApiResponse::error('User not found', 401);
-        }
-
-        // Update last_used_at timestamp
-        $token->forceFill(['last_used_at' => now()])->save();
-
-        // Set the authenticated user
-        Auth::setUser($user);
+        // For Sanctum compatibility
+        auth()->setUser($token->tokenable);
 
         return $next($request);
+    }
+
+    /**
+     * Check if the request should skip API key validation
+     *
+     * @param Request $request
+     * @return bool
+     */
+    private function shouldSkipValidation(Request $request): bool
+    {
+        // Public endpoints that don't require authentication
+        $publicPaths = [
+            'api/v1/health',
+            'api/v1/ready',
+            'api/v1/login',
+            'api/v1/register',
+            'api/v1/password/forgot',
+            'api/v1/password/reset',
+        ];
+
+        foreach ($publicPaths as $path) {
+            if ($request->is($path)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -17,17 +17,27 @@
             </div>
         @endif
 
+        @if ($errors->any())
+            <div class="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div id="signup-error" class="text-red-600 text-sm mb-4"></div>
 
-        <form id="signup-form" method="POST" action="{{ route('register') }}" class="space-y-5">
+        <form id="signup-form" method="POST" action="{{ route('register.submit') }}" class="space-y-5">
             @csrf
             <div>
                 <label class="block text-gray-700 mb-1">Name</label>
-                <input name="name" required class="form-input"/>
+                <input name="name" required class="form-input" value="{{ old('name') }}"/>
             </div>
             <div>
                 <label class="block text-gray-700 mb-1">Email Address</label>
-                <input name="email" type="email" required class="form-input"/>
+                <input name="email" type="email" required class="form-input" value="{{ old('email') }}"/>
             </div>
             <div>
                 <label class="block text-gray-700 mb-1">Password</label>
@@ -44,7 +54,7 @@
 
             <p class="mt-4 text-center text-gray-600 text-sm">
                 Already have an account?
-                <a href="{{ url('/login') }}" class="text-blue-600 hover:underline">Log In</a>
+                <a href="{{ route('login') }}" class="text-blue-600 hover:underline">Log In</a>
             </p>
         </form>
     </div>

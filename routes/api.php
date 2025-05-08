@@ -12,13 +12,13 @@ Route::apiV1(function () {
     Route::get('health', HealthController::class)
         ->name('health')
         ->description('Perform liveness/health check.')
-        ->requiredParams([]);
+        ->withoutMiddleware(\App\Http\Middleware\EnsureApiKey::class);
 
     // 2) Readiness — no params
     Route::get('ready', ReadinessController::class)
         ->name('ready')
         ->description('Perform readiness check (DB & cache).')
-        ->requiredParams([]);
+        ->withoutMiddleware(\App\Http\Middleware\EnsureApiKey::class);
 
     // 3) User registration
     Route::post('register', [AuthController::class, 'register'])
