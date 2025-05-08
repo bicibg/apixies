@@ -15,11 +15,13 @@
     <div class="container mx-auto flex flex-col md:flex-row items-center justify-between px-4">
         <!-- Logo and Title with proper styling -->
         <div class="flex items-center mb-3 md:mb-0">
-            <!-- White box with Apixies text -->
-            <div class="bg-white p-2 rounded flex items-center justify-center mr-3">
-                <span class="text-[#0A2240] font-bold text-sm">Apixies</span>
-            </div>
-            <span class="text-white text-xl font-medium">Developer API Suite</span>
+            <!-- White box with Apixies text - now with link to home -->
+            <a href="/" class="flex items-center hover:opacity-95 transition-opacity">
+                <div class="bg-white p-2 rounded flex items-center justify-center mr-3">
+                    <span class="text-[#0A2240] font-bold text-sm">Apixies</span>
+                </div>
+                <span class="text-white text-xl font-medium">Developer API Suite</span>
+            </a>
         </div>
 
         <!-- Navigation links -->
