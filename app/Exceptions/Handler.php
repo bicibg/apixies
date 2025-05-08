@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use App\Helpers\ApiResponse;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,6 +18,18 @@ class Handler extends ExceptionHandler
 {
     public function render($request, Throwable $e)
     {
+        // For web routes, use Laravel's default exception handling
+        if (!$request->expectsJson() && !$request->is('api/*')) {
+            // Handle authentication exceptions for web routes
+            if ($e instanceof AuthenticationException) {
+                return $this->unauthenticated($request, $e);
+            }
+
+            // Use parent rendering for web routes
+            return parent::render($request, $e);
+        }
+
+        // For API routes or when JSON is expected, use your custom API responses
         return match(true) {
             $e instanceof ValidationException => ApiResponse::error(
                 'Validation failed.',
@@ -42,13 +55,31 @@ class Handler extends ExceptionHandler
                 [],
                 'UNAUTHORIZED'
             ),
+            $e instanceof AuthenticationException => ApiResponse::error(
+                'Unauthenticated.',
+                Response::HTTP_UNAUTHORIZED,
+                [],
+                'UNAUTHENTICATED'
+            ),
             default => ApiResponse::error(
                 config('app.debug') ? $e->getMessage() : 'Please contact support.',
                 Response::HTTP_INTERNAL_SERVER_ERROR,
                 [],
                 'INTERNAL_ERROR',
-                url('/docs#errors-500')
             ),
         };
+    }
+
+    /**
+     * Convert an authentication exception into a response.
+     */
+    protected function unauthenticated($request, AuthenticationException $exception)
+    {
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return ApiResponse::error('Unauthenticated.', Response::HTTP_UNAUTHORIZED, [], 'UNAUTHENTICATED');
+        }
+
+        // For web routes, redirect to login
+        return redirect()->guest(route('login'));
     }
 }

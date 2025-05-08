@@ -22,7 +22,7 @@ Route::middleware('web')->group(function() {
     // API Keys - protected by auth middleware
     Route::middleware('auth')->group(function() {
         Route::get('/api-keys', [WebApiKeyController::class, 'index'])->name('api-keys.index');
-        Route::post('/api-keys', [WebApiKeyController::class, 'store'])->name('api-keys.store'); // Fixed
+        Route::post('/api-keys', [WebApiKeyController::class, 'store'])->name('api-keys.store');
         Route::delete('/api-keys/{id}', [WebApiKeyController::class, 'destroy'])->name('api-keys.destroy');
     });
 });
