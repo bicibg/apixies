@@ -50,6 +50,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\EnsureApiKey::class,
             \App\Http\Middleware\SecureHeaders::class,
+            \App\Http\Middleware\ApiEndpointCounter::class,
             CorrelationId::class,
             ExceptionHandlerMiddleware::class,
             LogRequests::class,

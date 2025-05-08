@@ -108,5 +108,6 @@ Route::apiV1(function () {
             ->name('api-keys.destroy')
             ->description('Revoke (delete) the API token identified by {id}.')
             ->requiredParams([]); // {id} is a route param, not in the body
+
     });
 });
