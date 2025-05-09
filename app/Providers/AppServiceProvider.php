@@ -2,15 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\PersonalAccessToken;
 use Illuminate\Support\ServiceProvider;
-
-// 1a) Facade for static macros (apiV1)
 use Illuminate\Support\Facades\Route as RouteFacade;
-
-// 1b) The Route _object_ class for instance macros (description, requiredParams)
 use Illuminate\Routing\Route as RouteObject;
-
-use Spatie\ResponseCache\Middlewares\CacheResponse;
+use Laravel\Sanctum\Sanctum;
 use App\Http\Middleware\ForceJsonResponseMiddleware;
 use App\Http\Middleware\CorsMiddleware;
 use App\Http\Middleware\SanitizeInputMiddleware;
@@ -30,9 +26,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
-        // A) Instance macros on the Route _object_
-        //
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
         RouteObject::macro('description', function (string $description) {
             // $this is the Route instance
             $this->action['description'] = ($this->action['description'] ?? '') . $description;
@@ -44,15 +39,10 @@ class AppServiceProvider extends ServiceProvider
             return $this;
         });
 
-        //
-        // B) Static macro on the Route facade for your /api/v1 stack
-        //
         RouteFacade::macro('apiV1', function (callable $callback) {
             // RouteFacade proxies to the router under the hood
             return RouteFacade::prefix('v1')
                 ->middleware([
-                    'throttle:100,1',
-                    CacheResponse::class,
                     ForceJsonResponseMiddleware::class,
                     CorsMiddleware::class,
                     SanitizeInputMiddleware::class,
@@ -62,6 +52,7 @@ class AppServiceProvider extends ServiceProvider
                     CorrelationId::class,
                     EnsureApiKey::class,
                     SecureHeaders::class,
+                    'throttle:100,1', // 100 requests per minute
                 ])
                 ->group($callback);
         });

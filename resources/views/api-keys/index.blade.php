@@ -27,7 +27,8 @@
             @if (session('new_token'))
                 <div class="mb-6 p-4 bg-blue-50 border border-blue-300 rounded-md">
                     <h3 class="text-lg font-semibold text-blue-800 mb-2">API Key Created</h3>
-                    <p class="text-sm text-gray-700 mb-1">Name: <span class="font-medium">{{ session('new_token')['name'] }}</span></p>
+                    <p class="text-sm text-gray-700 mb-1">Name: <span
+                            class="font-medium">{{ session('new_token')['name'] }}</span></p>
                     <div class="mb-3">
                         <p class="text-sm text-gray-700 mb-1">Token (copy this now, it won't be shown again):</p>
                         <div class="relative">
@@ -48,7 +49,8 @@
                         </div>
                     </div>
                     <p class="text-xs text-red-600">
-                        <strong>Important:</strong> This is the only time your token will be visible. Please copy it now and store it securely.
+                        <strong>Important:</strong> This is the only time your token will be visible. Please copy it now
+                        and store it securely.
                     </p>
                 </div>
             @endif
@@ -59,10 +61,12 @@
                     <div class="bg-blue-50 p-4 rounded-md mb-6">
                         <h3 class="text-lg font-semibold text-blue-800 mb-2">Get Started with API Keys</h3>
                         <p class="text-gray-700 mb-2">
-                            API keys allow your applications to authenticate with our API services. Create your first API key to start building!
+                            API keys allow your applications to authenticate with our API services. Create your first
+                            API key to start building!
                         </p>
                         <p class="text-gray-700">
-                            After creating an API key, you'll need to include it in your requests as a Bearer token in the Authorization header.
+                            After creating an API key, you'll need to include it in your requests as a Bearer token in
+                            the Authorization header.
                         </p>
                     </div>
                 @endif
@@ -84,7 +88,7 @@
                                 {{ $key->last_used_at ? $key->last_used_at->format('M d, Y H:i') : 'Never used' }}
                             </td>
                             <td class="py-3 px-4 text-center">
-                                <form action="{{ route('api-keys.destroy', $key->id) }}" method="POST" class="inline">
+                                <form action="{{ route('api-keys.destroy', $key->uuid) }}" method="POST" class="inline">
                                     @csrf
                                     @method('DELETE')
                                     <button
@@ -122,23 +126,15 @@
                 <h2 class="text-lg font-medium text-gray-800">Create New API Key</h2>
                 <button id="close-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clip-rule="evenodd"/>
                     </svg>
                 </button>
             </div>
 
             <!-- Modal body -->
             <div class="p-5">
-                @if ($errors->any())
-                    <div class="mb-4 p-3 bg-red-50 border border-red-300 text-red-700 rounded">
-                        <ul class="list-disc list-inside text-sm">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
                 <form action="{{ route('api-keys.store') }}" method="POST">
                     @csrf
                     <div class="mb-4">
@@ -147,10 +143,14 @@
                             type="text"
                             id="key-name"
                             name="name"
+                            value="{{ old('name') }}"
                             placeholder="e.g., Development, Production, etc."
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 @error('name') border-red-500 @enderror"
                             required
                         >
+                        @error('name')
+                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                         <p class="mt-1 text-xs text-gray-500">
                             Give your API key a descriptive name to identify its use.
                         </p>
@@ -178,41 +178,42 @@
     </div>
 
     <script>
-        // Modal functionality
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
             const modal = document.getElementById('create-key-modal');
-            const modalOverlay = modal.querySelector('div'); // The overlay div
-            const openModalBtn = document.getElementById('create-key-button');
-            const closeModalBtn = document.getElementById('close-modal');
+            const modalOverlay = modal.querySelector('.modal-backdrop');
+            const openBtn = document.getElementById('create-key-button');
+            const closeBtn = document.getElementById('close-modal');
             const cancelBtn = document.getElementById('cancel-create');
 
             function openModal() {
                 modal.classList.remove('hidden');
-                document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+                document.body.style.overflow = 'hidden';
             }
 
             function closeModal() {
                 modal.classList.add('hidden');
-                document.body.style.overflow = ''; // Restore scrolling
+                document.body.style.overflow = '';
             }
 
-            openModalBtn.addEventListener('click', openModal);
-            closeModalBtn.addEventListener('click', closeModal);
+            // Bind all handlers once
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
             cancelBtn.addEventListener('click', closeModal);
-
-            // Close modal when clicking on the overlay
-            modalOverlay.addEventListener('click', function(e) {
+            modalOverlay.addEventListener('click', e => {
                 if (e.target === modalOverlay) {
                     closeModal();
                 }
             });
-
-            // Close modal when pressing Escape key
-            document.addEventListener('keydown', function(e) {
+            document.addEventListener('keydown', e => {
                 if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
                     closeModal();
                 }
             });
+
+            // If validation failed, re-open the modal
+            @if ($errors->any())
+            openModal();
+            @endif
         });
 
         // Copy token functionality
@@ -223,13 +224,13 @@
             tokenInput.select();
             document.execCommand('copy');
 
-            // Change button text temporarily
             const originalText = copyBtn.innerText;
             copyBtn.innerText = 'Copied!';
 
-            setTimeout(function() {
+            setTimeout(() => {
                 copyBtn.innerText = originalText;
             }, 2000);
         }
     </script>
+
 @endsection

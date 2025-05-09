@@ -124,60 +124,54 @@
                     @guest
                         <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
                             <div class="flex">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                                <!-- icon... -->
                                 <p class="text-blue-800">
-                                    <strong>Want to use our API?</strong> <a href="{{ route('register') }}" class="text-blue-600 hover:underline font-semibold">Sign up</a> or <a href="{{ route('login') }}" class="text-blue-600 hover:underline font-semibold">log in</a> to get your API key.
+                                    <strong>Want to use our API?</strong>
+                                    <a href="{{ route('register') }}" class="text-blue-600 hover:underline font-semibold">Sign up</a>
+                                    or
+                                    <a href="{{ route('login') }}" class="text-blue-600 hover:underline font-semibold">Log in</a>
+                                    to manage your API keys.
                                 </p>
                             </div>
                         </div>
                     @endguest
 
-                    <div class="mb-6">
-                        <p class="mb-4">All API requests require authentication using an API key. Include your API key in the request headers:</p>
+                    <p class="mb-4">
+                        All future endpoints under <code class="font-mono">/api/v1/</code> require a valid API key.
+                        <strong>Except</strong>:
+                        <code>/api/v1/health</code> and <code>/api/v1/ready</code> are public and don’t need authentication.
+                    </p>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
-                                <h3 class="font-medium text-base mb-3 flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Bearer Authentication (Recommended)
-                                </h3>
-                                <div class="code-block">
-                                    <code>Authorization: Bearer YOUR_API_KEY</code>
-                                </div>
-                            </div>
-
-                            <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
-                                <h3 class="font-medium text-base mb-3 flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    Alternative Method
-                                </h3>
-                                <div class="code-block">
-                                    <code>X-API-KEY: YOUR_API_KEY</code>
-                                </div>
-                            </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <!-- Bearer method -->
+                        <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                            <h3 class="font-medium text-base mb-3 flex items-center">
+                                <!-- icon... --> Bearer Authentication (recommended)
+                            </h3>
+                            <pre class="code-block"><code>Authorization: Bearer YOUR_API_KEY</code></pre>
                         </div>
 
-                        @auth
-                            <div class="bg-green-50 border border-green-200 rounded-md p-4 mb-2">
-                                <div class="flex">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <p class="text-green-800">
-                                        You can manage your API keys in the <a href="{{ route('api-keys.index') }}" class="text-green-700 hover:underline font-semibold">API Keys</a> section.
-                                    </p>
-                                </div>
-                            </div>
-                        @endauth
+                        <!-- X-API-KEY header -->
+                        <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                            <h3 class="font-medium text-base mb-3 flex items-center">
+                                <!-- icon... --> X-API-KEY Header
+                            </h3>
+                            <pre class="code-block"><code>X-API-KEY: YOUR_API_KEY</code></pre>
+                        </div>
                     </div>
+
+                    @auth
+                        <div class="bg-green-50 border border-green-200 rounded-md p-4 mb-2 flex items-center">
+                            <!-- icon... -->
+                            <p class="text-green-800">
+                                Manage your keys any time in the
+                                <a href="{{ route('api-keys.index') }}" class="text-green-700 hover:underline font-semibold">API Keys</a> section.
+                            </p>
+                        </div>
+                    @endauth
                 </div>
             </div>
+
 
             <div class="tab-content hidden" id="examples">
                 <div class="p-6">
@@ -187,7 +181,7 @@
                         <h3 class="font-medium text-gray-800 mb-3">cURL Example</h3>
                         <div class="code-block">
                             <pre><code>curl -X GET \
-  https://{{ request()->getHost() }}/v1/health \
+  https://{{ request()->getHost() }}/api/v1/test \
   -H 'Authorization: Bearer YOUR_API_KEY'</code></pre>
                         </div>
                     </div>
@@ -196,7 +190,7 @@
                         <h3 class="font-medium text-gray-800 mb-3">JavaScript Example</h3>
                         <div class="code-block">
                             <pre><code>// JavaScript fetch example
-fetch('https://{{ request()->getHost() }}/v1/health', {
+fetch('https://{{ request()->getHost() }}/api/v1/test', {
   method: 'GET',
   headers: {
     'Authorization': 'Bearer YOUR_API_KEY',
@@ -216,7 +210,7 @@ fetch('https://{{ request()->getHost() }}/v1/health', {
 $curl = curl_init();
 
 curl_setopt_array($curl, [
-  CURLOPT_URL => "https://{{ request()->getHost() }}/v1/health",
+  CURLOPT_URL => "https://{{ request()->getHost() }}/api/v1/test",
   CURLOPT_RETURNTRANSFER => true,
   CURLOPT_HTTPHEADER => [
     "Authorization: Bearer YOUR_API_KEY",
@@ -246,43 +240,84 @@ if ($err) {
                     <p class="mb-4">All API responses are returned in JSON format with a consistent structure:</p>
 
                     <div class="code-block mb-6">
-                        <pre><code>{
-  "status": "success", // or "error"
-  "http_code": 200, // HTTP status code
-  "code": "SUCCESS_CODE", // API-specific code identifier
+            <pre><code>{
+  "status": "success",      // or "error"
+  "http_code": 200,         // HTTP status code
+  "code": "SUCCESS_CODE",   // API-specific code identifier
   "message": "Operation successful", // A human-readable message
-  "data": {} // The response data (object or array)
+  "data": {}                // The response data (object or array)
 }</code></pre>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Create API Key example -->
                         <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
-                            <h3 class="font-medium text-base mb-3">Successful Response Example</h3>
+                            <h3 class="font-medium text-base mb-3">Create API Key</h3>
                             <div class="code-block">
-                                <pre><code>{
+                    <pre><code>{
   "status": "success",
   "http_code": 200,
   "code": "API_KEY_CREATED",
   "message": "API key created",
   "data": {
-    "id": 1,
+    "uuid": "550e8400-e29b-41d4-a716-446655440000",
     "name": "Production API Key",
-    "token": "1|yQPrJKDIwCRrGSJQI5SpDPZvVAHnqkH4rGI3kYgF"
+    "plainTextToken": "1|yQPrJKDIwCRrGSJQI5SpDPZvVAHnqkH4rGI3kYgF"
   }
 }</code></pre>
                             </div>
                         </div>
 
+                        <!-- Validation Error example -->
                         <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
-                            <h3 class="font-medium text-base mb-3">Error Response Example</h3>
+                            <h3 class="font-medium text-base mb-3">Validation Error</h3>
                             <div class="code-block">
-                                <pre><code>{
+                    <pre><code>{
   "status": "error",
-  "http_code": 400,
-  "code": "VALIDATION_ERROR",
-  "message": "Validation failed",
+  "http_code": 422,
+  "code": "VALIDATION_FAILED",
+  "message": "Validation failed.",
   "errors": {
-    "email": ["The email field is required."]
+    "name": ["The name field is required."]
+  }
+}</code></pre>
+                            </div>
+                        </div>
+
+                        <!-- Sample Feature example -->
+                        <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                            <h3 class="font-medium text-base mb-3">Sample Feature</h3>
+                            <div class="code-block">
+                    <pre><code>{
+  "status": "success",
+  "http_code": 200,
+  "code": "SAMPLE_FEATURE_RESPONSE",
+  "message": "Here’s a made-up feature response",
+  "data": {
+    "sampleKey": "sampleValue",
+    "items": [1, 2, 3]
+  }
+}</code></pre>
+                            </div>
+                        </div>
+
+
+                        <!-- Test endpoint example -->
+                        <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                            <h3 class="font-medium text-base mb-3">Test Authentication</h3>
+                            <div class="code-block">
+                    <pre><code>{
+  "status": "success",
+  "http_code": 200,
+  "code": "SUCCESS",
+  "message": "Authentication successful",
+  "data": {
+    "message": "API key is valid",
+    "user": {
+      "id": 42,
+      "name": "Alice",
+      "email": "alice@example.com"
+    }
   }
 }</code></pre>
                             </div>
@@ -298,53 +333,69 @@ if ($err) {
                     <div class="space-y-6">
                         <div>
                             <h3 class="text-lg font-medium text-gray-800 mb-2">Request Tracking</h3>
-                            <p class="mb-2">Each API request is assigned a unique request ID, which is returned in the <code class="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono">X-Request-ID</code> header of the response. You can also provide your own request ID in the <code class="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono">X-Request-ID</code> header of your request.</p>
+                            <p class="mb-2">
+                                Each API request is assigned a unique request ID, which is returned in the
+                                <code class="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono">X-Request-ID</code>
+                                header of the response. You can also provide your own request ID in the same header.
+                            </p>
                             <div class="code-block">
-                                <pre><code>// Example response header
+                    <pre><code>// Example response header
 X-Request-ID: 550e8400-e29b-41d4-a716-446655440000</code></pre>
                             </div>
                         </div>
 
                         <div>
                             <h3 class="text-lg font-medium text-gray-800 mb-2">CORS Support</h3>
-                            <p>Our API supports Cross-Origin Resource Sharing (CORS) with the following settings:</p>
+                            <p>
+                                Our API supports Cross-Origin Resource Sharing (CORS) so you can call it from any origin.
+                            </p>
                             <ul class="list-disc ml-6 mb-2">
                                 <li>Access-Control-Allow-Origin: *</li>
                                 <li>Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS</li>
                                 <li>Access-Control-Allow-Headers: Content-Type, Authorization</li>
                             </ul>
-                            <p>This allows you to make requests from any origin, including browser-based applications.</p>
                         </div>
 
                         <div>
                             <h3 class="text-lg font-medium text-gray-800 mb-2">Input Sanitization</h3>
-                            <p>All input fields in your request are automatically trimmed to remove leading and trailing whitespace.</p>
+                            <p>
+                                All input fields are automatically trimmed and sanitized to remove leading/trailing whitespace and prevent common injection attacks.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-800 mb-2">JSON-Only Responses</h3>
+                            <p>
+                                Every endpoint always returns well-formed JSON—no HTML or other formats—so your client code can reliably parse responses.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-800 mb-2">Rate Limiting</h3>
+                            <p>
+                                To prevent abuse, the API enforces a limit of <strong>100 requests per minute</strong> per key. Exceeding the limit returns HTTP 429.
+                            </p>
                         </div>
 
                         <div>
                             <h3 class="text-lg font-medium text-gray-800 mb-2">Security</h3>
-                            <p>Our API implements several security measures:</p>
+                            <p>We apply industry-standard protections:</p>
                             <ul class="list-disc ml-6">
-                                <li>Strict security headers to protect against common web vulnerabilities</li>
-                                <li>CSRF protection on web routes, with exemption for API routes</li>
-                                <li>Rate limiting to protect against abuse</li>
-                                <li>Exception handling to prevent sensitive information leakage</li>
+                                <li>Strict security headers (CSP, HSTS, X-Frame-Options, etc.)</li>
+                                <li>CSRF protection on web routes (API routes are exempt)</li>
                             </ul>
                         </div>
 
                         <div>
                             <h3 class="text-lg font-medium text-gray-800 mb-2">Error Handling</h3>
-                            <p>Our API provides detailed error messages and consistent error formats to help you troubleshoot issues. All errors include:</p>
-                            <ul class="list-disc ml-6">
-                                <li>HTTP status code that reflects the nature of the error</li>
-                                <li>Machine-readable error code for programmatic handling</li>
-                                <li>Human-readable error message</li>
-                                <li>Detailed validation errors when applicable</li>
-                            </ul>
+                            <p>
+                                All errors return a clear HTTP status code, a machine-readable error code, a human-friendly message, and detailed validation errors when applicable.
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 @endsection
