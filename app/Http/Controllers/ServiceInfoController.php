@@ -44,7 +44,7 @@ class ServiceInfoController extends Controller
             ]);
         }
 
-        return view('welcome', [
+        return view('api-docs', [
             'routes' => $apiRoutes,
         ]);
     }

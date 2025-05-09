@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('web')->group(function() {
     // Public landing
     Route::get('/', [ServiceInfoController::class, 'getApiRoutes'])
-        ->name('dashboard');
+        ->name('api-docs');
 
     // Registration
     Route::get('/register', [WebAuthController::class, 'showRegister'])

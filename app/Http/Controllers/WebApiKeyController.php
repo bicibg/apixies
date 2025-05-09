@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
-use Illuminate\Validation\Rule;
 
 class WebApiKeyController extends Controller
 {
@@ -35,25 +33,18 @@ class WebApiKeyController extends Controller
     {
         $user = $request->user();
 
-        $rules = [
+        $request->validate([
             'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('personal_access_tokens')
-                    ->where(fn($query) => $query
-                        ->where('tokenable_type', User::class)
+                'required', 'string', 'max:255',
+                \Illuminate\Validation\Rule::unique('personal_access_tokens')
+                    ->where(fn($q) => $q
+                        ->where('tokenable_type', \App\Models\User::class)
                         ->where('tokenable_id', $user->id)
                     ),
             ],
-        ];
-
-        $messages = [
-            'name.unique' => 'You already have an API key named "'. $request->input('name') .'". Please choose a different name.',
-        ];
-
-        $request->validate($rules, $messages);
-
+        ], [
+            'name.unique' => 'You already have an API key named "'.$request->input('name').'". Please choose a different name.',
+        ]);
 
         $tokenResult = $user->createToken(
             $request->input('name'),
@@ -71,7 +62,10 @@ class WebApiKeyController extends Controller
 
         return redirect()->route('api-keys.index')
             ->with('status', 'API key created.')
-            ->with('plainTextToken', $tokenResult->plainTextToken);
+            ->with('new_token', [
+                'name'  => $request->input('name'),
+                'token' => $tokenResult->plainTextToken,
+            ]);
     }
 
     /**

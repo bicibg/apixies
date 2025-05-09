@@ -27,10 +27,13 @@
             @if (session('new_token'))
                 <div class="mb-6 p-4 bg-blue-50 border border-blue-300 rounded-md">
                     <h3 class="text-lg font-semibold text-blue-800 mb-2">API Key Created</h3>
-                    <p class="text-sm text-gray-700 mb-1">Name: <span
-                            class="font-medium">{{ session('new_token')['name'] }}</span></p>
+                    <p class="text-sm text-gray-700 mb-1">
+                        Name: <span class="font-medium">{{ session('new_token')['name'] }}</span>
+                    </p>
                     <div class="mb-3">
-                        <p class="text-sm text-gray-700 mb-1">Token (copy this now, it won't be shown again):</p>
+                        <p class="text-sm text-gray-700 mb-1">
+                            Token (copy this now, it won't be shown again):
+                        </p>
                         <div class="relative">
                             <input
                                 id="token-display"
@@ -49,8 +52,7 @@
                         </div>
                     </div>
                     <p class="text-xs text-red-600">
-                        <strong>Important:</strong> This is the only time your token will be visible. Please copy it now
-                        and store it securely.
+                        <strong>Important:</strong> This is the only time your token will be visible. Please copy it now and store it securely.
                     </p>
                 </div>
             @endif
@@ -61,12 +63,10 @@
                     <div class="bg-blue-50 p-4 rounded-md mb-6">
                         <h3 class="text-lg font-semibold text-blue-800 mb-2">Get Started with API Keys</h3>
                         <p class="text-gray-700 mb-2">
-                            API keys allow your applications to authenticate with our API services. Create your first
-                            API key to start building!
+                            API keys allow your applications to authenticate with our API services. Create your first API key to start building!
                         </p>
                         <p class="text-gray-700">
-                            After creating an API key, you'll need to include it in your requests as a Bearer token in
-                            the Authorization header.
+                            After creating an API key, you'll need to include it in your requests as a Bearer token in the Authorization header.
                         </p>
                     </div>
                 @endif
@@ -195,14 +195,12 @@
                 document.body.style.overflow = '';
             }
 
-            // Bind all handlers once
+            // Bind handlers
             openBtn.addEventListener('click', openModal);
             closeBtn.addEventListener('click', closeModal);
             cancelBtn.addEventListener('click', closeModal);
             modalOverlay.addEventListener('click', e => {
-                if (e.target === modalOverlay) {
-                    closeModal();
-                }
+                if (e.target === modalOverlay) closeModal();
             });
             document.addEventListener('keydown', e => {
                 if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
@@ -210,16 +208,15 @@
                 }
             });
 
-            // If validation failed, re-open the modal
+            // Re-open on validation errors
             @if ($errors->any())
             openModal();
             @endif
         });
 
-        // Copy token functionality
         function copyToken() {
             const tokenInput = document.getElementById('token-display');
-            const copyBtn = document.getElementById('copy-token-btn');
+            const copyBtn    = document.getElementById('copy-token-btn');
 
             tokenInput.select();
             document.execCommand('copy');
@@ -232,5 +229,4 @@
             }, 2000);
         }
     </script>
-
 @endsection

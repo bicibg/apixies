@@ -15,44 +15,40 @@ class EnsureApiKey
 {
     public function handle(Request $request, Closure $next)
     {
-        $public = [
-            'api/v1/login', 'api/v1/register',
-            'api/v1/password/forgot', 'api/v1/password/reset',
-        ];
-
-        foreach ($public as $path) {
-            if ($request->is($path)) {
-                return $next($request);
-            }
-        }
-
+        // 1) Grab the token from the Authorization header or X-API-KEY
         $raw = $request->bearerToken() ?: $request->header('X-API-KEY');
+
         if (! $raw) {
-            return ApiResponse::error('Unauthorized', Response::HTTP_UNAUTHORIZED);
+            Log::warning('API key missing', ['path' => $request->path()]);
+            return ApiResponse::error('No API key provided', Response::HTTP_UNAUTHORIZED);
         }
 
-        $token = Cache::remember("api_token:{$raw}", 60, function () use ($raw) {
-            return PersonalAccessToken::where('uuid', $raw)->first();
-        });
+        // 2) Lookup via Sanctum helper, cached for 60s
+        $cacheKey = "api_token:{$raw}";
+        $token = Cache::remember($cacheKey, 60, fn() => PersonalAccessToken::findToken($raw));
 
-        if (! $token || $token->expired()) {
-            return ApiResponse::error('Invalid or expired token', Response::HTTP_UNAUTHORIZED);
+        if (! $token) {
+            Log::warning('API key invalid', ['token' => $raw]);
+            return ApiResponse::error('Invalid API key', Response::HTTP_UNAUTHORIZED);
         }
 
+        // 3) Expiration check
+        if ($token->expires_at && now()->greaterThan($token->expires_at)) {
+            Log::warning('API key expired', ['uuid' => $token->uuid]);
+            return ApiResponse::error('API key expired', Response::HTTP_UNAUTHORIZED);
+        }
+
+        // 4) Scope check
         if (! $token->can('read')) {
+            Log::warning('API key missing read scope', ['uuid' => $token->uuid]);
             return ApiResponse::error('Insufficient scope', Response::HTTP_FORBIDDEN);
         }
 
+        // 5) All good — update last_used_at quietly and set the user
         $token->forceFill(['last_used_at' => Carbon::now()])->saveQuietly();
-
         $request->setUserResolver(fn() => $token->tokenable);
 
-        Log::info('API request', [
-            'path'      => $request->path(),
-            'method'    => $request->method(),
-            'client_ip' => $request->ip(),
-            'token_uuid'=> $token->uuid,
-        ]);
+        Log::info('API key authorized', ['uuid' => $token->uuid, 'path' => $request->path()]);
 
         return $next($request);
     }

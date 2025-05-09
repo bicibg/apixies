@@ -9,6 +9,12 @@
         })(window,document,'script','dataLayer','GTM-MXM728HH');</script>
     <!-- End Google Tag Manager -->
 
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
+
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -37,7 +43,7 @@
 
         <!-- Navigation links -->
         <div class="flex flex-wrap justify-center md:justify-end items-center space-x-3 md:space-x-5">
-            <a href="{{ route('dashboard') }}" class="text-white hover:text-gray-200 text-sm py-1">API Docs</a>
+            <a href="{{ route('api-docs') }}" class="text-white hover:text-gray-200 text-sm py-1">API Docs</a>
             <a href="{{ route('api-keys.index') }}" class="text-white hover:text-gray-200 text-sm py-1">API Keys</a>
 
             @auth
@@ -71,7 +77,7 @@
 <!-- Mobile menu (hidden by default, shown when toggled) -->
 <div id="mobile-menu" class="hidden md:hidden bg-white shadow-md">
     <div class="container mx-auto px-4 py-2 space-y-2">
-        <a href="{{ route('dashboard') }}" class="block py-2 px-3 text-gray-800 hover:bg-gray-100 rounded">API Docs</a>
+        <a href="{{ route('api-docs') }}" class="block py-2 px-3 text-gray-800 hover:bg-gray-100 rounded">API Docs</a>
         <a href="{{ route('api-keys.index') }}" class="block py-2 px-3 text-gray-800 hover:bg-gray-100 rounded">API Keys</a>
         @auth
             <div class="py-2 px-3 text-gray-600">{{ Auth::user()->name }}</div>
