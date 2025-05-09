@@ -29,9 +29,6 @@ $app = Application::configure(basePath: dirname(__DIR__))
             StartSession::class,
             ShareErrorsFromSession::class,
             VerifyCsrfToken::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            CorrelationId::class,
-            LogRequests::class,
         ]);
 
         // Set up auth middleware
