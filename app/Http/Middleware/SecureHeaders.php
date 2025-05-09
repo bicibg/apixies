@@ -4,18 +4,32 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response as BaseResponse;
 
 class SecureHeaders
 {
     public function handle(Request $request, Closure $next)
     {
-        $res = $next($request);
+        // Let the request run through all other middleware / controllers:
+        $rawResponse = $next($request);
 
-        return $res
-            ->header('X-Frame-Options', 'DENY')
-            ->header('X-Content-Type-Options', 'nosniff')
-            ->header('Referrer-Policy', 'no-referrer')
-            ->header('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
-            ->header('Permissions-Policy', 'geolocation=()');
+        // If it’s not already a Response, wrap it in one:
+        if (! $rawResponse instanceof BaseResponse) {
+            $response = response($rawResponse);
+        } else {
+            $response = $rawResponse;
+        }
+
+        // Now safely add headers:
+        $response->headers->set('X-Frame-Options', 'DENY');
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+        $response->headers->set('Referrer-Policy', 'no-referrer');
+        $response->headers->set(
+            'Strict-Transport-Security',
+            'max-age=63072000; includeSubDomains; preload'
+        );
+        $response->headers->set('Permissions-Policy', 'geolocation=()');
+
+        return $response;
     }
 }
