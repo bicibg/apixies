@@ -28,8 +28,6 @@ Route::middleware('web')->group(function() {
         Route::delete('/api-keys/{id}', [WebApiKeyController::class, 'destroy'])->name('api-keys.destroy');
     });
 
-    Route::get('/api-keys', [WebApiKeyController::class, 'index'])->name('api-keys.index');
-
     Route::middleware(['auth', 'can:viewApiStats'])->group(function () {
         Route::get('/admin/api-stats', function () {
             // Aggregate counts per endpoint
