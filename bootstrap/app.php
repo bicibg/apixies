@@ -43,24 +43,12 @@ $app = Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SanitizeInputMiddleware::class,
             \App\Http\Middleware\TransformMiddleware::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-
-            // 3) Exception handler first, so we always have a Response
-            \App\Http\Middleware\ExceptionHandlerMiddleware::class,
-
-            // 4) Auth
             \App\Http\Middleware\EnsureApiKey::class,
-
-            // 5) Metrics
-            \App\Http\Middleware\ApiEndpointCounter::class,
-
-            // 6) Security headers (wraps the response safely)
             \App\Http\Middleware\SecureHeaders::class,
-
-            // 7) Correlation ID (adds X-Request-ID)
-            \App\Http\Middleware\CorrelationId::class,
-
-            // 8) Request‐logging last
-            \App\Http\Middleware\LogRequests::class,
+            \App\Http\Middleware\ApiEndpointCounter::class,
+            CorrelationId::class,
+            ExceptionHandlerMiddleware::class,
+            LogRequests::class,
         ]);
     })
     ->create();
