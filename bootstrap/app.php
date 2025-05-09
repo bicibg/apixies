@@ -32,8 +32,6 @@ $app = Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             CorrelationId::class,
             LogRequests::class,
-            // Exception handler should come after others for web routes
-            // Move ExceptionHandlerMiddleware here if it has special web route handling
         ]);
 
         // Set up auth middleware

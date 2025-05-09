@@ -40,14 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const tokenElement = document.querySelector('.token-display');
             if (!tokenElement) return;
 
-            // Copy token to clipboard
             navigator.clipboard.writeText(tokenElement.textContent.trim())
                 .then(() => {
-                    // Show success message
                     const originalText = copyButton.textContent;
                     copyButton.textContent = 'Copied!';
-
-                    // Reset button text after 2 seconds
                     setTimeout(() => {
                         copyButton.textContent = originalText;
                     }, 2000);
@@ -77,30 +73,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!tabButtons.length) return;
 
+        // Function to activate a given tab
+        function activateTab(button) {
+            // Deactivate all tabs
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active', 'text-[#0A2240]', 'border-b-2', 'border-[#0A2240]');
+                btn.classList.add('text-gray-500');
+            });
+            // Hide all panes
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Activate this tab
+            button.classList.add('active', 'text-[#0A2240]', 'border-b-2', 'border-[#0A2240]');
+            button.classList.remove('text-gray-500');
+
+            // Show its pane
+            const tabId = button.dataset.tab;
+            const pane = document.getElementById(tabId);
+            if (pane) {
+                pane.classList.remove('hidden');
+            }
+        }
+
+        // Bind click handlers
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
-                // Deactivate all tabs
-                tabButtons.forEach(btn => {
-                    btn.classList.remove('active', 'text-[#0A2240]', 'border-b-2', 'border-[#0A2240]');
-                    btn.classList.add('text-gray-500');
-                });
-
-                tabContents.forEach(content => {
-                    content.classList.add('hidden');
-                });
-
-                // Activate clicked tab
-                button.classList.add('active', 'text-[#0A2240]', 'border-b-2', 'border-[#0A2240]');
-                button.classList.remove('text-gray-500');
-
-                const tabId = button.dataset.tab;
-                const tabContent = document.getElementById(tabId);
-
-                if (tabContent) {
-                    tabContent.classList.remove('hidden');
-                }
+                activateTab(button);
             });
         });
+
+        // On load, activate the first tab
+        activateTab(tabButtons[0]);
     }
 
     /**
@@ -119,11 +124,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 row.style.display = text.includes(query) ? '' : 'none';
             });
 
-            // Show message if no results
             const noResults = document.getElementById('no-search-results');
-
             if (noResults) {
-                if (query && ![...rows].some(row => row.style.display !== 'none')) {
+                const anyVisible = [...rows].some(r => r.style.display !== 'none');
+                if (query && !anyVisible) {
                     noResults.classList.remove('hidden');
                 } else {
                     noResults.classList.add('hidden');
@@ -131,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Add clear button functionality
+        // Clear button (if you have one)
         const clearButton = document.getElementById('clear-search');
         if (clearButton) {
             clearButton.addEventListener('click', () => {

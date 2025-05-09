@@ -9,25 +9,32 @@
         })(window,document,'script','dataLayer','GTM-MXM728HH');</script>
     <!-- End Google Tag Manager -->
 
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <title>@yield('title', 'Apixies')</title>
+
+    <!-- Favicons -->
     <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
     <link rel="shortcut icon" href="/favicon/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
     <link rel="manifest" href="/favicon/site.webmanifest" />
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title','Apixies')</title>
+    <!-- Fonts & Styles -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-    @vite(['resources/css/app.css','resources/js/app.js'])
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="flex flex-col min-h-screen bg-gray-50 text-gray-800">
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MXM728HH"
                   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
+
+<!-- Header -->
 <header class="bg-gradient-to-r from-[#0A2240] to-[#007C91] py-3">
     <div class="container mx-auto flex flex-col md:flex-row items-center justify-between px-4">
         <!-- Logo and Title with proper styling -->
@@ -43,7 +50,7 @@
 
         <!-- Navigation links -->
         <div class="flex flex-wrap justify-center md:justify-end items-center space-x-3 md:space-x-5">
-            <a href="{{ route('api-docs') }}" class="text-white hover:text-gray-200 text-sm py-1">API Docs</a>
+            <a href="{{ route('docs.index') }}" class="text-white hover:text-gray-200 text-sm py-1">API Docs</a>
             <a href="{{ route('api-keys.index') }}" class="text-white hover:text-gray-200 text-sm py-1">API Keys</a>
 
             @auth
@@ -64,57 +71,59 @@
     </div>
 </header>
 
-<!-- Mobile menu toggle button (visible on small screens) -->
+<!-- Mobile menu toggle -->
 <div class="md:hidden bg-gray-100 border-b border-gray-200 py-2 px-4">
     <button id="mobile-menu-toggle" class="flex items-center text-gray-600">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none"
+             viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 6h16M4 12h16m-7 6h7"/>
         </svg>
         Menu
     </button>
 </div>
 
-<!-- Mobile menu (hidden by default, shown when toggled) -->
+<!-- Mobile Nav -->
 <div id="mobile-menu" class="hidden md:hidden bg-white shadow-md">
-    <div class="container mx-auto px-4 py-2 space-y-2">
-        <a href="{{ route('api-docs') }}" class="block py-2 px-3 text-gray-800 hover:bg-gray-100 rounded">API Docs</a>
-        <a href="{{ route('api-keys.index') }}" class="block py-2 px-3 text-gray-800 hover:bg-gray-100 rounded">API Keys</a>
+    <div class="px-4 py-2 space-y-2">
+        <a href="{{ route('docs.index') }}" class="block py-2 text-gray-800 hover:bg-gray-100 rounded">API Docs</a>
+        <a href="{{ route('api-keys.index') }}" class="block py-2 text-gray-800 hover:bg-gray-100 rounded">API Keys</a>
+
         @auth
             <div class="py-2 px-3 text-gray-600">{{ Auth::user()->name }}</div>
-            <form method="POST" action="{{ url('/logout') }}">
+            <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="block w-full text-left py-2 px-3 text-red-600 hover:bg-gray-100 rounded">
+                <button type="submit"
+                        class="block w-full text-left py-2 px-3 text-red-600 hover:bg-gray-100 rounded">
                     Log Out
                 </button>
             </form>
         @else
-            <a href="{{ url('/login') }}" class="block py-2 px-3 text-gray-800 hover:bg-gray-100 rounded">Log In</a>
-            <a href="{{ url('/register') }}" class="block py-2 px-3 text-blue-600 hover:bg-gray-100 rounded">Sign Up</a>
+            <a href="{{ route('login') }}" class="block py-2 text-gray-800 hover:bg-gray-100 rounded">Log In</a>
+            <a href="{{ route('register') }}" class="block py-2 text-blue-600 hover:bg-gray-100 rounded">Sign Up</a>
         @endauth
     </div>
 </div>
 
+<!-- Main Content -->
 <main class="flex-1 container mx-auto px-4 py-8">
     @yield('content')
 </main>
 
+<!-- Footer -->
 <footer class="text-center text-sm text-gray-500 py-4">
     &copy; {{ date('Y') }} Apixies. All rights reserved.
 </footer>
 
-<!-- Mobile menu toggle script -->
+<!-- Mobile menu script -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
-        const mobileMenu = document.getElementById('mobile-menu');
-
-        if (mobileMenuToggle && mobileMenu) {
-            mobileMenuToggle.addEventListener('click', function() {
-                mobileMenu.classList.toggle('hidden');
-            });
+        const toggle = document.getElementById('mobile-menu-toggle');
+        const menu   = document.getElementById('mobile-menu');
+        if (toggle && menu) {
+            toggle.addEventListener('click', () => menu.classList.toggle('hidden'));
         }
     });
 </script>
-
 </body>
 </html>

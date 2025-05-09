@@ -91,7 +91,7 @@ class WebAuthController extends Controller
                 ->withErrors(['email' => 'Please verify your email address.']);
         }
 
-        return redirect()->intended(route('api-docs'))
+        return redirect()->intended(route('docs.index'))
             ->with('status', 'Login successful.');
     }
 

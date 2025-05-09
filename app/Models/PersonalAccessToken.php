@@ -3,12 +3,25 @@
 namespace App\Models;
 
 use Laravel\Sanctum\PersonalAccessToken as SanctumToken;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class PersonalAccessToken extends SanctumToken
 {
+    use SoftDeletes;
+
     protected $guarded = ['id'];
+
+    /**
+     * The attributes that should be mutated to dates.
+     * (Not strictly necessary in Laravel 8+, but good clarity.)
+     */
+    protected $dates = [
+        'last_used_at',
+        'expires_at',
+        'deleted_at',
+    ];
 
     protected static function boot()
     {
@@ -25,12 +38,10 @@ class PersonalAccessToken extends SanctumToken
      */
     public function expired(): bool
     {
-        // if there's no expiry set, treat it as never expiring
         if (! $this->expires_at) {
             return false;
         }
 
         return Carbon::now()->greaterThan($this->expires_at);
-        // or: return $this->expires_at->isPast();
     }
 }

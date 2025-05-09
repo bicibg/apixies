@@ -29,8 +29,8 @@ class EmailInspectorController extends Controller
         // wrap it in our standard API envelope
         return ApiResponse::success(
             $result,
-            Response::HTTP_OK,
-            'Email inspection successful'
+            'Email inspection successful',
+            Response::HTTP_OK
         );
     }
 }
