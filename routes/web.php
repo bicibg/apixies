@@ -15,11 +15,9 @@ Route::middleware('web')->group(function () {
     Route::get('/', [ServiceInfoController::class, 'getApiRoutes'])
         ->name('docs.index');
 
-    // Single-endpoint detail
-    // Single‐endpoint detail (must come before any /docs/endpoints/* static routes)
-    Route::get('/docs/endpoints/{key}', [ServiceInfoController::class, 'showApiRoute'])
+    Route::get('/docs/{key}', [ServiceInfoController::class, 'showApiRoute'])
         ->where('key', '.*')             // <-- allow slashes in {key}
-        ->name('docs.endpoints.show');
+        ->name('docs.show');
 
 
     // Auth

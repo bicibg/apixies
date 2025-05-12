@@ -1,71 +1,56 @@
-{{-- resources/views/docs/index.blade.php --}}
-@section('docs-title','Apixies API')
-@section('docs-subtitle','Build powerful applications with our simple, reliable API')
-@section('docs-hero-buttons')
-    @auth
-        <a href="{{ route('api-keys.index') }}"
-           class="inline-block bg-white text-[#0A2240] px-5 py-2 rounded-md font-medium hover:bg-gray-100 transition mr-4">
-            Manage API Keys
-        </a>
-    @else
-        <a href="{{ route('login') }}"
-           class="inline-block bg-white text-[#0A2240] px-5 py-2 rounded-md font-medium hover:bg-gray-100 transition mr-4">
-            Log In
-        </a>
-        <a href="{{ route('register') }}"
-           class="inline-block bg-teal-500 text-white px-5 py-2 rounded-md font-medium hover:bg-teal-600 transition">
-            Sign Up for API Access
-        </a>
-    @endauth
-@endsection
-
+@php($title = 'Apixies API Docs')
 @extends('docs.layout')
 
-@section('docs-endpoints')
-    <h2 class="text-xl font-semibold text-[#0A2240] mb-4">Available Endpoints</h2>
-    <div class="overflow-x-auto bg-white rounded-lg shadow-md">
-        <table class="min-w-full">
-            <thead class="bg-gray-100 text-gray-600 uppercase text-sm">
-            <tr>
-                <th class="py-3 px-4 text-left">Method</th>
-                <th class="py-3 px-4 text-left">URI</th>
-                <th class="py-3 px-4 text-left">Description</th>
-            </tr>
-            </thead>
-            <tbody class="text-gray-700">
-            @foreach($routes as $route)
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="py-3 px-4">
-              <span class="method-badge {{ strtolower($route['method']) }}">
-                {{ $route['method'] }}
-              </span>
-                    </td>
-                    <td class="py-3 px-4 font-mono text-sm">
-                        <a href="{{ route('docs.endpoints.show', ['key'=>$route['uri']]) }}"
-                           class="text-blue-600 hover:underline">
-                            {{ $route['uri'] }}
-                        </a>
-                    </td>
-                    <td class="py-3 px-4">{{ $route['description'] }}</td>
-                </tr>
-            @endforeach
-            </tbody>
-        </table>
+@section('content-body')
+
+    @include('docs.partials.hero')
+    {{-- tab bar ------------------------------------------------------------}}
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <nav id="tab-bar" class="flex border-b text-sm font-medium overflow-x-auto">
+            <button data-pane="endpoints"      class="tab-btn active">API Endpoints</button>
+            <button data-pane="authentication" class="tab-btn">Authentication</button>
+            <button data-pane="examples"       class="tab-btn">Examples</button>
+            <button data-pane="responses"      class="tab-btn">Response Format</button>
+            <button data-pane="features"       class="tab-btn">Features</button>
+        </nav>
+
+        {{-- panes (all in DOM; only one visible) ---------------------------}}
+        <section id="endpoints"      class="tab-pane p-6">@include('docs.partials.endpoints')</section>
+        <section id="authentication" class="tab-pane p-6 hidden">@include('docs.partials.authentication')</section>
+        <section id="examples"       class="tab-pane p-6 hidden">@include('docs.partials.examples')</section>
+        <section id="responses"      class="tab-pane p-6 hidden">@include('docs.partials.responses')</section>
+        <section id="features"       class="tab-pane p-6 hidden">@include('docs.partials.features')</section>
     </div>
 @endsection
 
-@section('docs-authentication')
-    @include('docs.partials.authentication')
-@endsection
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const buttons = [...document.querySelectorAll('#tab-bar .tab-btn')];
+            const panes   = id => document.getElementById(id);
 
-@section('docs-examples')
-    @include('docs.partials.examples')
-@endsection
+            function show(id) {
+                /* switch button styles */
+                buttons.forEach(b => b.classList.toggle('active', b.dataset.pane === id));
+                /* show the matching pane, hide others */
+                ['endpoints','authentication','examples','responses','features']
+                    .forEach(pid => panes(pid).classList.toggle('hidden', pid !== id));
+            }
 
-@section('docs-responses')
-    @include('docs.partials.responses')
-@endsection
+            /* basic button styling classes */
+            buttons.forEach(b => b.classList.add(
+                'px-5','py-3','border-b-2','border-transparent','transition','text-gray-600'
+            ));
+            const activeCls = ['text-[#0A2240]','border-[#0A2240]'];
 
-@section('docs-features')
-    @include('docs.partials.features')
-@endsection
+            /* click handler */
+            buttons.forEach(b => b.addEventListener('click', () => {
+                buttons.forEach(btn => btn.classList.remove(...activeCls));
+                b.classList.add(...activeCls);
+                show(b.dataset.pane);
+            }));
+
+            show('endpoints');          // default tab
+        });
+    </script>
+@endpush

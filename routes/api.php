@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\V1\EmailInspectorController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\ReadinessController;
 use App\Http\Controllers\Api\V1\SecurityHeadersInspectorController;
+use App\Http\Controllers\Api\V1\SslHealthInspectorController;
+use App\Http\Controllers\Api\V1\UserAgentInspectorController;
 use Illuminate\Support\Facades\Route;
 
 Route::apiV1(function () {
@@ -55,5 +57,15 @@ Route::apiV1(function () {
             ->name('inspect-headers')
             ->description('Inspect a website’s HTTP response headers and grade security best‑practices.')
             ->requiredParams(['url']);
+
+        Route::get('inspect-user-agent', UserAgentInspectorController::class)
+            ->name('inspect-user-agent')
+            ->description('Parse a User‑Agent string and detect browser, OS, device and bot flag.')
+            ->requiredParams(['user_agent']);
+
+        Route::get('inspect-ssl', SslHealthInspectorController::class)
+            ->name('inspect-ssl')
+            ->description('Inspect a domain’s SSL certificate for validity, expiry and chain health.')
+            ->requiredParams(['domain']);
     });
 });
