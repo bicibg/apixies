@@ -32,5 +32,6 @@ class AuthServiceProvider extends ServiceProvider
             // Only allow if your User model has an is_admin flag
             return $user->email === 'bugraergin@gmail.com';
         });
+        Gate::define('viewFilament', fn ($user) => (bool) $user->is_admin);
     }
 }

@@ -71,29 +71,21 @@ class WebAuthController extends Controller
      */
     public function login(Request $request)
     {
-        $request->validate([
-            'email'    => ['required','email'],
-            'password' => ['required'],
+        $credentials = $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required',
         ]);
 
-        if (! Auth::attempt($request->only('email','password'), $request->filled('remember'))) {
-            throw ValidationException::withMessages([
-                'email' => 'The provided credentials do not match our records.',
-            ]);
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
+            return redirect()->intended(route('docs.index'));
         }
 
-        $request->session()->regenerate();
-
-        $user = Auth::user();
-        if (! $user->hasVerifiedEmail()) {
-            Auth::logout();
-            return redirect()->route('login')
-                ->withErrors(['email' => 'Please verify your email address.']);
-        }
-
-        return redirect()->intended(route('docs.index'))
-            ->with('status', 'Login successful.');
+        return back()->withErrors([
+            'email' => 'These credentials do not match our records.',
+        ]);
     }
+
 
     /**
      * Logout the user.

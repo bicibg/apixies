@@ -56,4 +56,11 @@ Route::middleware('web')->group(function () {
     Route::get('suggestions', [SuggestionController::class, 'index']);
     Route::post('suggestions', [SuggestionController::class, 'store']);
     Route::post('suggestions/{suggestion}/vote', [SuggestionController::class, 'vote']);
+    Route::get('/debug-admin-auth', function () {
+        return [
+            'cookie' => request()->cookie(config('session.cookie')),
+            'user'   => optional(auth()->user())->only('id','email','is_admin'),
+        ];
+    });
+
 });
