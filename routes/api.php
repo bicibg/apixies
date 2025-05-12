@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\EmailInspectorController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\ReadinessController;
+use App\Http\Controllers\Api\V1\SecurityHeadersInspectorController;
 use Illuminate\Support\Facades\Route;
 
 Route::apiV1(function () {
@@ -42,11 +43,17 @@ Route::apiV1(function () {
             ], 'Authentication successful');
         })
             ->name('api.test')
-            ->description('Test endpoint to verify API key authentication.');
+            ->description('Test endpoint to verify API key authentication.')
+            ->requiredParams([]);
 
         Route::get('inspect-email', EmailInspectorController::class)
             ->name('inspect-email')
             ->description('Inspect an email address for format, DNS/MX, disposable, role‐based, and suggestion.')
             ->requiredParams(['email']);
+
+        Route::get('inspect-headers', SecurityHeadersInspectorController::class)
+            ->name('inspect-headers')
+            ->description('Inspect a website’s HTTP response headers and grade security best‑practices.')
+            ->requiredParams(['url']);
     });
 });

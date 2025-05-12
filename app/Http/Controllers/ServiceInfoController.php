@@ -19,7 +19,6 @@ class ServiceInfoController extends Controller
     {
         // Get every registered route
         $allRoutes = Route::getRoutes();
-
         // Filter to only those whose URI begins with api/v1/
         $apiRoutes = collect($allRoutes)
             ->filter(fn($route) =>
@@ -37,7 +36,6 @@ class ServiceInfoController extends Controller
                 'example_response'  => $this->getExampleFor($route->uri),
             ])
             ->values();  // reset the keys
-
         if (request()->expectsJson()) {
             return response()->json([
                 'status' => 200,
@@ -103,7 +101,7 @@ class ServiceInfoController extends Controller
                 "code"          => "200",
                 "message"       => "Email inspection successful",
                 "data"          => [
-                    "email"             => "someone@exmaple.com",
+                    "email"             => "someone@example.com",
                     "format_valid"      => true,
                     "domain_resolvable" => false,
                     "mx_records_found"  => false,
@@ -113,6 +111,38 @@ class ServiceInfoController extends Controller
                     "suggestion"        => "someone@example.com"
                 ],
             ],
+
+            /* ───────────────────────────────────────────────────────────────
+             | NEW: canned example for the Security‑Headers inspector
+             |─────────────────────────────────────────────────────────────── */
+            'api/v1/inspect-headers' => [
+                "status"    => "success",
+                "http_code" => 200,
+                "code"      => "200",
+                "message"   => "Security headers inspection successful",
+                "data"      => [
+                    "url"         => "https://example.com",
+                    "status_code" => 200,
+                    "headers"     => [
+                        "strict-transport-security" => "max-age=63072000; includeSubDomains; preload",
+                        "x-frame-options"           => "DENY",
+                        "x-content-type-options"    => "nosniff",
+                        "content-security-policy"   => "default-src 'self'; img-src https: data:; object-src 'none';",
+                        "referrer-policy"           => "strict-origin-when-cross-origin",
+                        "permissions-policy"        => "geolocation=()"
+                    ],
+                    "missing"   => [
+                        "cross-origin-embedder-policy",
+                        "cross-origin-opener-policy",
+                        "cross-origin-resource-policy"
+                    ],
+                    "grade"      => "A",
+                    "scanned_at" => "2025-05-12T12:34:56+00:00"
+                ],
+            ],
+
+            /* ─────────────────────────────────────────────────────────────── */
+
             default => [
                 "status"    => "success",
                 "http_code" => 200,
