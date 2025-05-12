@@ -34,36 +34,20 @@ class GenerateSitemap extends Command
             ->add(Url::create('/')
                 ->setLastModificationDate(now())
                 ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
-                ->setPriority(1.0))
-            ->add(Url::create('/suggestions')
-                ->setLastModificationDate(now())
-                ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY)
-                ->setPriority(0.9));
+                ->setPriority(1.0));
 
-        // Add dynamic pages for each API suggestion
-        $this->info('Adding suggestions to sitemap...');
-        Suggestion::all()->each(function (Suggestion $suggestion) use ($sitemap) {
-            $sitemap->add(
-                Url::create("/suggestions/{$suggestion->id}")
-                    ->setLastModificationDate($suggestion->updated_at)
-                    ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
-                    ->setPriority(0.8)
-            );
-        });
+        $sitemap->add(Url::create('/community-ideas')
+            ->setLastModificationDate(now())
+            ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
+            ->setPriority(0.9));
 
-        // Add other important pages
-        $sitemap->add(Url::create('/about')
+        $sitemap->add(Url::create('/login')
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
-            ->setPriority(0.5))
-            ->add(Url::create('/contact')
-                ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
-                ->setPriority(0.5))
-            ->add(Url::create('/terms')
-                ->setChangeFrequency(Url::CHANGE_FREQUENCY_YEARLY)
-                ->setPriority(0.3))
-            ->add(Url::create('/privacy')
-                ->setChangeFrequency(Url::CHANGE_FREQUENCY_YEARLY)
-                ->setPriority(0.3));
+            ->setPriority(0.5));
+
+        $sitemap->add(Url::create('/register')
+            ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
+            ->setPriority(0.5));
 
         $sitemap->writeToFile(public_path('sitemap.xml'));
 
