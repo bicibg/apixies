@@ -3,9 +3,6 @@
 namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Gate;
-use App\Models\User;
-
 class AuthServiceProvider extends ServiceProvider
 {
     /**
@@ -23,9 +20,6 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // This method exists here because this class extends
-        // Illuminate\Foundation\Support\Providers\AuthServiceProvider
         $this->registerPolicies();
-        Gate::define('viewFilament', fn ($user) => (bool) $user->is_admin);
     }
 }

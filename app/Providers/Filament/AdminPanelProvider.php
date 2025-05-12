@@ -28,12 +28,28 @@ class AdminPanelProvider extends PanelProvider
             /* ── Auth: reuse web guard, gate via is_admin ─────────────── */
             ->authGuard('web')
             ->authMiddleware([
-                Authenticate::class,        // uses the web guard session
-                'can:viewFilament',         // user->is_admin gate
+                Authenticate::class,
             ])
 
             /* ── Branding & auto‑discovery ───────────────────────────── */
-            ->colors(['primary' => Color::Amber])
+            ->colors([
+                'primary' => '#0A2240',     // Deep navy blue
+                'secondary' => '#718096',   // Muted blue-gray
+                'gray' => Color::Slate,     // Neutral slate gray
+                'danger' => '#9B2C2C',      // Muted red
+                'success' => '#2F855A',     // Forest green
+                'warning' => '#C05621',     // Burnt orange
+                'info' => '#2B6CB0',        // Medium blue
+            ])
+            ->brandName('Apixies')
+
+            // Larger logo configuration
+            ->brandLogo(asset('logo.png'))
+            ->brandLogoHeight('5rem') // Increase logo height
+
+            // You can also set a dark mode logo if needed
+            // ->darkModeBrandLogo(asset('dark-logo.png'))
+
             ->discoverResources(
                 in: app_path('Filament/Resources'),
                 for: 'App\\Filament\\Resources',

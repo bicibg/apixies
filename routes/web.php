@@ -53,9 +53,4 @@ Route::middleware('web')->group(function () {
 
     Route::get('/community-ideas', [SuggestionController::class, 'board'])
         ->name('suggestions.board');
-
-    if (App::environment('local')) {
-        Route::get('/generate-sitemap', [SitemapController::class, 'generate']);
-    }
-
 });
