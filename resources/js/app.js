@@ -1,6 +1,11 @@
 // resources/js/app.js
 import './bootstrap';
 
+import alpine from 'alpinejs';
+window.Alpine = alpine;
+alpine.start();
+
+
 document.addEventListener('DOMContentLoaded', () => {
     // Check token on every page load
     checkAuthToken();
