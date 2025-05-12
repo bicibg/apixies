@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SuggestionController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -46,9 +47,13 @@ Route::middleware('web')->group(function () {
     });
 
     // Admin stats
-    Route::middleware(['auth','can:viewApiStats'])->get('/admin/api-stats', function() {
-        $stats = ApiEndpointCount::orderByDesc('count')->get();
-        $logs  = ApiEndpointLog::orderByDesc('created_at')->limit(100)->get();
-        return view('admin.api-stats', compact('stats','logs'));
-    })->name('admin.api-stats');
+//    Route::middleware(['auth','can:viewApiStats'])->get('/admin/api-stats', function() {
+//        $stats = ApiEndpointCount::orderByDesc('count')->get();
+//        $logs  = ApiEndpointLog::orderByDesc('created_at')->limit(100)->get();
+//        return view('admin.api-stats', compact('stats','logs'));
+//    })->name('admin.api-stats');
+
+    Route::get('suggestions', [SuggestionController::class, 'index']);
+    Route::post('suggestions', [SuggestionController::class, 'store']);
+    Route::post('suggestions/{suggestion}/vote', [SuggestionController::class, 'vote']);
 });

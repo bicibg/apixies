@@ -3,13 +3,6 @@
     <h2 class="text-xl font-semibold text-[#0A2240] mb-4">Response Format</h2>
 
     <p class="mb-4">All responses share the same envelope:</p>
-    <pre class="code-block mb-6"><code>{
-  "status": "success",   // or "error"
-  "http_code": 200,
-  "code": "SUCCESS_CODE",
-  "message": "Human‑readable message",
-  "data": {}             // object or array
-}</code></pre>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="bg-gray-50 p-5 rounded-lg border">
