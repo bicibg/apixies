@@ -49,4 +49,7 @@ Route::middleware('web')->group(function () {
     Route::get('suggestions', [SuggestionController::class, 'index']);
     Route::post('suggestions', [SuggestionController::class, 'store']);
     Route::post('suggestions/{suggestion}/vote', [SuggestionController::class, 'vote']);
+
+    Route::get('/community-ideas', [SuggestionController::class, 'board'])
+        ->name('suggestions.board');
 });

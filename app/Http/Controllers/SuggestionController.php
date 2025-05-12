@@ -65,7 +65,8 @@ class SuggestionController extends Controller
             ->exists();
 
         if ($already) {
-            return ApiResponse::error(null, 'You already voted for this suggestion', 409, 'ALREADY_VOTED');
+            // Fixed: order of parameters matches the ApiResponse::error method definition
+            return ApiResponse::error('You already voted for this suggestion', 409, [], 'ALREADY_VOTED');
         }
 
         SuggestionVote::create([
@@ -77,5 +78,14 @@ class SuggestionController extends Controller
         $suggestion->increment('votes');
 
         return ApiResponse::success($suggestion->only('id', 'votes'), 'Vote recorded');
+    }
+
+    public function board()
+    {
+        $ideas = Suggestion::whereIn('status', ['pending', 'planned'])
+            ->orderByDesc('votes')
+            ->paginate(15);
+
+        return view('suggestions.board', compact('ideas'));
     }
 }

@@ -97,3 +97,8 @@ tr:hover      { @apply bg-blue-50; }
 }
 /* hide Alpine elements until JS is ready */
 [x-cloak] { display: none !important; }
+
+.modal-backdrop {
+    background-color: transparent !important;
+    backdrop-filter: blur(1px);
+}
