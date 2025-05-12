@@ -1,10 +1,10 @@
-@php($title = 'Apixies API Docs')
+@php($title = 'Apixies API Docs')
 @extends('docs.layout')
 
 @section('content-body')
     {{-- █ Hero banner with CTA buttons (kept) --}}
     @include('docs.partials.hero', [
-        'title'    => 'Apixies API',
+        'title'    => 'Apixies API',
         'subtitle' => 'Build powerful applications with our simple, reliable API',
         'showCta'  => true,
     ])
@@ -15,10 +15,10 @@
         <div class="flex items-center justify-between border-b px-4 py-2">
             <nav class="flex text-sm font-medium overflow-x-auto">
                 @foreach([
-                    'endpoints'      => 'API Endpoints',
+                    'endpoints'      => 'API Endpoints',
                     'authentication' => 'Authentication',
                     'examples'       => 'Examples',
-                    'responses'      => 'Response Format',
+                    'responses'      => 'Response Format',
                     'features'       => 'Features'
                 ] as $id => $label)
                     <button data-tab="{{ $id }}"
@@ -27,11 +27,7 @@
                     </button>
                 @endforeach
             </nav>
-
-            {{-- Suggest‑API modal trigger (aligned right) --}}
-            <x-suggest-modal />
         </div>
-
         {{-- █ Tab panes ----------------------------------------------------}}
         <section id="endpoints"      class="tab-content p-6">@include('docs.partials.endpoints')</section>
         <section id="authentication" class="tab-content p-6 hidden">@include('docs.partials.authentication')</section>
