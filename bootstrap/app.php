@@ -6,9 +6,6 @@ use App\Exceptions\Handler;
 use App\Http\Middleware\CorrelationId;
 use App\Http\Middleware\ExceptionHandlerMiddleware;
 use App\Http\Middleware\LogRequests;
-use App\Http\Middleware\VerifyCsrfToken;
-use Illuminate\Session\Middleware\StartSession;
-use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 $app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -24,12 +21,16 @@ $app = Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         ]);
 
-        // Web middleware group - add correlation ID and logging here instead of global
         $mw->group('web', [
-            StartSession::class,
-            ShareErrorsFromSession::class,
-            VerifyCsrfToken::class,
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,   // optional but recommended
         ]);
+
 
         // Set up auth middleware
         $mw->alias(['auth' => \App\Http\Middleware\Authenticate::class]);

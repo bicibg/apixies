@@ -2,10 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use Filament\Http\Middleware\Authenticate;
-use Filament\Http\Middleware\AuthenticateSession;
-use Filament\Http\Middleware\DisableBladeIconComponents;
-use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -14,8 +10,11 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Http\Middleware\Authenticate;
+use Filament\Http\Middleware\AuthenticateSession;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -26,16 +25,15 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
 
-            /* use the same session guard as the site */
+            /* ── Auth: reuse web guard, gate via is_admin ─────────────── */
             ->authGuard('web')
-
-            /* check login + admin gate */
             ->authMiddleware([
-                \Filament\Http\Middleware\Authenticate::class,
-                'can:viewFilament',
+                Authenticate::class,        // uses the web guard session
+                'can:viewFilament',         // user->is_admin gate
             ])
 
-            /* resources, pages, widgets */
+            /* ── Branding & auto‑discovery ───────────────────────────── */
+            ->colors(['primary' => Color::Amber])
             ->discoverResources(
                 in: app_path('Filament/Resources'),
                 for: 'App\\Filament\\Resources',
@@ -49,18 +47,17 @@ class AdminPanelProvider extends PanelProvider
                 for: 'App\\Filament\\Widgets',
             )
 
-            /* branding + shared middleware (unchanged) */
-            ->colors(['primary' => \Filament\Support\Colors\Color::Amber])
+            /* ── Shared middleware stack ─────────────────────────────── */
             ->middleware([
-                \Illuminate\Cookie\Middleware\EncryptCookies::class,
-                \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-                \Illuminate\Session\Middleware\StartSession::class,
-                \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-                \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
-                \Illuminate\Routing\Middleware\SubstituteBindings::class,
-                \Filament\Http\Middleware\DisableBladeIconComponents::class,
-                \Filament\Http\Middleware\DispatchServingFilamentEvent::class,
+                EncryptCookies::class,
+                AddQueuedCookiesToResponse::class,
+                StartSession::class,
+                AuthenticateSession::class,
+                ShareErrorsFromSession::class,
+                VerifyCsrfToken::class,
+                SubstituteBindings::class,
+                DisableBladeIconComponents::class,
+                DispatchServingFilamentEvent::class,
             ]);
     }
-
 }

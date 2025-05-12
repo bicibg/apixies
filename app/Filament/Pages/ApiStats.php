@@ -2,18 +2,29 @@
 
 namespace App\Filament\Pages;
 
-use Filament\Pages\Dashboard;
+use App\Filament\Widgets\ApiLogsTable;
+use App\Filament\Widgets\ApiStatsOverview;
+use Filament\Pages\Page;
 
-class ApiStats extends Dashboard
+class ApiStats extends Page
 {
     protected static ?string $navigationIcon  = 'heroicon-o-chart-bar';
     protected static ?string $navigationGroup = 'Dashboard';
     protected static ?int    $navigationSort  = 0;
+    protected static ?string $title           = 'API Stats';
 
-    public function getHeaderWidgets(): array
+    protected static ?string $slug  = 'api-stats';           // URL = /admin/api-stats
+    protected static string  $view  = 'filament.pages.api-stats';
+
+    /**  Header widgets (cards) */
+    protected function getHeaderWidgets(): array
     {
-        return [
-            \App\Filament\Widgets\ApiStatsOverview::class,
-        ];
+        return [ ApiStatsOverview::class ];
+    }
+
+    /**  Footer widgets (table) */
+    protected function getFooterWidgets(): array
+    {
+        return [ ApiLogsTable::class ];
     }
 }

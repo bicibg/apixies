@@ -12,8 +12,7 @@ class WebAuthController extends Controller
 {
     public function __construct()
     {
-        // Throttle login & registration attempts
-        $this->middleware('throttle:10,5')->only(['authenticate', 'register']);
+        $this->middleware('throttle:10,5')->only(['login', 'register']);
     }
 
     /**
@@ -54,7 +53,7 @@ class WebAuthController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('/')
+        return redirect()->route('docs.index')
             ->with('status', 'Registration successful. Please verify your email.');
     }
 

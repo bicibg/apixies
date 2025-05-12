@@ -12,14 +12,14 @@ class ApiStatsOverview extends StatsOverviewWidget
     protected function getCards(): array
     {
         return [
-            Card::make('Total Requests', number_format(ApiEndpointCount::sum('count'))),
+            Card::make('Total Requests', number_format(ApiEndpointCount::sum('count'))),
 
-            Card::make('Avg Latency (ms)',
+            Card::make('Avg Latency (ms)',
                 round(ApiEndpointLog::where('created_at', '>=', now()->subDays(30))
                     ->avg('latency_ms'), 1)
-            )->color('success')->description('last 30 d'),
+            )->color('success')->description('last 30d'),
 
-            Card::make('Unique API Keys',
+            Card::make('Unique API Keys',
                 ApiEndpointLog::distinct('api_key_id')->count()
             )->color('primary'),
         ];
