@@ -1,9 +1,10 @@
 // resources/js/app.js
 import './bootstrap';
 
-import alpine from 'alpinejs';
-window.Alpine = alpine;
-alpine.start();
+import Alpine from '@alpinejs/csp'
+window.Alpine = Alpine
+Alpine.start()
+
 
 
 document.addEventListener('DOMContentLoaded', () => {
