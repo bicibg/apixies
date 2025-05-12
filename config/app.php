@@ -14,7 +14,7 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
-
+    'sitemap_secret' => env('SITEMAP_SECRET', null),
     /*
     |--------------------------------------------------------------------------
     | Application Environment

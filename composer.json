@@ -17,6 +17,7 @@
         "openspout/openspout": "^4.22",
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-responsecache": "^7.6",
+        "spatie/laravel-sitemap": "^7.3",
         "ua-parser/uap-php": "^3.9"
     },
     "require-dev": {
