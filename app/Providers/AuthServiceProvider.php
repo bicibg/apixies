@@ -26,12 +26,6 @@ class AuthServiceProvider extends ServiceProvider
         // This method exists here because this class extends
         // Illuminate\Foundation\Support\Providers\AuthServiceProvider
         $this->registerPolicies();
-
-        // Define the 'viewApiStats' Gate:
-        Gate::define('viewApiStats', function (User $user): bool {
-            // Only allow if your User model has an is_admin flag
-            return $user->email === 'bugraergin@gmail.com';
-        });
         Gate::define('viewFilament', fn ($user) => (bool) $user->is_admin);
     }
 }
