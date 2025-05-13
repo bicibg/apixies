@@ -15,6 +15,7 @@
         "laravel/sanctum": "^4.1",
         "laravel/tinker": "^2.10.1",
         "openspout/openspout": "^4.22",
+        "spatie/browsershot": "^5.0",
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-responsecache": "^7.6",
         "spatie/laravel-sitemap": "^7.3",

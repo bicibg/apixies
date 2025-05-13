@@ -9,7 +9,10 @@ class ForceJsonResponseMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        // Force the request to accept JSON
+        if (! $request->acceptsJson()) {
+            return $next($request);
+        }
+
         $request->headers->set('Accept', 'application/json');
         return $next($request);
     }

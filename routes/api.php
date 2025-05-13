@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\ReadinessController;
 use App\Http\Controllers\Api\V1\SecurityHeadersInspectorController;
 use App\Http\Controllers\Api\V1\SslHealthInspectorController;
 use App\Http\Controllers\Api\V1\UserAgentInspectorController;
+use App\Http\Controllers\HtmlToPdfController;
 use Illuminate\Support\Facades\Route;
 
 Route::apiV1(function () {
@@ -67,5 +68,11 @@ Route::apiV1(function () {
             ->name('inspect-ssl')
             ->description('Inspect a domain’s SSL certificate for validity, expiry and chain health.')
             ->requiredParams(['domain']);
+
+        Route::post('html-to-pdf', HtmlToPdfController::class)
+            ->name('html-to-pdf')
+//            ->withoutMiddleware([\App\Http\Middleware\ForceJsonResponseMiddleware::class, \App\Http\Middleware\TransformMiddleware::class])
+            ->description('Convert an HTML payload into a PDF file')
+            ->requiredParams(['html']);
     });
 });
