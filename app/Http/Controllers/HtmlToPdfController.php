@@ -12,6 +12,7 @@ class HtmlToPdfController extends Controller
         $request->validate(['html' => 'required|string']);
 
         $pdfContent = Browsershot::html($request->html)
+            ->setNodeBinary('/home/forge/.nvm/versions/node/v20.x.x/bin/node')
             ->noSandbox()
             ->setWaitUntilNetworkIdle()
             ->emulateMedia('screen')
