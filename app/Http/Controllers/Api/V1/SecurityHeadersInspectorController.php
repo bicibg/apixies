@@ -36,10 +36,19 @@ class SecurityHeadersInspectorController extends Controller
 
         // Step 4: inspect
         $result = $inspector->inspect($raw);
+        \Log::debug('Inspection result:', ['result' => $result]);
 
         if (($result['error'] ?? false) === true) {
-            // Add a default error message if none is provided
-            $errorMessage = $result['message'] ?? 'Unable to fetch headers for the given URL.';
+
+            \Log::debug('Error condition met', [
+                'has_message' => isset($result['message']),
+                'message_type' => isset($result['message']) ? gettype($result['message']) : 'not_set',
+                'message_value' => $result['message'] ?? 'default_not_applied'
+            ]);
+
+            $errorMessage = isset($result['message']) && is_string($result['message'])
+                ? $result['message']
+                : 'Unable to fetch headers for the given URL.';
 
             return ApiResponse::error(
                 $errorMessage,
