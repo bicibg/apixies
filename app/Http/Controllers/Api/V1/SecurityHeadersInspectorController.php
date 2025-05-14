@@ -28,10 +28,9 @@ class SecurityHeadersInspectorController extends Controller
         // Step 3: final URL sanity check
         if (!filter_var($raw, FILTER_VALIDATE_URL)) {
             return ApiResponse::error(
-                null,
                 'The url field must be a valid URL.',
                 422,
-                'INVALID_URL'
+                ['INVALID_URL']
             );
         }
 
@@ -40,10 +39,9 @@ class SecurityHeadersInspectorController extends Controller
 
         if (($result['error'] ?? false) === true) {
             return ApiResponse::error(
-                null,
                 'Unable to fetch headers for the given URL.',
                 400,
-                'SECURITY_HEADERS_INSPECTION_FAILED'
+                ['SECURITY_HEADERS_INSPECTION_FAILED'],
             );
         }
 
