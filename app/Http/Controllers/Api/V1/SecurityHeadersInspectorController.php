@@ -34,14 +34,17 @@ class SecurityHeadersInspectorController extends Controller
             );
         }
 
-        // Step 4: inspect
+        // Step 4: inspect
         $result = $inspector->inspect($raw);
 
         if (($result['error'] ?? false) === true) {
+            // Add a default error message if none is provided
+            $errorMessage = $result['message'] ?? 'Unable to fetch headers for the given URL.';
+
             return ApiResponse::error(
-                'Unable to fetch headers for the given URL.',
+                $errorMessage,
                 400,
-                ['SECURITY_HEADERS_INSPECTION_FAILED'],
+                ['SECURITY_HEADERS_INSPECTION_FAILED']
             );
         }
 
