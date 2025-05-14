@@ -38,6 +38,11 @@ class SecurityHeadersInspectorController extends Controller
         $result = $inspector->inspect($raw);
 
         if (($result['error'] ?? false) === true) {
+            \Log::debug('Error condition met', [
+                'has_message' => isset($result['message']),
+                'message_type' => isset($result['message']) ? gettype($result['message']) : 'not_set',
+                'message_value' => $result['message'] ?? 'default_not_applied'
+            ]);
             return ApiResponse::error(
                 'Unable to fetch headers for the given URL.',
                 400,
