@@ -2,69 +2,57 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Contracts\View\View;
-use Illuminate\Foundation\Application;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use App\Models\ApiEndpointCount;
+use Illuminate\Support\Facades\DB;
 
 class ServiceInfoController extends Controller
 {
-    public function getApiRoutes(): Factory|Application|View|JsonResponse
+    /**
+     * Get API routes for the documentation
+     *
+     * @return \Illuminate\View\View
+     */
+    public function getApiRoutes()
     {
-        $routes = $this->collectApiRoutes();
+        // Get API routes from config
+        $apiRoutes = config('api_examples');
 
-        if (request()->expectsJson()) {
-            return response()->json(['status' => 200, 'data' => $routes]);
+        // Get popular endpoints if available
+        try {
+            $popularEndpoints = ApiEndpointCount::select('endpoint', DB::raw('sum(count) as total'))
+                ->groupBy('endpoint')
+                ->orderBy('total', 'desc')
+                ->limit(5)
+                ->get();
+        } catch (\Exception $e) {
+            $popularEndpoints = collect();
         }
 
-        return view('docs.index', compact('routes'));
+        return view('docs.index', [
+            'apiRoutes' => $apiRoutes,
+            'popularEndpoints' => $popularEndpoints,
+        ]);
     }
 
-    public function showApiRoute(string $key)
+    /**
+     * Show a specific API route
+     *
+     * @param string $key
+     * @return \Illuminate\View\View
+     */
+    public function showApiRoute($key)
     {
-        $routes = $this->collectApiRoutes();
-        $route  = $routes->first(fn($r) => $r['uri'] === $key || "/{$r['uri']}" === $key);
+        // Get API routes from config
+        $apiRoutes = config('api_examples');
 
-        abort_unless($route, 404);
-        return view('docs.show', compact('route'));
-    }
+        if (!isset($apiRoutes[$key])) {
+            abort(404);
+        }
 
-    protected function collectApiRoutes()
-    {
-        return collect(Route::getRoutes())
-            ->filter(fn($route) =>
-                Str::startsWith($route->uri, 'api/v1/')
-                && $route->getName()
-                && ! Str::startsWith($route->getName(), 'generated::')
-            )
-            ->map(fn($route) => [
-                'method'           => implode('|', $route->methods),
-                'uri'              => $route->uri,
-                'description'      => $route->action['description'] ?? 'No description provided',
-                'route_params'     => $this->extractRouteParameters($route->uri),
-                'query_params'     => $route->action['required_params'] ?? [],
-                'example_response' => $this->getExample($route->uri),
-            ])
-            ->values();
-    }
-
-    private function extractRouteParameters(string $uri): array
-    {
-        preg_match_all('/\{(.+?)\}/', $uri, $m);
-        return $m[1] ?? [];
-    }
-
-    private function getExample(string $uri): array
-    {
-        return Config::get("api_examples.{$uri}", [
-            'status'    => 'success',
-            'http_code' => 200,
-            'code'      => strtoupper(str_replace(['/', '-', '.'], '_', $uri)) . '_OK',
-            'message'   => 'Request successful',
-            'data'      => new \stdClass(),
+        return view('docs.show', [
+            'apiRoute' => $apiRoutes[$key],
+            'key' => $key,
         ]);
     }
 }

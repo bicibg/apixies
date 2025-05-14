@@ -1,45 +1,79 @@
-<div class="mb-4 flex justify-between items-center">
-    <h2 class="text-xl font-semibold text-[#0A2240]">Available Endpoints</h2>
-    <div class="relative">
-        <input id="endpoint-search" type="text" placeholder="Search endpoints…"
-               class="px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500">
-        <svg class="h-5 w-5 absolute right-3 top-2.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none"
-             viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round"
-                                                             stroke-width="2" d="M21 21l-4.35-4.35M9.5 17a7.5 7.5 0 100-15 7.5 7.5 0 000 15z"/></svg>
+{{-- resources/views/docs/partials/endpoints.blade.php --}}
+<div class="mt-10">
+    <h2 class="text-2xl font-bold mb-6">API Endpoints</h2>
+
+    <!-- Search box -->
+    <div class="relative mb-6">
+        <input
+            type="text"
+            id="endpoint-search"
+            placeholder="Search API endpoints..."
+            class="w-full p-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+            </svg>
+        </div>
     </div>
-</div>
 
-<table class="api-table w-full text-sm">
-    <thead>
-    <tr>
-        <th class="py-3 px-4">Method</th>
-        <th class="py-3 px-4">URI</th>
-        <th class="py-3 px-4">Description</th>
-        <th class="py-3 px-4">Query Params</th>
-    </tr>
-    </thead>
-    <tbody id="endpoint-table-body">
-    @foreach($routes as $route)
-        <tr class="endpoint-row">
-            <td class="py-3 px-4">
-                <span class="method-badge {{ strtolower($route['method']) }}">{{ $route['method'] }}</span>
-            </td>
-            <td class="py-3 px-4">
-                <a href="{{ route('docs.show', $route['uri']) }}" class="text-blue-600 hover:underline">
-                    /{{ $route['uri'] }}
-                </a>
-            </td>
-            <td class="py-3 px-4">{{ $route['description'] }}</td>
-            <td class="py-3 px-4">
-                @forelse($route['query_params'] as $param)
-                    <span class="param-badge">{{ $param }}</span>
-                @empty
-                    <span class="text-gray-400">None</span>
-                @endforelse
-            </td>
-        </tr>
+    <!-- No results message (hidden by default) -->
+    <div id="no-search-results" class="text-center text-gray-500 p-4 hidden">
+        No endpoints match your search.
+    </div>
+
+    <!-- Endpoint categories -->
+    @php
+        $apiRoutes = config('api_examples');
+        $categories = collect($apiRoutes)->groupBy('category');
+    @endphp
+
+    @foreach($categories as $category => $endpoints)
+        <div class="mb-8">
+            <h3 class="text-xl font-bold mb-4 capitalize">{{ $category }}</h3>
+
+            <div class="space-y-4">
+                @foreach($endpoints as $key => $route)
+                    <div class="endpoint-row bg-white p-4 rounded-lg border border-gray-200 hover:border-indigo-300 transition">
+                        <div class="flex flex-wrap justify-between items-start">
+                            <div class="mb-2">
+                                <div class="flex items-center">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-md {{ isset($route['method']) && $route['method'] === 'GET' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }} mr-2">
+                                        {{ $route['method'] ?? 'GET' }}
+                                    </span>
+                                    <h4 class="font-bold">{{ $route['title'] ?? 'API Endpoint' }}</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1">{{ $route['description'] ?? '' }}</p>
+                            </div>
+
+                            <div>
+                                <a href="{{ route('docs.show', $key) }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 pt-3 border-t border-gray-100 flex flex-wrap justify-between items-center">
+                            <code class="text-sm bg-gray-100 p-1 rounded">/{{ $route['uri'] ?? '' }}</code>
+
+                            @if($route['demo'] ?? false)
+                                <div>
+                                    <x-demo-modal :route="[
+                                        'uri' => $route['uri'] ?? '',
+                                        'method' => $route['method'] ?? 'GET',
+                                        'route_params' => $route['route_params'] ?? [],
+                                        'query_params' => $route['query_params'] ?? []
+                                    ]" />
+                                </div>
+                            @else
+                                <button disabled class="px-4 py-2 rounded font-medium bg-gray-300 text-gray-500 cursor-not-allowed">
+                                    Demo unavailable
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
     @endforeach
-    </tbody>
-</table>
-
-<div id="no-search-results" class="hidden py-8 text-center text-gray-500">No endpoints match your search.</div>
+</div>

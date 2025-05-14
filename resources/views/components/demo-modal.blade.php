@@ -2,7 +2,12 @@
     'route'  // array with keys: uri, method, route_params, query_params
 ])
 
-<div x-data="demoModal()" x-init="initToken()" x-cloak>
+<div
+    x-data="demoModal"
+    data-uri="{{ $route['uri'] }}"
+    data-method="{{ strtolower(explode('|', $route['method'])[0]) }}"
+    x-cloak
+>
     {{-- Trigger button --}}
     <button @click="open = true"
             class="w-full px-4 py-3 text-center rounded font-medium bg-white text-[#0A2240] hover:bg-gray-100 transition">
@@ -146,7 +151,7 @@
                             </div>
 
                             <!-- Response container with proper scrolling -->
-                            <div class="border border-gray-200 bg-gray-50 rounded-md overflow-hidden"
+                            <div class="border border-gray-200 bg-gray-50 rounded-md overflow-hidden response-area"
                                  :style="fullscreen ? 'height: calc(100vh - 280px);' : 'height: 350px;'">
 
                                 <!-- Loading indicator -->
@@ -213,183 +218,4 @@
             </div>
         </div>
     </div>
-
-    <script>
-        function demoModal() {
-            return {
-                open: false,
-                token: null,
-                params: {},
-                response: '{ }',
-                responseUrl: null,
-                isLoading: false,
-                fullscreen: false,
-
-                // Initialize token from localStorage
-                initToken() {
-                    this.token = localStorage.getItem('sandbox_token');
-                },
-
-                // Get a new token from the server
-                async getNewToken() {
-                    this.isLoading = true;
-
-                    try {
-                        const res = await fetch('/sandbox/token', {
-                            method: 'GET',
-                            headers: {
-                                'X-XSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                            },
-                            credentials: 'same-origin'
-                        });
-
-                        const data = await res.json();
-
-                        if (data.token) {
-                            // Store only the token, nothing else
-                            this.token = data.token;
-                            localStorage.setItem('sandbox_token', data.token);
-
-                            // Clear any existing response data
-                            this.response = '{ }';
-                            if (this.responseUrl) {
-                                URL.revokeObjectURL(this.responseUrl);
-                                this.responseUrl = null;
-                            }
-                        } else {
-                            this.response = 'Error getting sandbox token';
-                        }
-                    } catch (err) {
-                        this.response = `Error: ${err.toString()}`;
-                    } finally {
-                        this.isLoading = false;
-                    }
-                },
-
-                // Toggle fullscreen mode
-                toggleFullscreen() {
-                    this.fullscreen = !this.fullscreen;
-
-                    // Allow time for the DOM to update
-                    setTimeout(() => {
-                        // If entering fullscreen, focus on the response area
-                        if (this.fullscreen) {
-                            const responseArea = document.querySelector('.response-area');
-                            if (responseArea) responseArea.focus();
-                        }
-                    }, 100);
-                },
-
-                async submit() {
-                    if (!this.token) {
-                        this.response = 'Please get a sandbox token first';
-                        return;
-                    }
-
-                    this.isLoading = true;
-
-                    // Clean up previous response URL
-                    if (this.responseUrl) {
-                        URL.revokeObjectURL(this.responseUrl);
-                        this.responseUrl = null;
-                    }
-
-                    const method = '{{ strtolower(explode('|', $route['method'])[0]) }}';
-                    const isPostMethod = method.toLowerCase() === 'post';
-
-                    try {
-                        // Build URL and request options
-                        const url = `/${ '{{ $route['uri'] }}' }`;
-                        const headers = {
-                            'Authorization': `Bearer ${this.token}`,
-                            'X-XSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                        };
-
-                        // For POST requests, set Content-Type to application/json
-                        if (isPostMethod) {
-                            headers['Content-Type'] = 'application/json';
-                        }
-
-                        const options = {
-                            method: method.toUpperCase(),
-                            headers,
-                            credentials: 'same-origin'
-                        };
-
-                        // Add body for POST requests
-                        if (isPostMethod) {
-                            options.body = JSON.stringify(this.params);
-                        }
-
-                        // For GET requests, append query params to URL
-                        const requestUrl = isPostMethod ? url : `${url}?${new URLSearchParams(this.params)}`;
-
-                        const res = await fetch(requestUrl, options);
-
-                        // Check for 401 Unauthorized or 429 Too Many Requests
-                        if (res.status === 401 || res.status === 429) {
-                            const errorData = await res.json();
-
-                            // If token expired or quota exhausted, clear token and show message
-                            if (errorData.message === 'Sandbox token expired' ||
-                                errorData.message === 'Sandbox quota exhausted') {
-                                localStorage.removeItem('sandbox_token');
-                                this.token = null;
-                                this.response = `Error: ${errorData.message}. Please get a new token.`;
-                                return;
-                            }
-                        }
-
-                        // Handle different status codes
-                        if (!res.ok) {
-                            const text = await res.text();
-                            try {
-                                this.response = JSON.stringify(JSON.parse(text), null, 2);
-                            } catch {
-                                this.response = text;
-                            }
-                            return;
-                        }
-
-                        // Check content type to handle different response types
-                        const contentType = res.headers.get('Content-Type') || '';
-
-                        if (contentType.includes('application/pdf')) {
-                            // For PDF responses, create a blob URL and use iframe
-                            const blob = await res.blob();
-                            this.responseUrl = URL.createObjectURL(blob);
-                            this.response = 'PDF document generated successfully.';
-                        } else {
-                            // For JSON or text responses
-                            const text = await res.text();
-                            try {
-                                this.response = JSON.stringify(JSON.parse(text), null, 2);
-                            } catch {
-                                this.response = text;
-                            }
-                        }
-                    } catch (err) {
-                        this.response = `Error: ${err.toString()}`;
-                    } finally {
-                        this.isLoading = false;
-                    }
-                },
-
-                // Clean up when the modal is closed
-                closeModal() {
-                    if (this.responseUrl) {
-                        URL.revokeObjectURL(this.responseUrl);
-                        this.responseUrl = null;
-                    }
-
-                    this.fullscreen = false;
-                    this.open = false;
-                }
-            }
-        }
-
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('demoModal', demoModal);
-        });
-    </script>
 </div>

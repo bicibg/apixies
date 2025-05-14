@@ -1,68 +1,97 @@
 <?php
 
-use App\Http\Controllers\SandboxTokenController;
-use App\Http\Controllers\SitemapController;
-use App\Http\Controllers\SuggestionController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
-use App\Http\Controllers\ServiceInfoController;
-use App\Http\Controllers\WebAuthController;
-use App\Http\Controllers\WebApiKeyController;
+use App\Http\Controllers\{
+    DocsController,
+    WebAuthController,
+    WebApiKeyController,
+    SandboxTokenController,
+    SuggestionController
+};
 
-Route::middleware('web')->group(function () {
+// Redirect home to docs
+Route::redirect('/', '/docs')->name('home');
 
-    Route::get('/', [ServiceInfoController::class, 'getApiRoutes'])
-        ->name('docs.index');
+// ─────────────────────────────────────────────────────────────────────────────
+// Documentation
+// ─────────────────────────────────────────────────────────────────────────────
+Route::prefix('docs')->name('docs.')->group(function () {
+    Route::get('/',       [DocsController::class, 'index'])->name('index');
+    Route::get('features',[DocsController::class, 'features'])->name('features');
+    Route::get('authentication',[DocsController::class, 'authentication'])->name('authentication');
+    Route::get('responses',[DocsController::class, 'responses'])->name('responses');
+    Route::get('examples',[DocsController::class, 'examples'])->name('examples');
 
-    Route::get('/docs/{key}', [ServiceInfoController::class, 'showApiRoute'])
-        ->where('key', '.*')             // <-- allow slashes in {key}
-        ->name('docs.show');
+    // Endpoints docs
+    Route::get('endpoints',            [DocsController::class, 'endpoints'])->name('endpoints.index');
+    Route::get('endpoints/{key}',      [DocsController::class, 'showEndpoint'])->name('endpoints.show');
+});
 
-    Route::get('/register', [WebAuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [WebAuthController::class, 'register'])->name('register.submit');
-    Route::get('/login', [WebAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [WebAuthController::class, 'login'])->name('login.submit');
-    Route::post('/logout', [WebAuthController::class, 'logout'])->name('logout');
+// ─────────────────────────────────────────────────────────────────────────────
+// Authentication
+// ─────────────────────────────────────────────────────────────────────────────
+Route::controller(WebAuthController::class)->group(function () {
+    Route::get('register',  'showRegister')->name('register');
+    Route::post('register', 'register')->name('register.submit');
+    Route::get('login',     'showLogin')->name('login');
+    Route::post('login',    'login')->name('login.submit');
+    Route::post('logout',   'logout')->name('logout');
+});
 
-    Route::get('/email/verify', fn() => view('auth.verify-email'))
-        ->middleware('auth')->name('verification.notice');
-    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-        $request->fulfill();
-        return redirect()->route('docs.index');
-    })
-        ->middleware(['auth', 'signed'])
-        ->name('verification.verify');
-    Route::post('/email/verification-notification', function (Request $request) {
-        $request->user()->sendEmailVerificationNotification();
-        return back()->with('status', 'verification-link-sent');
-    })
-        ->middleware(['auth', 'throttle:6,1'])
-        ->name('verification.send');
+// Email verification
+Route::view('email/verify', 'auth.verify-email')
+    ->middleware('auth')
+    ->name('verification.notice');
 
-    Route::middleware(['auth', 'verified'])->group(function () {
-        Route::get('/api-keys', [WebApiKeyController::class, 'index'])->name('api-keys.index');
-        Route::post('/api-keys', [WebApiKeyController::class, 'store'])->name('api-keys.store');
-        Route::delete('/api-keys/{uuid}', [WebApiKeyController::class, 'destroy'])
-            ->where('uuid', '[0-9a-fA-F\-]{36}')
-            ->name('api-keys.destroy');
+Route::get('email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect()->route('docs.index');
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+Route::post('email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('status', 'verification-link-sent');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// API Keys (authenticated & verified)
+// ─────────────────────────────────────────────────────────────────────────────
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('api-keys', WebApiKeyController::class)
+        ->only(['index', 'store', 'destroy'])
+        ->parameters(['api-keys' => 'uuid']);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Suggestions & Community Board
+// ─────────────────────────────────────────────────────────────────────────────
+Route::resource('suggestions', SuggestionController::class)
+    ->only(['index', 'store']);
+
+Route::post('suggestions/{suggestion}/vote', [SuggestionController::class, 'vote'])
+    ->name('suggestions.vote');
+
+Route::get('community-ideas', [SuggestionController::class, 'board'])
+    ->name('suggestions.board');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sandbox Token Management
+// ─────────────────────────────────────────────────────────────────────────────
+Route::prefix('sandbox/token')
+    ->controller(SandboxTokenController::class)
+    ->group(function () {
+        Route::get('/',         'issue');
+        Route::post('create',   'create');
+        Route::post('refresh',  'refresh');
+        Route::post('validate', 'validate');
     });
 
-    Route::get('suggestions', [SuggestionController::class, 'index']);
-    Route::post('suggestions', [SuggestionController::class, 'store']);
-    Route::post('suggestions/{suggestion}/vote', [SuggestionController::class, 'vote']);
-
-    Route::get('/community-ideas', [SuggestionController::class, 'board'])
-        ->name('suggestions.board');
-    Route::get('/sandbox/token', [SandboxTokenController::class, 'issue'])
-        ->name('sandbox.token');
-
-    Route::get('/pdf/preview', function (Illuminate\Http\Request $request) {
-        $html = base64_decode($request->query('html', ''));
-
-        return view('docs.pdf.preview', ['content' => $html]);
-    })->name('pdf.preview');
-
-
-
-});
+// ─────────────────────────────────────────────────────────────────────────────
+// PDF Preview
+// ─────────────────────────────────────────────────────────────────────────────
+Route::get('pdf/preview', function (Request $request) {
+    $html = base64_decode($request->query('html', ''));
+    return view('docs.pdf.preview', ['content' => $html]);
+})->name('pdf.preview');

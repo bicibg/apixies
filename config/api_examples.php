@@ -1,101 +1,165 @@
 <?php
-// config/api_examples.php
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Per‐URI Example Responses
-    |--------------------------------------------------------------------------
-    |
-    | Map your API URI (relative to your domain, without leading slash) to
-    | an array that will be shown as the "example_response".  When you add
-    | a new feature, just drop it in here.
-    |
-    */
-
-    'api/v1/inspect-email' => [
-        "status"    => "success",
-        "http_code" => 200,
-        "code"      => "200",
-        "message"   => "Email inspection successful",
-        "data"      => [
-            "email"             => "someone@example.com",
-            "format_valid"      => true,
-            "domain_resolvable" => false,
-            "mx_records_found"  => false,
-            "mailbox_exists"    => false,
-            "is_disposable"     => false,
-            "is_role_based"     => false,
-            "suggestion"        => "someone@example.com"
-        ],
-    ],
-    'api/v1/inspect-headers' => [
-        "status"    => "success",
-        "http_code" => 200,
-        "code"      => "200",
-        "message"   => "Security headers inspection successful",
-        "data"      => [
-            "url"         => "https://apixies.io",
-            "status_code" => 200,
-            "headers"     => [
-                "strict-transport-security"     => "max-age=63072000; includeSubDomains; preload",
-                "content-security-policy"       => "default-src 'self'; img-src 'self' https: data:; object-src 'none'; frame-ancestors 'none'",
-                "referrer-policy"               => "strict-origin-when-cross-origin",
-                "permissions-policy"            => "geolocation=(), microphone=(), camera=()",
-                "x-frame-options"               => "DENY",
-                "x-content-type-options"        => "nosniff",
-                "x-xss-protection"              => "1; mode=block",
-                "cross-origin-opener-policy"    => "same-origin",
-                "cross-origin-embedder-policy"  => "require-corp",
-                "cross-origin-resource-policy"  => "same-origin",
+    'health' => [
+        'title' => 'Health Check',
+        'description' => 'Check the health status of the API',
+        'uri' => 'api/v1/health',
+        'method' => 'GET',
+        'category' => 'system',
+        'route_params' => [],
+        'query_params' => [],
+        'demo' => true,
+        'response_example' => [
+            'status' => 'success',
+            'http_code' => 200,
+            'code' => 'SUCCESS',
+            'message' => 'API is healthy',
+            'data' => [
+                'version' => '1.0.0',
+                'environment' => 'production',
+                'timestamp' => '2025-05-15T12:34:56Z',
             ],
-            "missing"    => [],
-            "grade"      => "A+",
-            "scanned_at" => "2025-05-12T12:34:56Z"
         ],
     ],
-
-
-    'api/v1/inspect-user-agent' => [
-        "status"    => "success",
-        "http_code" => 200,
-        "code"      => "200",
-        "message"   => "User‑Agent inspection successful",
-        "data"      => [
-            "user_agent" => "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-            "is_bot"     => false,
-            "device"     => ["family" => "Desktop", "model" => null, "brand" => null],
-            "os"         => ["family" => "macOS", "major" => "13", "minor" => "4", "patch" => null],
-            "browser"    => ["family" => "Chrome", "major" => "123", "minor" => "0", "patch" => "0"],
-            "scanned_at" => "2025-05-12T12:34:56+00:00"
+    'ssl' => [
+        'title' => 'SSL Health Inspector',
+        'description' => 'Inspect SSL certificate details for a domain',
+        'uri' => 'api/v1/inspect-ssl',
+        'method' => 'GET',
+        'category' => 'inspector',
+        'route_params' => [],
+        'query_params' => ['url'],
+        'demo' => true,
+        'response_example' => [
+            'status' => 'success',
+            'http_code' => 200,
+            'code' => 'SUCCESS',
+            'message' => 'SSL certificate inspected successfully',
+            'data' => [
+                'url' => 'https://example.com',
+                'status_code' => 200,
+                'certificate' => [
+                    'issuer' => 'Let\'s Encrypt Authority X3',
+                    'subject' => 'example.com',
+                    'valid_from' => '2023-01-01T00:00:00Z',
+                    'valid_to' => '2023-04-01T00:00:00Z',
+                    'valid' => true,
+                    'days_until_expiry' => 90,
+                ],
+            ],
         ],
     ],
-
-    'api/v1/inspect-ssl' => [
-        "status"    => "success",
-        "http_code" => 200,
-        "code"      => "200",
-        "message"   => "SSL inspection successful",
-        "data"      => [
-            "domain"      => "example.com",
-            "port"        => 443,
-            "valid"       => true,
-            "issuer"      => "Let's Encrypt",
-            "subject"     => "example.com",
-            "subject_alt" => "DNS:example.com, DNS:www.example.com",
-            "expires_at"  => "2026-03-12T04:13:00+00:00",
-            "days_left"   => 305,
-            "scanned_at"  => "2025-05-12T12:34:56+00:00"
+    'headers' => [
+        'title' => 'Security Headers Inspector',
+        'description' => 'Inspect security headers for a URL',
+        'uri' => 'api/v1/inspect-headers',
+        'method' => 'GET',
+        'category' => 'inspector',
+        'route_params' => [],
+        'query_params' => ['url'],
+        'demo' => true,
+        'response_example' => [
+            'status' => 'success',
+            'http_code' => 200,
+            'code' => 'SUCCESS',
+            'message' => 'Security headers inspected successfully',
+            'data' => [
+                'url' => 'https://example.com',
+                'status_code' => 200,
+                'headers' => [
+                    'Content-Security-Policy' => 'default-src \'self\'',
+                    'X-Content-Type-Options' => 'nosniff',
+                    'X-Frame-Options' => 'DENY',
+                    'X-XSS-Protection' => '1; mode=block',
+                ],
+            ],
         ],
     ],
-    'api/v1/html-to-pdf' => [
-        'headers' => [
-            'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="document.pdf"',
+    'email' => [
+        'title' => 'Email Inspector',
+        'description' => 'Inspect email address details',
+        'uri' => 'api/v1/inspect-email',
+        'method' => 'GET',
+        'category' => 'inspector',
+        'route_params' => [],
+        'query_params' => ['email'],
+        'demo' => true,
+        'response_example' => [
+            'status' => 'success',
+            'http_code' => 200,
+            'code' => 'SUCCESS',
+            'message' => 'Email address inspected successfully',
+            'data' => [
+                'email' => 'user@example.com',
+                'valid' => true,
+                'domain' => 'example.com',
+                'mx_records' => [
+                    'mx1.example.com',
+                    'mx2.example.com',
+                ],
+                'disposable' => false,
+                'free_provider' => false,
+            ],
         ],
-        'body'    => '<binary PDF stream>',
     ],
-
-
+    'user-agent' => [
+        'title' => 'User Agent Inspector',
+        'description' => 'Inspect user agent details',
+        'uri' => 'api/v1/inspect-user-agent',
+        'method' => 'GET',
+        'category' => 'inspector',
+        'route_params' => [],
+        'query_params' => ['user_agent'],
+        'demo' => true,
+        'response_example' => [
+            'status' => 'success',
+            'http_code' => 200,
+            'code' => 'SUCCESS',
+            'message' => 'User agent inspected successfully',
+            'data' => [
+                'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36',
+                'browser' => 'Chrome',
+                'browser_version' => '90.0.4430.212',
+                'os' => 'Windows',
+                'os_version' => '10',
+                'device' => 'Desktop',
+                'mobile' => false,
+                'bot' => false,
+            ],
+        ],
+    ],
+    'html-to-pdf' => [
+        'title' => 'HTML to PDF Converter',
+        'description' => 'Convert HTML content to PDF document',
+        'uri' => 'api/v1/html-to-pdf',
+        'method' => 'POST',
+        'category' => 'converter',
+        'route_params' => [],
+        'query_params' => ['html'],
+        'demo' => true,
+        'response_example' => [
+            'Binary PDF content with Content-Type: application/pdf',
+        ],
+    ],
+    'test' => [
+        'title' => 'Test Endpoint',
+        'description' => 'Simple endpoint for testing API connectivity',
+        'uri' => 'api/v1/test',
+        'method' => 'GET',
+        'category' => 'system',
+        'route_params' => [],
+        'query_params' => [],
+        'demo' => true,
+        'response_example' => [
+            'status' => 'success',
+            'http_code' => 200,
+            'code' => 'SUCCESS',
+            'message' => 'API connection successful',
+            'data' => [
+                'timestamp' => '2025-05-15T12:34:56Z',
+                'ip' => '127.0.0.1',
+            ],
+        ],
+    ],
 ];

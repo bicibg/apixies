@@ -1,3 +1,4 @@
+{{-- resources/views/docs/partials/hero.blade.php --}}
 @props([
     'title'    => 'Apixies API',
     'subtitle' => 'Build powerful applications with our simple, reliable API',
@@ -32,9 +33,14 @@
             <x-suggest-modal />
         </div>
     @elseif($route)
-        {{-- API demo button --}}
+        {{-- API demo button with complete route information --}}
         <div class="w-full">
-            <x-demo-modal :route="$route"/>
+            <x-demo-modal :route="[
+                'uri' => $route['uri'] ?? '',
+                'method' => $route['method'] ?? 'GET',
+                'route_params' => $route['route_params'] ?? [],
+                'query_params' => $route['query_params'] ?? []
+            ]"/>
         </div>
     @endif
 </div>

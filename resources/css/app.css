@@ -54,6 +54,86 @@
         overflow-x: auto;            /* horizontal scroll */
         -webkit-overflow-scrolling: touch;
     }
+
+    /* -------------------------------------------------------
+       Docs Navigation Styling (new!)
+       -------------------------------------------------------*/
+    .docs-nav {
+        @apply sticky top-4;
+    }
+
+    .docs-nav .nav-section {
+        @apply bg-white p-4 rounded-lg shadow-sm mb-4;
+    }
+
+    .docs-nav h3 {
+        @apply text-lg font-bold mb-4;
+    }
+
+    .docs-nav ul {
+        @apply space-y-1;
+    }
+
+    .docs-nav a {
+        @apply block px-3 py-2 rounded transition-colors text-gray-700;
+    }
+
+    .docs-nav a:hover:not(.active) {
+        @apply bg-gray-100;
+    }
+
+    .docs-nav a.active {
+        @apply bg-[#0A2240] text-white font-medium;
+    }
+
+    /* -------------------------------------------------------
+       Documentation Sections (new!)
+       -------------------------------------------------------*/
+    .docs-section {
+        @apply mb-16 pb-8 border-b border-gray-200;
+    }
+
+    .docs-section:last-child {
+        @apply border-b-0 pb-0;
+    }
+
+    .docs-section h2 {
+        @apply text-2xl font-bold mb-6 scroll-mt-8;
+    }
+
+    /* -------------------------------------------------------
+       Endpoint Rows (new!)
+       -------------------------------------------------------*/
+    .endpoint-row {
+        @apply bg-white p-4 rounded-lg border border-gray-200 hover:border-indigo-300 transition mb-4;
+    }
+
+    /* -------------------------------------------------------
+       Response examples and tabs (new!)
+       -------------------------------------------------------*/
+    .tab-nav {
+        @apply flex border-b border-gray-200;
+    }
+
+    .tab-btn {
+        @apply py-3 px-4 font-medium cursor-pointer;
+    }
+
+    .tab-btn.active {
+        @apply text-[#0A2240] border-b-2 border-[#0A2240];
+    }
+
+    .tab-btn:not(.active) {
+        @apply text-gray-500 hover:text-gray-700;
+    }
+
+    .tab-content {
+        @apply py-4;
+    }
+
+    .tab-content:not(.active) {
+        @apply hidden;
+    }
 }
 
 /* -----------------------------------------------------------
@@ -91,10 +171,20 @@ header img { @apply max-w-[140px] mb-2 rounded bg-white/85 shadow relative z-[1]
 .api-table td { @apply align-middle; }
 tr:hover      { @apply bg-blue-50; }
 
+/* Documentation sections - prevent stacking */
+#features, #authentication, #endpoints, #responses, #examples {
+    @apply pt-4 mb-12 clear-both;
+    scroll-margin-top: 2rem;
+}
+
 /* Responsive tweak */
 @media (max-width: 768px) {
     header h1 { font-size: 1.8rem; }
+    .docs-nav {
+        @apply static mb-8;
+    }
 }
+
 /* hide Alpine elements until JS is ready */
 [x-cloak] { display: none !important; }
 

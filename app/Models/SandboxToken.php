@@ -4,23 +4,31 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class SandboxToken extends Model
 {
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
     protected $fillable = [
         'token',
         'calls',
         'quota',
-        'expires_in',
+        'expires_at',
     ];
 
-    // If you're using timestamps
-    protected array $dates = [
-        'created_at',
-        'updated_at',
-        'expires_at',
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'expires_at' => 'datetime',
     ];
 
     /**
@@ -30,8 +38,7 @@ class SandboxToken extends Model
      */
     public function isExpired(): bool
     {
-        $expiresAt = $this->created_at->addSeconds($this->expires_in);
-        return now()->greaterThan($expiresAt);
+        return $this->expires_at->isPast();
     }
 
     /**
