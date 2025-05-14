@@ -47,7 +47,7 @@ class ApiResponse
     {
         $requestId = request()->header('X-Request-ID');
 
-        if (!is_string($requestId) || !preg_match('/^[0-9A-Za-z\-_]+$/', $requestId)) {
+        if (!is_string($requestId) || !Str::uuid()->isValid($requestId)) {
             $requestId = (string) Str::uuid();
         }
 

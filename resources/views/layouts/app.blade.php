@@ -34,6 +34,12 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="flex flex-col min-h-screen bg-gray-50 text-gray-800">
+
+<!-- Sandbox status bar -->
+<div id="sandbox-bar" class="hidden bg-yellow-100 text-yellow-800 p-2 text-center">
+    Demo mode • calls left: <span id="sandbox-quota">—</span> • expires in: <span id="sandbox-expiry">—</span>s
+</div>
+
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MXM728HH"
                   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -144,6 +150,57 @@
             toggle.addEventListener('click', () => menu.classList.toggle('hidden'));
         }
     });
+    const SANDBOX_KEY = 'apixies_sandbox';
+
+    async function fetchNewSandbox() {
+        const res = await fetch('{{ route('sandbox.token') }}');
+        const json = await res.json();
+        const data = {
+            token: json.token,
+            expires: Date.now() + json.expires_in * 1000,
+            quota: json.quota
+        };
+        localStorage.setItem(SANDBOX_KEY, JSON.stringify(data));
+        return data;
+    }
+
+    async function initSandbox() {
+        let sb = null;
+        try {
+            const stored = localStorage.getItem(SANDBOX_KEY);
+            if (stored) {
+                sb = JSON.parse(stored);
+                // if expired, fetch new
+                if (Date.now() > sb.expires) {
+                    sb = await fetchNewSandbox();
+                }
+            } else {
+                sb = await fetchNewSandbox();
+            }
+        } catch (e) {
+            console.error('Sandbox init error', e);
+            sb = await fetchNewSandbox();
+        }
+
+        // show bar
+        window.sandbox = sb;
+        document.getElementById('sandbox-bar').classList.remove('hidden');
+        document.getElementById('sandbox-quota').innerText = sb.quota;
+        updateExpiry();
+        setInterval(updateExpiry, 1000);
+    }
+
+    function updateExpiry() {
+        const sec = Math.max(0, Math.ceil((window.sandbox.expires - Date.now()) / 1000));
+        document.getElementById('sandbox-expiry').innerText = sec;
+        if (sec <= 0) {
+            // clear and re-init
+            localStorage.removeItem(SANDBOX_KEY);
+            initSandbox();
+        }
+    }
+
+    initSandbox();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x/dist/cdn.min.js" defer></script>
 

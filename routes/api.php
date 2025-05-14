@@ -31,7 +31,7 @@ Route::apiV1(function () {
     // ==========================================
 
     // All routes in this group require a valid API key
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::group([], function () {
         // ==========================================
         // TEST ENDPOINT (for API key testing)
         // ==========================================

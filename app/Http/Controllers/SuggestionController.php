@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
 use App\Models\Suggestion;
 use App\Models\SuggestionVote;
 use App\Helpers\ApiResponse;

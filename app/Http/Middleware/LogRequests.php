@@ -11,13 +11,14 @@ class LogRequests
 {
     public function handle(Request $request, Closure $next)
     {
-        $requestId = app('X-Request-ID');
+        $requestId = app(CorrelationId::REQUEST_ID_KEY) ?? 'unknown';
 
         Log::info('Incoming request', [
-            'id'=>$requestId,
+            'request_id'=>$requestId,
             'method'  => $request->method(),
             'url'     => $request->fullUrl(),
             'payload' => $request->all(),
+            'path' => $request->path(),
         ]);
 
         $response = $next($request);

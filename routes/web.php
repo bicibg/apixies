@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SandboxTokenController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SuggestionController;
 use Illuminate\Support\Facades\Route;
@@ -53,4 +54,8 @@ Route::middleware('web')->group(function () {
 
     Route::get('/community-ideas', [SuggestionController::class, 'board'])
         ->name('suggestions.board');
+    Route::get('/sandbox/token', [SandboxTokenController::class, 'issue'])
+        ->name('sandbox.token');
+
+
 });

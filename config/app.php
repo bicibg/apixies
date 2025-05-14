@@ -122,5 +122,14 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
-
+    /*
+    |--------------------------------------------------------------------------
+    | Trusted Proxies
+    |--------------------------------------------------------------------------
+    |
+    | Set trusted proxy IPs - comma-separated list or '*' for all proxies.
+    | Add this to your app config instead of using env() directly in middleware.
+    |
+    */
+    'trusted_proxies' => env('TRUST_PROXIES', '127.0.0.1,::1'),
 ];

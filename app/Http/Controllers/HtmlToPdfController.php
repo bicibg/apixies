@@ -11,19 +11,31 @@ class HtmlToPdfController extends Controller
     {
         $request->validate(['html' => 'required|string']);
 
-        $pdfContent = Browsershot::html($request->html)
-            ->noSandbox()
-            ->setWaitUntilNetworkIdle()
-            ->emulateMedia('screen')
-            ->showBackground()
-            ->pdf();
+        // Use the HTML exactly as provided without modifications
+        $html = $request->html;
 
-        return response($pdfContent, 200, [
-            'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="document.pdf"',
-        ]);
+        try {
+            // Create a PDF with minimal processing
+            $pdfContent = Browsershot::html($html)
+                ->noSandbox()
+                ->waitUntilNetworkIdle()
+                ->emulateMedia('screen')
+                ->showBackground()
+                ->pdf();
+
+            // Return the PDF content directly, no caching
+            return response($pdfContent, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="document.pdf"',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0',
+                'Pragma' => 'no-cache',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'PDF generation failed',
+                'details' => $e->getMessage()
+            ], 500);
+        }
     }
-
-
-
 }
