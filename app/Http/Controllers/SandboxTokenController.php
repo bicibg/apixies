@@ -10,22 +10,20 @@ class SandboxTokenController extends Controller
 {
     public function issue(): JsonResponse
     {
+        // Generate a new token
         $token = Str::random(40);
-        $ttl   = 1800;  // 30 minutes
-        $quota = 100;
 
-        // Create token in database
+        // Create a new sandbox token record
         SandboxToken::create([
             'token' => $token,
-            'calls' => 0,
-            'quota' => $quota,
-            'expires_in' => $ttl,
+            'calls' => 0,             // Start with 0 calls
+            'quota' => 50,            // Allow 50 calls per token
+            'expires_at' => now()->addMinutes(30), // 30 minute expiry
         ]);
 
+        // Return only the token to the client
         return response()->json([
-            'token'      => $token,
-            'expires_in' => $ttl,
-            'quota'      => $quota,
+            'token' => $token
         ]);
     }
 }

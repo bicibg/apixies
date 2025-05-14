@@ -4,11 +4,11 @@ namespace App\Http\Middleware;
 
 use App\Helpers\ApiResponse;
 use App\Models\SandboxToken;
-use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use App\Models\PersonalAccessToken;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
@@ -24,101 +24,105 @@ class EnsureApiKey
             return ApiResponse::error('No API key provided', Response::HTTP_UNAUTHORIZED);
         }
 
-        // For debugging: Store token validation debug info
+        // Debug info
         $debug = ['token_prefix' => substr($raw, 0, 8) . '...', 'path' => $request->path()];
 
         // 2) Check for a sandbox token
-        $sandboxToken = SandboxToken::findToken($raw);
+        $sandbox = SandboxToken::where('token', $raw)->first();
 
-        if ($sandboxToken) {
-            $debug['source'] = 'sandbox';
+        if ($sandbox) {
+            // Handle sandbox token
             Log::info('Sandbox token found', $debug);
 
-            // Check expiration
-            if ($sandboxToken->isExpired()) {
-                // Clean up expired token
-                $sandboxToken->delete();
+            // Check if expired
+            if (isset($sandbox->expires_at) && now()->greaterThan($sandbox->expires_at)) {
                 Log::warning('Sandbox token expired', $debug);
                 return ApiResponse::error('Sandbox token expired', Response::HTTP_UNAUTHORIZED);
             }
 
-            // Check quota
-            if ($sandboxToken->isQuotaExhausted()) {
-                Log::warning('Sandbox quota exhausted', $debug);
-                return ApiResponse::error('Sandbox quota exhausted', Response::HTTP_TOO_MANY_REQUESTS);
+            // Determine which field to use for call tracking
+            // Check all possible field names for tracking calls
+            $callsRemaining = null;
+            $callsField = null;
+
+            if (isset($sandbox->remaining_calls)) {
+                $callsRemaining = $sandbox->remaining_calls;
+                $callsField = 'remaining_calls';
+            } elseif (isset($sandbox->calls)) {
+                // If calls is a counter of used calls
+                $quota = $sandbox->quota ?? 100; // Default quota if not set
+                $callsRemaining = $quota - $sandbox->calls;
+                $callsField = 'calls';
+            } elseif (isset($sandbox->quota)) {
+                $callsRemaining = $sandbox->quota;
+                $callsField = 'quota';
             }
 
-            // Update call count
-            $sandboxToken->incrementCalls();
+            // Log the full sandbox token data for debugging
+            Log::info('Sandbox token data', [
+                'token' => substr($raw, 0, 8) . '...',
+                'data' => $sandbox->toArray()
+            ]);
 
-            // Set a demo user for sandbox tokens
-            // This is critical for routes that expect $request->user() to be available
-            $demoUser = $this->getDemoUser();
-            $request->setUserResolver(fn() => $demoUser);
+            // Check if we have a valid tracking field
+            if ($callsField && $callsRemaining !== null) {
+                // Check quota
+                if ($callsRemaining <= 0) {
+                    Log::warning('Sandbox quota exhausted', $debug);
+                    return ApiResponse::error('Sandbox quota exhausted', Response::HTTP_TOO_MANY_REQUESTS);
+                }
 
-            Log::info('Sandbox token authorized', array_merge($debug, ['calls' => $sandboxToken->calls]));
+                // Update call count based on field type
+                if ($callsField === 'remaining_calls' || $callsField === 'quota') {
+                    $sandbox->$callsField = $callsRemaining - 1;
+                } elseif ($callsField === 'calls') {
+                    $sandbox->calls += 1;
+                }
+
+                $sandbox->save();
+            } else {
+                // If no tracking field is found, just proceed without tracking
+                Log::warning('No call tracking field found on sandbox token', $debug);
+            }
+
+            // For sandbox tokens, we don't need a user, so we can proceed
+            Log::info('Sandbox token authorized', $debug);
             return $next($request);
         }
 
-        // 3) Standard API token lookup
-        $token = PersonalAccessToken::findToken($raw);
+        // 3) Standard API token lookup via Sanctum
+        $cacheKey = "api_token:{$raw}";
+        $token = Cache::get($cacheKey);
+        if (!$token) {
+            $token = PersonalAccessToken::findToken($raw);
+            if ($token) {
+                Cache::put($cacheKey, $token, 60);
+            }
+        }
 
         if (!$token) {
-            $debug['token_hash'] = hash('sha256', $raw);
-            Log::warning('API key invalid', $debug);
+            Log::warning('API key invalid', ['token_hash' => hash('sha256', $raw)]);
             return ApiResponse::error('Invalid API key', Response::HTTP_UNAUTHORIZED);
         }
 
         // 4) Expiration check
         if ($token->expires_at && now()->greaterThan($token->expires_at)) {
-            $debug['uuid'] = $token->uuid;
-            Log::warning('API key expired', $debug);
+            Log::warning('API key expired', ['uuid' => $token->uuid]);
             return ApiResponse::error('API key expired', Response::HTTP_UNAUTHORIZED);
         }
 
         // 5) Scope check
         if (!$token->can('read')) {
-            $debug['uuid'] = $token->uuid;
-            Log::warning('API key missing read scope', $debug);
+            Log::warning('API key missing read scope', ['uuid' => $token->uuid]);
             return ApiResponse::error('Insufficient scope', Response::HTTP_FORBIDDEN);
         }
 
-        // 6) All good — update last_used_at
+        // 6) All good — update last_used_at and set the user
         $token->forceFill(['last_used_at' => Carbon::now()])->saveQuietly();
         $request->setUserResolver(fn() => $token->tokenable);
 
-        $debug['uuid'] = $token->uuid;
-        Log::info('API key authorized', $debug);
+        Log::info('API key authorized', ['uuid' => $token->uuid, 'path' => $request->path()]);
 
         return $next($request);
-    }
-
-    /**
-     * Get a demo user for sandbox tokens
-     *
-     * @return User
-     */
-    protected function getDemoUser(): User
-    {
-        // Try to get the first admin user or create a dummy one
-        $demoUser = User::where('email', 'sandbox@example.com')->first();
-
-        if (!$demoUser) {
-            // Check for any existing user
-            $demoUser = User::first();
-
-            // If no users exist, create a dummy one
-            if (!$demoUser) {
-                $demoUser = new User();
-                $demoUser->id = 1; // Force ID to 1
-                $demoUser->name = 'Sandbox User';
-                $demoUser->email = 'sandbox@example.com';
-
-                // We're not saving this user to the database
-                // It's just a dummy object to satisfy routes that need a user
-            }
-        }
-
-        return $demoUser;
     }
 }

@@ -16,6 +16,13 @@ class SandboxToken extends Model
         'expires_in',
     ];
 
+    // If you're using timestamps
+    protected array $dates = [
+        'created_at',
+        'updated_at',
+        'expires_at',
+    ];
+
     /**
      * Check if the token is expired
      *
