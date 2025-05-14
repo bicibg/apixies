@@ -54,7 +54,18 @@ class SecurityHeadersInspectorService
         } catch (\Throwable $e) {
             return [
                 'error'     => true,
+                'message'   => 'Unable to fetch headers: ' . $e->getMessage(),
                 'exception' => $e->getMessage(),
+            ];
+        }
+
+        // Check if response is successful (200-299 status code)
+        $statusCode = $resp->getStatusCode();
+        if ($statusCode < 200 || $statusCode >= 300) {
+            return [
+                'error'     => true,
+                'message'   => 'Server responded with status code ' . $statusCode,
+                'status_code' => $statusCode,
             ];
         }
 
