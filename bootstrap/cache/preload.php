@@ -1,7 +1,7 @@
 <?php
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__.'/../../vendor/autoload.php';
 
-$map = require __DIR__ . '/../vendor/composer/autoload_classmap.php';
+$map = require __DIR__.'/../../vendor/composer/autoload_classmap.php';
 foreach (array_keys($map) as $class) {
     if (
         ! class_exists($class, false)
