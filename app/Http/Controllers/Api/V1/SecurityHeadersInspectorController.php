@@ -33,6 +33,25 @@ class SecurityHeadersInspectorController extends Controller
                 ['INVALID_URL']
             );
         }
+        
+        $selfDomains = [
+            'apixies.io',
+            parse_url(config('app.url'), PHP_URL_HOST),
+            $_SERVER['HTTP_HOST'] ?? '',
+            $_SERVER['SERVER_NAME'] ?? '',
+        ];
+
+        // Parse the domain from the URL
+        $urlHost = parse_url($raw, PHP_URL_HOST);
+
+        // Check if trying to scan own domain
+        if ($urlHost && in_array($urlHost, array_filter($selfDomains))) {
+            return ApiResponse::error(
+                'Cannot scan own domain for security reasons',
+                400,
+                ['SELF_REFERENCE_NOT_ALLOWED']
+            );
+        }
 
         // Step 4: inspect
         $result = $inspector->inspect($raw);
