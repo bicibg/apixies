@@ -14,18 +14,18 @@ class SecurityHeadersInspectorController extends Controller
      */
     public function __invoke(Request $request, SecurityHeadersInspectorService $inspector)
     {
-        // Step 1: basic presence validation
+        // Step 1: basic presence validation
         $validated = $request->validate([
             'url' => ['required', 'string', 'max:255'],
         ]);
 
-        // Step 2: ensure scheme; default to HTTPS
+        // Step 2: ensure scheme; default to HTTPS
         $raw = trim($validated['url']);
         if (!preg_match('#^https?://#i', $raw)) {
             $raw = 'https://' . ltrim($raw, '/');
         }
 
-        // Step 3: final URL sanity check
+        // Step 3: final URL sanity check
         if (!filter_var($raw, FILTER_VALIDATE_URL)) {
             return ApiResponse::error(
                 'The url field must be a valid URL.',
@@ -34,7 +34,7 @@ class SecurityHeadersInspectorController extends Controller
             );
         }
 
-        // Step 4: inspect
+        // Step 4: inspect
         $result = $inspector->inspect($raw);
 
         if (($result['error'] ?? false) === true) {
@@ -43,10 +43,14 @@ class SecurityHeadersInspectorController extends Controller
                 'message_type' => isset($result['message']) ? gettype($result['message']) : 'not_set',
                 'message_value' => $result['message'] ?? 'default_not_applied'
             ]);
+
+            // Use the error message from the service if available
+            $errorMessage = $result['message'] ?? 'Unable to fetch headers for the given URL.';
+
             return ApiResponse::error(
-                'Unable to fetch headers for the given URL.',
+                $errorMessage,
                 400,
-                ['SECURITY_HEADERS_INSPECTION_FAILED'],
+                ['SECURITY_HEADERS_INSPECTION_FAILED']
             );
         }
 
