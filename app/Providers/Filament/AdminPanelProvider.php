@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\ApiStats;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -15,6 +16,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationBuilder as Navigation;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -24,13 +26,14 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-
+            ->pages([
+                ApiStats::class,
+            ])
             /* ── Auth: reuse web guard, gate via is_admin ─────────────── */
             ->authGuard('web')
             ->authMiddleware([
                 Authenticate::class,
             ])
-
             /* ── Branding & auto‑discovery ───────────────────────────── */
             ->colors([
                 'primary' => '#0A2240',     // Deep navy blue
