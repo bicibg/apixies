@@ -12,17 +12,18 @@
     {{-- Modal overlay --}}
     <div x-show="open"
          x-transition.opacity
-         class="fixed inset-0 flex items-center justify-center z-[9999]
+         class="fixed inset-0 flex items-center justify-center z-[9999] p-4 overflow-hidden
                 bg-[#0A2240]/50 backdrop-blur-sm"
-         @keydown.escape.window="open = false">
+         @keydown.escape.window="closeModal()">
 
         {{-- Modal dialog --}}
-        <div @click.away="open = false"
+        <div @click.away="closeModal()"
              x-transition.scale
-             :class="isPdf && fullscreen ? 'fixed inset-0 bg-white flex flex-col' : 'bg-white w-full max-w-4xl rounded-lg shadow-xl relative flex flex-col max-h-[90vh]'">
+             :class="isPdf && fullscreen ? 'fixed inset-0 bg-white flex flex-col' : 'bg-white w-full max-w-4xl rounded-lg shadow-xl relative flex flex-col'"
+             style="max-height: 90vh;">
 
             {{-- Modal header --}}
-            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
                 <h2 class="text-xl font-semibold text-[#0A2240]">
                     Try {{ strtoupper(explode('|', $route['method'])[0]) }} /{{ $route['uri'] }}
                 </h2>
@@ -52,7 +53,7 @@
                 </div>
             </div>
 
-            <div class="p-4 overflow-y-auto flex-grow flex flex-col"
+            <div class="overflow-y-auto flex-grow"
                  :class="fullscreen ? 'p-0' : 'p-4'">
 
                 {{-- Input form (hidden in fullscreen PDF mode) --}}
@@ -94,7 +95,7 @@
 
                 {{-- Response section --}}
                 <div :class="fullscreen ? 'flex-grow' : 'mt-6'" class="flex flex-col">
-                    <div x-show="!fullscreen" class="flex items-center justify-between mb-2">
+                    <div x-show="!fullscreen" class="flex items-center justify-between mb-2 sticky top-0 bg-white z-10">
                         <h3 class="text-sm font-medium text-gray-700">Response</h3>
 
                         {{-- Download button for PDF responses --}}
@@ -111,16 +112,16 @@
                         </a>
                     </div>
 
-                    {{-- Response display area - larger for PDFs --}}
-                    <div class="border border-gray-200 overflow-hidden flex-grow"
-                         :class="fullscreen ? 'h-full' : isPdf ? 'h-[500px]' : 'h-60 bg-gray-50 rounded-md'">
+                    {{-- Response display area - adjustable height with proper scrolling --}}
+                    <div class="border border-gray-200 overflow-hidden relative"
+                         :class="fullscreen ? 'h-full' : isPdf ? 'h-[500px]' : 'max-h-[400px] bg-gray-50 rounded-md'">
 
                         {{-- Loading indicator --}}
                         <div x-show="isLoading" class="flex items-center justify-center h-full bg-gray-50">
                             <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-gray-300 border-r-blue-600"></div>
                         </div>
 
-                        {{-- PDF Response - direct embed --}}
+                        {{-- PDF Response - direct embed with object tag --}}
                         <template x-if="isPdf && pdfUrl && !isLoading">
                             <object
                                 x-bind:data="pdfUrl"
@@ -137,7 +138,7 @@
                             </object>
                         </template>
 
-                        {{-- JSON/Text Response --}}
+                        {{-- JSON/Text Response with scrolling --}}
                         <pre x-show="!isPdf && !isLoading" x-text="response"
                              class="whitespace-pre-wrap p-4 text-gray-900 overflow-auto h-full"></pre>
                     </div>
@@ -145,7 +146,7 @@
             </div>
 
             {{-- Modal footer with buttons (hidden in fullscreen mode) --}}
-            <div x-show="!fullscreen" class="p-4 border-t border-gray-200 flex justify-end space-x-3">
+            <div x-show="!fullscreen" class="p-4 border-t border-gray-200 flex justify-end space-x-3 sticky bottom-0 bg-white z-10">
                 <button type="button" @click="closeModal()"
                         class="px-4 py-2 rounded bg-gray-100 hover:bg-gray-200 text-gray-800 transition">
                     Cancel
@@ -233,7 +234,7 @@
                         const contentType = res.headers.get('Content-Type');
 
                         if (contentType && contentType.includes('application/pdf')) {
-                            // Handle PDF response - create a blob URL for direct viewing
+                            // Handle PDF response by directly passing through
                             const blob = await res.blob();
                             this.pdfUrl = URL.createObjectURL(blob);
                             this.isPdf = true;
