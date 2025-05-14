@@ -20,7 +20,8 @@
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-responsecache": "^7.6",
         "spatie/laravel-sitemap": "^7.3",
-        "ua-parser/uap-php": "^3.9"
+        "ua-parser/uap-php": "^3.9",
+        "ext-zend-opcache": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

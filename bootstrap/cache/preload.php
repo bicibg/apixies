@@ -1,7 +1,6 @@
 <?php
-require __DIR__.'/../../vendor/autoload.php';
-
-$map = require __DIR__.'/../../vendor/composer/autoload_classmap.php';
+require __DIR__ . '/../../vendor/autoload.php';
+$map = require __DIR__ . '/../../vendor/composer/autoload_classmap.php';
 foreach (array_keys($map) as $class) {
     if (
         ! class_exists($class, false)
@@ -13,13 +12,20 @@ foreach (array_keys($map) as $class) {
 }
 
 $files = [
-    __DIR__ . '/../app/Models',
-    __DIR__ . '/../app/Http/Controllers',
-    __DIR__ . '/../app/Services',
+    __DIR__ . '/../../app/Models',
+    __DIR__ . '/../../app/Http/Controllers',
+    __DIR__ . '/../../app/Services',
 ];
 
 foreach ($files as $dir) {
-    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir)) as $file) {
+    if (! is_dir($dir)) {
+        continue;
+    }
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($dir)
+    );
+
+    foreach ($iterator as $file) {
         if ($file->getExtension() === 'php') {
             @opcache_compile_file($file->getPathname());
         }
