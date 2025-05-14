@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const searchInput = document.getElementById('endpoint-search');
         if (!searchInput) return;
 
-        searchInput.addEventListener('input', function() {
+        searchInput.addEventListener('input', function () {
             const query = this.value.toLowerCase();
             const rows = document.querySelectorAll('.endpoint-row');
 
@@ -145,3 +145,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
