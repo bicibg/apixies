@@ -71,7 +71,10 @@ Route::apiV1(function () {
 
         Route::post('html-to-pdf', HtmlToPdfController::class)
             ->name('html-to-pdf')
-//            ->withoutMiddleware([\App\Http\Middleware\ForceJsonResponseMiddleware::class, \App\Http\Middleware\TransformMiddleware::class])
+            ->withoutMiddleware([
+                \App\Http\Middleware\ForceJsonResponseMiddleware::class,
+                \App\Http\Middleware\TransformMiddleware::class
+            ])
             ->description('Convert an HTML payload into a PDF file')
             ->requiredParams(['html']);
     });

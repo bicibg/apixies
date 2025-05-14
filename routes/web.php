@@ -57,5 +57,12 @@ Route::middleware('web')->group(function () {
     Route::get('/sandbox/token', [SandboxTokenController::class, 'issue'])
         ->name('sandbox.token');
 
+    Route::get('/pdf/preview', function (Illuminate\Http\Request $request) {
+        $html = base64_decode($request->query('html', ''));
+
+        return view('docs.pdf.preview', ['content' => $html]);
+    })->name('pdf.preview');
+
+
 
 });

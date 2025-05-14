@@ -12,29 +12,29 @@
     {{-- Modal overlay --}}
     <div x-show="open"
          x-transition.opacity
-         class="fixed inset-0 flex items-center justify-center z-[9999] p-4 overflow-hidden
+         class="fixed inset-0 flex items-center justify-center z-[9999] p-4
                 bg-[#0A2240]/50 backdrop-blur-sm"
          @keydown.escape.window="closeModal()">
 
         {{-- Modal dialog --}}
         <div @click.away="closeModal()"
              x-transition.scale
-             :class="isPdf && fullscreen ? 'fixed inset-0 bg-white flex flex-col' : 'bg-white w-full max-w-4xl rounded-lg shadow-xl relative flex flex-col'"
-             style="max-height: 90vh;">
+             class="bg-white rounded-lg shadow-xl relative flex flex-col"
+             :class="{ 'fixed inset-0 m-0 rounded-none': fullscreen, 'w-full max-w-4xl max-h-[90vh]': !fullscreen }">
 
             {{-- Modal header --}}
-            <div class="p-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
-                <h2 class="text-xl font-semibold text-[#0A2240]">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-[#0A2240]">
                     Try {{ strtoupper(explode('|', $route['method'])[0]) }} /{{ $route['uri'] }}
                 </h2>
 
                 <div class="flex items-center">
-                    {{-- Fullscreen toggle for PDF --}}
+                    {{-- Fullscreen toggle --}}
                     <button
-                        x-show="isPdf && pdfUrl"
-                        @click="fullscreen = !fullscreen"
+                        @click="toggleFullscreen()"
                         type="button"
-                        class="mr-2 text-gray-500 hover:text-gray-700"
+                        class="mr-3 text-gray-500 hover:text-gray-700"
+                        title="Toggle fullscreen"
                     >
                         <svg x-show="!fullscreen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
@@ -53,11 +53,10 @@
                 </div>
             </div>
 
-            <div class="overflow-y-auto flex-grow"
-                 :class="fullscreen ? 'p-0' : 'p-4'">
-
-                {{-- Input form (hidden in fullscreen PDF mode) --}}
-                <div x-show="!fullscreen || !isPdf">
+            {{-- Modal content - scrollable container --}}
+            <div class="flex flex-col overflow-auto flex-1">
+                <div class="p-4">
+                    {{-- Input form --}}
                     <form id="api-demo-form" @submit.prevent="submit" class="space-y-4">
                         <div class="grid grid-cols-1 gap-4">
                             @foreach($route['route_params'] as $p)
@@ -91,62 +90,53 @@
                             @endforeach
                         </div>
                     </form>
-                </div>
 
-                {{-- Response section --}}
-                <div :class="fullscreen ? 'flex-grow' : 'mt-6'" class="flex flex-col">
-                    <div x-show="!fullscreen" class="flex items-center justify-between mb-2 sticky top-0 bg-white z-10">
-                        <h3 class="text-sm font-medium text-gray-700">Response</h3>
+                    {{-- Response section --}}
+                    <div class="mt-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-medium text-gray-700">Response</h3>
 
-                        {{-- Download button for PDF responses --}}
-                        <a
-                            x-show="isPdf && pdfUrl"
-                            x-bind:href="pdfUrl"
-                            download="document.pdf"
-                            class="text-sm text-blue-600 hover:text-blue-800 flex items-center"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                            Download PDF
-                        </a>
-                    </div>
-
-                    {{-- Response display area - adjustable height with proper scrolling --}}
-                    <div class="border border-gray-200 overflow-hidden relative"
-                         :class="fullscreen ? 'h-full' : isPdf ? 'h-[500px]' : 'max-h-[400px] bg-gray-50 rounded-md'">
-
-                        {{-- Loading indicator --}}
-                        <div x-show="isLoading" class="flex items-center justify-center h-full bg-gray-50">
-                            <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-gray-300 border-r-blue-600"></div>
+                            {{-- Download PDF button (shown only when PDF is detected) --}}
+                            <a
+                                x-show="isPdf && pdfUrl"
+                                x-bind:href="pdfUrl"
+                                download="document.pdf"
+                                class="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Download PDF
+                            </a>
                         </div>
 
-                        {{-- PDF Response - direct embed with object tag --}}
-                        <template x-if="isPdf && pdfUrl && !isLoading">
-                            <object
-                                x-bind:data="pdfUrl"
-                                type="application/pdf"
-                                class="w-full h-full"
-                            >
-                                <div class="flex items-center justify-center h-full p-4 text-center">
-                                    <p>Your browser doesn't support PDF preview.
-                                        <a x-bind:href="pdfUrl" download="document.pdf" class="text-blue-600 underline">
-                                            Download the PDF
-                                        </a> instead.
-                                    </p>
-                                </div>
-                            </object>
-                        </template>
+                        {{-- Response display area with height limit and scrolling --}}
+                        <div class="border border-gray-200 rounded bg-gray-50 overflow-hidden"
+                             style="height: 350px;">
 
-                        {{-- JSON/Text Response with scrolling --}}
-                        <pre x-show="!isPdf && !isLoading" x-text="response"
-                             class="whitespace-pre-wrap p-4 text-gray-900 overflow-auto h-full"></pre>
+                            {{-- Loading indicator --}}
+                            <div x-show="isLoading" class="flex items-center justify-center h-full">
+                                <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-gray-300 border-r-blue-600"></div>
+                            </div>
+
+                            {{-- JSON Response with scrolling --}}
+                            <pre x-show="!isPdf && !isLoading" x-text="response"
+                                 class="whitespace-pre-wrap p-4 text-gray-900 overflow-auto h-full"></pre>
+
+                            {{-- PDF Response in iframe with scrolling --}}
+                            <div x-show="isPdf && pdfUrl && !isLoading" class="h-full w-full overflow-auto">
+                                <iframe
+                                    x-bind:src="pdfUrl"
+                                    class="w-full h-full border-0">
+                                </iframe>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Modal footer with buttons (hidden in fullscreen mode) --}}
-            <div x-show="!fullscreen" class="p-4 border-t border-gray-200 flex justify-end space-x-3 sticky bottom-0 bg-white z-10">
+            {{-- Modal footer --}}
+            <div class="p-4 border-t border-gray-200 flex justify-end space-x-3">
                 <button type="button" @click="closeModal()"
                         class="px-4 py-2 rounded bg-gray-100 hover:bg-gray-200 text-gray-800 transition">
                     Cancel
@@ -176,11 +166,33 @@
                 isLoading: false,
                 fullscreen: false,
 
+                // Toggle fullscreen mode safely
+                toggleFullscreen() {
+                    this.fullscreen = !this.fullscreen;
+
+                    // Ensure we can exit if ESC key is pressed
+                    if (this.fullscreen) {
+                        document.addEventListener('keydown', this.handleEscape);
+                    } else {
+                        document.removeEventListener('keydown', this.handleEscape);
+                    }
+                },
+
+                // Handle ESC key to exit fullscreen
+                handleEscape(e) {
+                    if (e.key === 'Escape') {
+                        const modal = Alpine.closestDataStack(e.target);
+                        if (modal && modal.fullscreen) {
+                            modal.fullscreen = false;
+                        }
+                    }
+                },
+
                 async submit() {
                     this.isLoading = true;
                     this.isPdf = false;
 
-                    // Clean up previous PDF URL if exists
+                    // Clean up previous PDF URL
                     if (this.pdfUrl) {
                         URL.revokeObjectURL(this.pdfUrl);
                         this.pdfUrl = null;
@@ -196,7 +208,7 @@
                         'X-XSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
                     };
 
-                    // For POST to html-to-pdf endpoint, set Content-Type to application/json
+                    // For POST requests, set Content-Type to application/json
                     if (isPostMethod) {
                         headers['Content-Type'] = 'application/json';
                     }
@@ -234,13 +246,13 @@
                         const contentType = res.headers.get('Content-Type');
 
                         if (contentType && contentType.includes('application/pdf')) {
-                            // Handle PDF response by directly passing through
+                            // For PDF, create a blob URL and display in iframe
                             const blob = await res.blob();
                             this.pdfUrl = URL.createObjectURL(blob);
                             this.isPdf = true;
                             this.response = 'PDF document received';
                         } else {
-                            // Handle regular JSON response
+                            // For JSON or text responses
                             const text = await res.text();
                             try {
                                 this.response = JSON.stringify(JSON.parse(text), null, 2);
@@ -250,7 +262,7 @@
                             this.isPdf = false;
                         }
 
-                        // Update quota
+                        // Update quota if needed
                         if (window.sandbox && window.sandbox.quota) {
                             window.sandbox.quota--;
                             localStorage.setItem('apixies_sandbox', JSON.stringify(window.sandbox));
@@ -267,12 +279,16 @@
                     }
                 },
 
-                // Clean up resources when the modal is closed
+                // Clean up when the modal is closed
                 closeModal() {
+                    document.removeEventListener('keydown', this.handleEscape);
+
                     if (this.pdfUrl) {
                         URL.revokeObjectURL(this.pdfUrl);
                         this.pdfUrl = null;
                     }
+
+                    this.fullscreen = false;
                     this.open = false;
                 }
             }
