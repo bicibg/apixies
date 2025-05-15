@@ -24,6 +24,21 @@ class SandboxTokenController extends Controller
             $ip = request()->ip() ?: '127.0.0.1';
             Log::info('Creating sandbox token for IP: ' . $ip);
 
+            // Check for rate limiting - no more than 3 tokens per hour per IP
+            $tokenCount = DB::table('sandbox_tokens')
+                ->where('ip_address', $ip)
+                ->where('created_at', '>', now()->subHour())
+                ->count();
+
+            if ($tokenCount >= 3) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Rate limit exceeded. Please try again later.',
+                    'rate_limited' => true,
+                    'retry_after' => now()->addHour()->diffInMinutes(now()) . ' minutes'
+                ], 429);
+            }
+
             // Generate a new token
             $token = Str::random(40);
 
@@ -50,21 +65,25 @@ class SandboxTokenController extends Controller
             ]);
 
             return response()->json([
-                'token' => $token
+                'token' => $token,
+                'expires_at' => now()->addMinutes(30),
+                'quota' => 50
             ]);
         } catch (QueryException $e) {
             Log::error('Database error creating sandbox token: ' . $e->getMessage());
 
             return response()->json([
-                'error' => 'Failed to create sandbox token',
-                'message' => 'Database error occurred: ' . $e->getMessage()
+                'status' => 'error',
+                'code' => 'DB_ERROR',
+                'message' => 'Failed to create sandbox token'
             ], 500);
         } catch (\Exception $e) {
             Log::error('Unexpected error creating sandbox token: ' . $e->getMessage());
 
             return response()->json([
-                'error' => 'Failed to create sandbox token',
-                'message' => 'Unexpected error occurred: ' . $e->getMessage()
+                'status' => 'error',
+                'code' => 'UNKNOWN_ERROR',
+                'message' => 'Failed to create sandbox token'
             ], 500);
         }
     }
@@ -76,7 +95,60 @@ class SandboxTokenController extends Controller
      */
     public function refresh(): JsonResponse
     {
-        return $this->create();
+        try {
+            // Get the client IP address
+            $ip = request()->ip() ?: '127.0.0.1';
+
+            // Check for rate limiting - max 5 refreshes per hour
+            $refreshCount = DB::table('sandbox_tokens')
+                ->where('ip_address', $ip)
+                ->where('updated_at', '>', now()->subHour())
+                ->where('created_at', '<>', DB::raw('updated_at'))
+                ->count();
+
+            if ($refreshCount >= 5) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Token refresh rate limit exceeded. Please try again later.',
+                    'rate_limited' => true,
+                    'retry_after' => now()->addHour()->diffInMinutes(now()) . ' minutes'
+                ], 429);
+            }
+
+            // Find existing tokens for this IP
+            $existingToken = DB::table('sandbox_tokens')
+                ->where('ip_address', $ip)
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if ($existingToken) {
+                // Update the existing token's expiration and reset calls
+                DB::table('sandbox_tokens')
+                    ->where('id', $existingToken->id)
+                    ->update([
+                        'expires_at' => now()->addMinutes(30),
+                        'calls' => 0,
+                        'updated_at' => now()
+                    ]);
+
+                return response()->json([
+                    'token' => $existingToken->token,
+                    'message' => 'Token refreshed successfully',
+                    'expires_at' => now()->addMinutes(30),
+                    'quota' => $existingToken->quota
+                ]);
+            }
+
+            // No existing token, create a new one
+            return $this->create();
+        } catch (\Exception $e) {
+            Log::error('Error refreshing token: ' . $e->getMessage());
+
+            return response()->json([
+                'error' => 'Failed to refresh token',
+                'message' => 'Unexpected error occurred'
+            ], 500);
+        }
     }
 
     /**
@@ -134,29 +206,28 @@ class SandboxTokenController extends Controller
                 ]);
             }
 
-            // Log token details for debugging
-            Log::info('Validating token', [
-                'token_id' => $sandboxToken->id ?? 'unknown',
-                'ip_stored' => $sandboxToken->ip_address ?? 'not set',
-                'token_start' => substr($token, 0, 8),
-                'calls' => $sandboxToken->calls ?? 0,
-                'quota' => $sandboxToken->quota ?? 0
-            ]);
-
             // Check if expires_at exists and token is expired
-            if (property_exists($sandboxToken, 'expires_at') &&
+            $isExpired = property_exists($sandboxToken, 'expires_at') &&
                 $sandboxToken->expires_at &&
-                now()->greaterThan($sandboxToken->expires_at)) {
+                now()->greaterThan($sandboxToken->expires_at);
+
+            // Check if quota is exceeded
+            $isQuotaExceeded = $sandboxToken->calls >= $sandboxToken->quota;
+
+            if ($isExpired) {
                 return response()->json([
                     'valid' => false,
-                    'message' => 'Sandbox token expired'
+                    'message' => 'Sandbox token expired',
+                    'expired' => true,
+                    'remaining_calls' => $sandboxToken->quota - $sandboxToken->calls
                 ]);
             }
 
-            if ($sandboxToken->calls >= $sandboxToken->quota) {
+            if ($isQuotaExceeded) {
                 return response()->json([
                     'valid' => false,
-                    'message' => 'Sandbox quota exhausted'
+                    'message' => 'Sandbox quota exhausted',
+                    'quota_exceeded' => true
                 ]);
             }
 
@@ -177,7 +248,7 @@ class SandboxTokenController extends Controller
 
             return response()->json([
                 'valid' => false,
-                'message' => 'Error validating token: ' . $e->getMessage()
+                'message' => 'Error validating token'
             ], 500);
         }
     }

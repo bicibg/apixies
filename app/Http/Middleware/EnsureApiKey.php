@@ -59,28 +59,43 @@ class EnsureApiKey
                     ], 401);
                 }
 
-                // Check if token is expired (if applicable)
-                if (property_exists($token, 'expires_at') &&
+                // Check if token is expired
+                $isExpired = property_exists($token, 'expires_at') &&
                     $token->expires_at &&
-                    now()->greaterThan($token->expires_at)) {
+                    now()->greaterThan($token->expires_at);
+
+                // Check if quota is exceeded
+                $isQuotaExceeded = $token->calls >= $token->quota;
+
+                // Reject request if token is expired or quota exceeded
+                if ($isExpired) {
                     return response()->json([
                         'status' => 'error',
                         'code' => 'SANDBOX_TOKEN_EXPIRED',
-                        'message' => 'Sandbox token expired',
+                        'message' => 'Sandbox token expired. Please refresh your token.',
+                        'remaining_calls' => $token->quota - $token->calls,
+                        'expired' => true
                     ], 401);
                 }
 
-                // Check if quota is exceeded
-                if ($token->calls >= $token->quota) {
+                if ($isQuotaExceeded) {
                     return response()->json([
                         'status' => 'error',
                         'code' => 'SANDBOX_QUOTA_EXCEEDED',
-                        'message' => 'Sandbox quota exhausted',
+                        'message' => 'Sandbox quota exhausted. Please refresh your token.',
+                        'quota_exceeded' => true
                     ], 429);
                 }
 
                 // Enable sandbox mode
                 $request->attributes->set('sandbox_mode', true);
+
+                // Make token info available
+                $request->attributes->set('token_info', [
+                    'remaining_calls' => $token->quota - $token->calls,
+                    'expires_at' => $token->expires_at,
+                    'is_expired' => $isExpired
+                ]);
 
                 // Increment token usage count
                 DB::table('sandbox_tokens')
