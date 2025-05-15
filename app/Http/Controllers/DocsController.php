@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 
 class DocsController extends Controller
 {
@@ -16,11 +17,22 @@ class DocsController extends Controller
     public function index(): View
     {
         $apiRoutes = config('api_examples');
-        $categories = collect($apiRoutes)->groupBy('category');
+
+        Log::debug('API Routes Keys: ' . implode(', ', array_keys($apiRoutes)));
+
+        // Create an array structure with original keys for categories
+        $categorizedRoutes = [];
+        foreach ($apiRoutes as $key => $route) {
+            $category = $route['category'] ?? 'general';
+            if (!isset($categorizedRoutes[$category])) {
+                $categorizedRoutes[$category] = [];
+            }
+            $categorizedRoutes[$category][$key] = $route;
+        }
 
         return view('docs.index', [
             'activeSection' => 'overview',
-            'categories' => $categories
+            'categories' => $categorizedRoutes
         ]);
     }
 
@@ -32,11 +44,20 @@ class DocsController extends Controller
     public function features(): View
     {
         $apiRoutes = config('api_examples');
-        $categories = collect($apiRoutes)->groupBy('category');
+
+        // Create an array structure with original keys for categories
+        $categorizedRoutes = [];
+        foreach ($apiRoutes as $key => $route) {
+            $category = $route['category'] ?? 'general';
+            if (!isset($categorizedRoutes[$category])) {
+                $categorizedRoutes[$category] = [];
+            }
+            $categorizedRoutes[$category][$key] = $route;
+        }
 
         return view('docs.features', [
             'activeSection' => 'features',
-            'categories' => $categories
+            'categories' => $categorizedRoutes
         ]);
     }
 
@@ -48,11 +69,20 @@ class DocsController extends Controller
     public function authentication(): View
     {
         $apiRoutes = config('api_examples');
-        $categories = collect($apiRoutes)->groupBy('category');
+
+        // Create an array structure with original keys for categories
+        $categorizedRoutes = [];
+        foreach ($apiRoutes as $key => $route) {
+            $category = $route['category'] ?? 'general';
+            if (!isset($categorizedRoutes[$category])) {
+                $categorizedRoutes[$category] = [];
+            }
+            $categorizedRoutes[$category][$key] = $route;
+        }
 
         return view('docs.authentication', [
             'activeSection' => 'authentication',
-            'categories' => $categories
+            'categories' => $categorizedRoutes
         ]);
     }
 
@@ -64,10 +94,21 @@ class DocsController extends Controller
     public function endpoints(): View
     {
         $apiRoutes = config('api_examples');
-        $categories = collect($apiRoutes)->groupBy('category');
+
+        // Create an array structure with original keys for categories
+        $categorizedRoutes = [];
+        foreach ($apiRoutes as $key => $route) {
+            $category = $route['category'] ?? 'general';
+            if (!isset($categorizedRoutes[$category])) {
+                $categorizedRoutes[$category] = [];
+            }
+            $categorizedRoutes[$category][$key] = $route;
+        }
+
+        Log::debug('Endpoint Categories: ' . implode(', ', array_keys($categorizedRoutes)));
 
         return view('docs.endpoints.index', [
-            'categories' => $categories,
+            'categories' => $categorizedRoutes,
             'activeSection' => 'endpoints'
         ]);
     }
@@ -82,25 +123,35 @@ class DocsController extends Controller
     {
         $apiRoutes = config('api_examples');
 
+        Log::debug('Endpoint request for key: ' . $key);
+        Log::debug('Available keys: ' . implode(', ', array_keys($apiRoutes)));
+
         // Handle numeric keys if they still exist in URLs
         if (is_numeric($key)) {
-            // Convert to array to get keys for numeric access
-            $routes = $apiRoutes;
-            $keys = array_keys($routes);
-
-            if (isset($keys[(int)$key])) {
-                // Redirect to the named route using the string key
-                return redirect()->route('docs.show', ['key' => $keys[(int)$key]]);
+            $routeKeys = array_keys($apiRoutes);
+            if (isset($routeKeys[(int)$key])) {
+                Log::debug('Redirecting numeric key to: ' . $routeKeys[(int)$key]);
+                return redirect()->route('docs.show', ['key' => $routeKeys[(int)$key]]);
             }
         }
 
         if (!isset($apiRoutes[$key])) {
+            Log::warning('Endpoint not found: ' . $key);
             abort(404, 'Endpoint not found');
         }
 
         $apiRoute = $apiRoutes[$key];
         $category = $apiRoute['category'] ?? 'general';
-        $categories = collect($apiRoutes)->groupBy('category');
+
+        // Create an array structure with original keys for categories
+        $categorizedRoutes = [];
+        foreach ($apiRoutes as $routeKey => $route) {
+            $routeCategory = $route['category'] ?? 'general';
+            if (!isset($categorizedRoutes[$routeCategory])) {
+                $categorizedRoutes[$routeCategory] = [];
+            }
+            $categorizedRoutes[$routeCategory][$routeKey] = $route;
+        }
 
         return view('docs.show', [
             'apiRoute' => $apiRoute,
@@ -108,7 +159,7 @@ class DocsController extends Controller
             'activeSection' => 'endpoints',
             'activeCategory' => $category,
             'activeEndpoint' => $key,
-            'categories' => $categories,
+            'categories' => $categorizedRoutes,
             'pageTitle' => $apiRoute['title'] ?? 'API Endpoint'
         ]);
     }
@@ -121,11 +172,20 @@ class DocsController extends Controller
     public function responses(): View
     {
         $apiRoutes = config('api_examples');
-        $categories = collect($apiRoutes)->groupBy('category');
+
+        // Create an array structure with original keys for categories
+        $categorizedRoutes = [];
+        foreach ($apiRoutes as $key => $route) {
+            $category = $route['category'] ?? 'general';
+            if (!isset($categorizedRoutes[$category])) {
+                $categorizedRoutes[$category] = [];
+            }
+            $categorizedRoutes[$category][$key] = $route;
+        }
 
         return view('docs.responses', [
             'activeSection' => 'responses',
-            'categories' => $categories
+            'categories' => $categorizedRoutes
         ]);
     }
 
@@ -137,11 +197,20 @@ class DocsController extends Controller
     public function codeExamples(): View
     {
         $apiRoutes = config('api_examples');
-        $categories = collect($apiRoutes)->groupBy('category');
+
+        // Create an array structure with original keys for categories
+        $categorizedRoutes = [];
+        foreach ($apiRoutes as $key => $route) {
+            $category = $route['category'] ?? 'general';
+            if (!isset($categorizedRoutes[$category])) {
+                $categorizedRoutes[$category] = [];
+            }
+            $categorizedRoutes[$category][$key] = $route;
+        }
 
         return view('docs.code-examples', [
             'activeSection' => 'code-examples',
-            'categories' => $categories
+            'categories' => $categorizedRoutes
         ]);
     }
 }

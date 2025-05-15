@@ -7,6 +7,9 @@ import Alpine from 'alpinejs';
 // Make Alpine available globally
 window.Alpine = Alpine;
 
+// Global variable to track if a token has already been created
+window.tokenCreationInProgress = false;
+
 // Register Alpine components before initializing
 document.addEventListener('DOMContentLoaded', () => {
     // Register the demoModal component
@@ -55,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 return true;
             },
-            
+
             init() {
                 // Initialize with default tokenInfo to prevent null errors
                 this.tokenInfo = {
@@ -81,13 +84,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.params = {};
 
                 // Get token info if token exists, otherwise create a new one
-                // but only for the first modal instance to prevent multiple tokens
+                // but only if not already in progress
                 if (this.token) {
                     this.getTokenInfo();
-                } else if (!document.querySelector('[x-data="demoModal"].initialized')) {
-                    // Only the first modal should create a token
-                    this.$el.classList.add('initialized');
+                } else if (!window.tokenCreationInProgress) {
+                    // Mark that we're creating a token and prevent others from doing so
+                    window.tokenCreationInProgress = true;
+                    console.log("Creating initial sandbox token");
                     this.refreshToken();
+                } else {
+                    console.log("Token creation already in progress, skipping");
                 }
 
                 console.log("Demo modal initialized with token:", this.token);
@@ -219,6 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     })
                     .finally(() => {
                         this.refreshingToken = false;
+                        // Reset the token creation flag so others can create if needed
+                        window.tokenCreationInProgress = false;
                     });
             },
 

@@ -115,11 +115,17 @@
             <!-- Responses Tab -->
             <div class="tab-content hidden" id="responses">
                 <!-- Responses content here... -->
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <p class="text-gray-700">Response details for this API endpoint.</p>
+                </div>
             </div>
 
             <!-- Examples Tab -->
             <div class="tab-content hidden" id="examples">
                 <!-- Examples content here... -->
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <p class="text-gray-700">Examples for this API endpoint.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -143,5 +149,62 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('js/tabs.js') }}"></script>
+    <script>
+        // Wait for the DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Tab script loaded");
+
+            // Query selectors for tab elements
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            console.log(`Found ${tabButtons.length} tab buttons and ${tabContents.length} tab contents`);
+
+            // Function to activate a tab
+            function activateTab(button) {
+                const tabId = button.getAttribute('data-tab');
+                console.log(`Activating tab: ${tabId}`);
+
+                // Deactivate all tabs
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('active', 'text-[#0A2240]');
+                    btn.classList.remove('border-[#0A2240]', 'border-b-2');
+                    btn.classList.add('text-gray-500', 'border-transparent');
+                });
+
+                // Hide all tab contents
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
+                });
+
+                // Activate selected tab
+                button.classList.add('active', 'text-[#0A2240]', 'border-[#0A2240]', 'border-b-2');
+                button.classList.remove('text-gray-500', 'border-transparent');
+
+                // Show selected tab content
+                const content = document.getElementById(tabId);
+                if (content) {
+                    content.classList.remove('hidden');
+                    console.log(`Showing content for tab: ${tabId}`);
+                } else {
+                    console.error(`Tab content not found for ID: ${tabId}`);
+                }
+            }
+
+            // Add click event listeners to tab buttons
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log(`Tab clicked: ${this.textContent.trim()}`);
+                    activateTab(this);
+                });
+            });
+
+            // Activate the first tab by default
+            if (tabButtons.length > 0) {
+                console.log('Activating first tab by default');
+                activateTab(tabButtons[0]);
+            }
+        });
+    </script>
 @endpush

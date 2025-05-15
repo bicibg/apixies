@@ -41,7 +41,6 @@
                                 <ul class="space-y-1">
                                     @foreach($routes as $routeKey => $route)
                                         <li>
-                                            <!-- Use explicit route name and string key -->
                                             <a href="{{ route('docs.show', ['key' => $routeKey]) }}"
                                                class="block pl-2 py-1 text-sm border-l-2 {{ isset($activeEndpoint) && $activeEndpoint === $routeKey ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-600 hover:border-gray-300' }}">
                                                 {{ $route['title'] ?? $routeKey }}
