@@ -30,7 +30,6 @@ class SandboxTokenController extends Controller
     public function create(): JsonResponse
     {
         try {
-            // Get the client IP address with fallback
             $ip = request()->ip() ?: '127.0.0.1';
             Log::info('Creating sandbox token for IP: ' . $ip);
 
@@ -42,7 +41,6 @@ class SandboxTokenController extends Controller
                 ->first();
 
             if ($existingValidToken) {
-                // Return existing token
                 return response()->json([
                     'token' => $existingValidToken->token,
                     'expires_at' => $existingValidToken->expires_at,
@@ -52,21 +50,18 @@ class SandboxTokenController extends Controller
                 ]);
             }
 
-            // Check for daily token limit (1 token per IP per day)
             $tokenCount = DB::table('sandbox_tokens')
                 ->where('ip_address', $ip)
                 ->where('created_at', '>', now()->startOfDay())
                 ->count();
 
             if ($tokenCount >= self::MAX_TOKENS_PER_DAY) {
-                // Find the most recent token for this IP
                 $latestToken = DB::table('sandbox_tokens')
                     ->where('ip_address', $ip)
                     ->orderBy('created_at', 'desc')
                     ->first();
 
                 if ($latestToken) {
-                    // If token exists but is expired, reactivate it
                     if (now()->greaterThan($latestToken->expires_at)) {
                         DB::table('sandbox_tokens')
                             ->where('id', $latestToken->id)
@@ -84,7 +79,6 @@ class SandboxTokenController extends Controller
                         ]);
                     }
 
-                    // If token exists but quota exhausted, return error/warning
                     if ($latestToken->calls >= $latestToken->quota) {
                         return response()->json([
                             'status' => 'warning',
@@ -103,10 +97,8 @@ class SandboxTokenController extends Controller
                 ], 429);
             }
 
-            // Generate a new token
             $token = Str::random(40);
 
-            // Insert new token
             DB::table('sandbox_tokens')->insert([
                 'token' => $token,
                 'calls' => 0,
@@ -150,23 +142,18 @@ class SandboxTokenController extends Controller
     public function refresh(): JsonResponse
     {
         try {
-            // Get the client IP address
             $ip = request()->ip() ?: '127.0.0.1';
 
-            // Find existing tokens for this IP
             $existingToken = DB::table('sandbox_tokens')
                 ->where('ip_address', $ip)
                 ->orderBy('created_at', 'desc')
                 ->first();
 
             if (!$existingToken) {
-                // No existing token, create a new one
                 return $this->create();
             }
 
-            // Token exists but quota is exhausted
             if ($existingToken->calls >= $existingToken->quota) {
-                // Check daily token limit
                 $tokenCount = DB::table('sandbox_tokens')
                     ->where('ip_address', $ip)
                     ->where('created_at', '>', now()->startOfDay())
@@ -181,11 +168,9 @@ class SandboxTokenController extends Controller
                     ], 429);
                 }
 
-                // If under daily limit, create a new token
                 return $this->create();
             }
 
-            // Token exists and has remaining quota, just refresh expiration
             DB::table('sandbox_tokens')
                 ->where('id', $existingToken->id)
                 ->update([
@@ -207,32 +192,6 @@ class SandboxTokenController extends Controller
                 'error' => 'Failed to refresh token',
                 'message' => 'Unexpected error occurred'
             ], 500);
-        }
-    }
-
-    /**
-     * Increment token usage count
-     *
-     * @param string $token
-     * @return bool
-     */
-    public function incrementUsage(string $token): bool
-    {
-        try {
-            $result = DB::table('sandbox_tokens')
-                ->where('token', $token)
-                ->increment('calls', 1, [
-                    'updated_at' => now()
-                ]);
-
-            Log::info('Token usage incremented for token: ' . substr($token, 0, 8) . '...', [
-                'result' => $result ? 'success' : 'failed'
-            ]);
-
-            return $result > 0;
-        } catch (\Exception $e) {
-            Log::error('Error incrementing token usage: ' . $e->getMessage());
-            return false;
         }
     }
 
@@ -270,7 +229,6 @@ class SandboxTokenController extends Controller
                 $sandboxToken->expires_at &&
                 now()->greaterThan($sandboxToken->expires_at);
 
-            // Check if quota is exceeded
             $isQuotaExceeded = $sandboxToken->calls >= $sandboxToken->quota;
 
             if ($isExpired) {
@@ -297,7 +255,6 @@ class SandboxTokenController extends Controller
                 'remaining_calls' => $sandboxToken->quota - $sandboxToken->calls,
             ];
 
-            // Add expires_at if it exists
             if (property_exists($sandboxToken, 'expires_at') && $sandboxToken->expires_at) {
                 $response['expires_at'] = $sandboxToken->expires_at;
             }

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Spatie\Browsershot\Browsershot;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class HtmlToPdfController extends Controller
 {
@@ -135,7 +134,6 @@ class HtmlToPdfController extends Controller
 </html>
 HTML;
 
-        // For API calls, generate nice styled PDF
         $pdfContent = Browsershot::html($fullHtml)
             ->noSandbox()
             ->waitUntilNetworkIdle()
@@ -144,7 +142,6 @@ HTML;
             ->format('A4')
             ->pdf();
 
-        // Return the PDF with proper headers
         return response($pdfContent, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="document.pdf"',
@@ -158,7 +155,6 @@ HTML;
      */
     private function generateSandboxPdf(string $html): \Illuminate\Http\Response
     {
-        // Add base HTML structure and reset CSS for sandbox mode
         $fullHtml = <<<HTML
 <!DOCTYPE html>
 <html>
@@ -181,7 +177,6 @@ HTML;
             vertical-align: baseline;
         }
 
-        /* Document defaults */
         body {
             margin: 0;
             padding: 20px;
@@ -191,7 +186,6 @@ HTML;
             background-color: white;
         }
 
-        /* Basic element styling */
         h1, h2, h3, h4, h5, h6 {
             margin-top: 1.5em;
             margin-bottom: 0.5em;
@@ -210,7 +204,6 @@ HTML;
             margin-bottom: 1em;
         }
 
-        /* Table styling */
         table {
             border-collapse: collapse;
             width: 100%;
@@ -227,13 +220,11 @@ HTML;
             background-color: #f2f2f2;
         }
 
-        /* Links */
         a {
             color: #0066cc;
             text-decoration: underline;
         }
 
-        /* Code blocks */
         pre, code {
             font-family: Consolas, Monaco, 'Andale Mono', monospace;
             background-color: #f5f5f5;
@@ -247,7 +238,6 @@ HTML;
             margin-bottom: 1em;
         }
 
-        /* Ensure page breaks don't cut elements awkwardly */
         h1, h2, h3, h4, h5, h6 {
             page-break-after: avoid;
             page-break-inside: avoid;
@@ -269,7 +259,6 @@ $html
 </html>
 HTML;
 
-        // Generate PDF directly from HTML string (no file:// URLs)
         $pdfContent = Browsershot::html($fullHtml)
             ->noSandbox()
             ->waitUntilNetworkIdle()
@@ -278,7 +267,6 @@ HTML;
             ->format('A4')
             ->pdf();
 
-        // Return the PDF with proper headers
         return response($pdfContent, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="document.pdf"',

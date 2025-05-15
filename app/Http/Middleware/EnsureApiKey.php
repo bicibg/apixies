@@ -19,41 +19,34 @@ class EnsureApiKey
      */
     public function handle(Request $request, Closure $next)
     {
-        // Check if the route should be public
-        if ($request->route()->getAction('middleware') &&
+        $request->attributes->set('sandbox_mode', false);
+        $path = $request->path();
+
+        // Log for debugging
+        Log::debug("EnsureApiKey handling request for path: {$path}");
+
+        if ($request->route() && $request->route()->getAction('middleware') &&
             in_array('public', (array) $request->route()->getAction('middleware'))) {
             return $next($request);
         }
 
-        // Skip auth for certain routes
-        $path = $request->path();
-        if (str_starts_with($path, 'health') ||
-            str_starts_with($path, 'ready') ||
-            str_starts_with($path, 'docs') ||
-            str_starts_with($path, 'swagger')) {
-            return $next($request);
-        }
+        $isHealthOrReadinessEndpoint =
+            $path === 'api/v1/health' ||
+            $path === 'api/v1/ready' ||
+            $path === 'health' ||
+            $path === 'ready';
 
-        // Always allow direct access to test endpoint - but only for GET requests
-        if ($path === 'api/v1/test' && $request->method() === 'GET') {
-            // Set sandbox mode for tracking purposes
-            $request->attributes->set('sandbox_mode', true);
-
-            return $next($request);
-        }
-
-        // Check for Sandbox Token
         $sandboxToken = $request->header('X-Sandbox-Token');
         if ($sandboxToken) {
-            Log::info('Using sandbox token: ' . substr($sandboxToken, 0, 8) . '...');
+            Log::debug("Found sandbox token for path: {$path}");
 
             try {
-                // Find the token in the database
                 $token = DB::table('sandbox_tokens')
                     ->where('token', $sandboxToken)
                     ->first();
 
                 if (!$token) {
+                    Log::info("Invalid sandbox token provided");
                     return response()->json([
                         'status' => 'error',
                         'code' => 'INVALID_SANDBOX_TOKEN',
@@ -61,16 +54,28 @@ class EnsureApiKey
                     ], 401);
                 }
 
-                // Check if token is expired
                 $isExpired = property_exists($token, 'expires_at') &&
                     $token->expires_at &&
                     now()->greaterThan($token->expires_at);
 
-                // Check if quota is exceeded
                 $isQuotaExceeded = $token->calls >= $token->quota;
 
-                // Reject request if token is expired or quota exceeded
+                $request->attributes->set('sandbox_mode', true);
+                Log::debug("Set sandbox_mode=true for path: {$path}");
+
+                $request->attributes->set('token_info', [
+                    'remaining_calls' => max(0, $token->quota - $token->calls),
+                    'expires_at' => $token->expires_at,
+                    'is_expired' => $isExpired
+                ]);
+
+                if ($isHealthOrReadinessEndpoint) {
+                    // Don't increment token usage for health/ready endpoints
+                    return $next($request);
+                }
+
                 if ($isExpired) {
+                    Log::info("Sandbox token expired");
                     return response()->json([
                         'status' => 'error',
                         'code' => 'SANDBOX_TOKEN_EXPIRED',
@@ -81,6 +86,7 @@ class EnsureApiKey
                 }
 
                 if ($isQuotaExceeded) {
+                    Log::info("Sandbox quota exceeded");
                     return response()->json([
                         'status' => 'error',
                         'code' => 'SANDBOX_QUOTA_EXCEEDED',
@@ -89,27 +95,14 @@ class EnsureApiKey
                     ], 429);
                 }
 
-                // Mark as sandbox mode for the API endpoint counter middleware
-                $request->attributes->set('sandbox_mode', true);
+                // Increment token usage count for regular API endpoints
+                DB::table('sandbox_tokens')
+                    ->where('token', $sandboxToken)
+                    ->increment('calls', 1, [
+                        'updated_at' => now()
+                    ]);
 
-                // Make token info available
-                $request->attributes->set('token_info', [
-                    'remaining_calls' => $token->quota - $token->calls,
-                    'expires_at' => $token->expires_at,
-                    'is_expired' => $isExpired
-                ]);
-
-                // Increment token usage count - EXCEPT for test endpoint since we handle that separately
-                if ($path !== 'api/v1/test') {
-                    DB::table('sandbox_tokens')
-                        ->where('token', $sandboxToken)
-                        ->increment('calls', 1, [
-                            'updated_at' => now()
-                        ]);
-
-                    Log::info('Sandbox token usage updated for: ' . substr($sandboxToken, 0, 8) . '...');
-                }
-
+                Log::debug("Incremented usage count for sandbox token");
                 return $next($request);
             } catch (\Exception $e) {
                 Log::error('Error processing sandbox token: ' . $e->getMessage());
@@ -122,7 +115,15 @@ class EnsureApiKey
             }
         }
 
-        // If we get here and there's no sandbox token, check authorization
+        if ($isHealthOrReadinessEndpoint) {
+            return $next($request);
+        }
+
+        if (str_starts_with($path, 'docs') ||
+            str_starts_with($path, 'swagger')) {
+            return $next($request);
+        }
+
         if (!$request->bearerToken() && !$request->header('X-API-Key')) {
             return response()->json([
                 'status' => 'error',
@@ -131,7 +132,6 @@ class EnsureApiKey
             ], 401);
         }
 
-        // Prefer Bearer token if available
         if ($request->bearerToken()) {
             try {
                 $user = Auth::guard('sanctum')->user();
@@ -156,7 +156,6 @@ class EnsureApiKey
             }
         }
 
-        // Check for API key
         $apiKey = $request->header('X-API-Key');
         if ($apiKey) {
             return response()->json([

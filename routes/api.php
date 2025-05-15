@@ -43,6 +43,7 @@ Route::apiV1(function () {
                 'message' => 'API connection successful',
                 'authenticated' => true,
                 'timestamp' => now()->toIso8601String(),
+                'sandbox' => $request->attributes->get('sandbox_mode', false),
             ], 'API test successful');
         })
             ->name('test')
@@ -78,4 +79,26 @@ Route::apiV1(function () {
             ->description('Convert an HTML payload into a PDF file')
             ->requiredParams(['html']);
     });
+
+    Route::get('sandbox-test', function (Request $request) {
+        // Get the sandbox mode status
+        $isSandbox = $request->attributes->get('sandbox_mode', false);
+
+        // Get the sandbox token if provided
+        $sandboxToken = $request->header('X-Sandbox-Token');
+        $tokenExcerpt = $sandboxToken ? substr($sandboxToken, 0, 8).'...' : 'none';
+
+        // Get current time
+        $now = now()->toIso8601String();
+
+        // Return a response with debug info
+        return ApiResponse::success([
+            'sandbox_mode' => $isSandbox,
+            'token' => $tokenExcerpt,
+            'timestamp' => $now,
+            'request_attributes' => $request->attributes->all(),
+        ], 'Sandbox tracking test');
+    })
+        ->name('sandbox-test')
+        ->description('Test endpoint for sandbox tracking.');
 });

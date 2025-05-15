@@ -8,4 +8,8 @@ class ApiEndpointLog extends Model
 {
     public $timestamps = false;
     protected $guarded = [];
+
+    protected $casts = [
+        'is_sandbox' => 'boolean',
+    ];
 }

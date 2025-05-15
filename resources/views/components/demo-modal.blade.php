@@ -167,7 +167,7 @@
                     {{-- Submit button --}}
                     <div class="mt-6">
                         <button @click="submit"
-                                :disabled="loading || (needsUrlParam && !hasRequiredParams) || (!isTestEndpoint && !hasValidToken)"
+                                :disabled="loading || (needsUrlParam && !hasRequiredParams) || (!isHealthOrReadinessEndpoint && !hasValidToken)"
                                 class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed flex justify-center">
                             <span x-show="!loading">Send Request</span>
                             <svg x-show="loading" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -176,7 +176,7 @@
                             </svg>
                         </button>
 
-                        <div x-show="!hasValidToken && tokenInfo && !isTestEndpoint" class="mt-2 text-center text-xs text-red-500">
+                        <div x-show="!hasValidToken && tokenInfo && !isHealthOrReadinessEndpoint" class="mt-2 text-center text-xs text-red-500">
                             Your token has expired or quota is exhausted. Please try again tomorrow.
                         </div>
                     </div>
@@ -392,13 +392,16 @@
                 return expiry < new Date();
             },
 
-            get isTestEndpoint() {
-                return this.uri === 'api/v1/test';
+            get isHealthOrReadinessEndpoint() {
+                return this.uri === 'api/v1/health' ||
+                    this.uri === 'api/v1/ready' ||
+                    this.uri === 'health' ||
+                    this.uri === 'ready';
             },
 
             get hasValidToken() {
-                // For the test endpoint, always allow regardless of token status
-                if (this.isTestEndpoint) {
+                // For health and readiness endpoints, no token needed
+                if (this.isHealthOrReadinessEndpoint) {
                     return true;
                 }
 
@@ -463,8 +466,8 @@
                         };
                     }
 
-                    // If no valid token exists and we're not on the test endpoint, try to get a new one automatically
-                    if (!data.valid && !localStorage.getItem('sandbox_token') && !this.isTestEndpoint) {
+                    // If no valid token exists and we're not on a health/readiness endpoint, try to get a new one automatically
+                    if (!data.valid && !localStorage.getItem('sandbox_token') && !this.isHealthOrReadinessEndpoint) {
                         await this.getNewToken();
                     }
                 } catch (error) {

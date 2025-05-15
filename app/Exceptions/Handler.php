@@ -18,18 +18,14 @@ class Handler extends ExceptionHandler
 {
     public function render($request, Throwable $e)
     {
-        // For web routes, use Laravel's default exception handling
         if (!$request->expectsJson() && !$request->is('api/*')) {
-            // Handle authentication exceptions for web routes
             if ($e instanceof AuthenticationException) {
                 return $this->unauthenticated($request, $e);
             }
 
-            // Use parent rendering for web routes
             return parent::render($request, $e);
         }
 
-        // For API routes or when JSON is expected, use your custom API responses
         return match(true) {
             $e instanceof ValidationException => ApiResponse::error(
                 'Validation failed.',
@@ -79,7 +75,6 @@ class Handler extends ExceptionHandler
             return ApiResponse::error('Unauthenticated.', Response::HTTP_UNAUTHORIZED, [], 'UNAUTHENTICATED');
         }
 
-        // For web routes, redirect to login
         return redirect()->guest(route('login'));
     }
 }

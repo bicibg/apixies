@@ -64,7 +64,6 @@ class SuggestionController extends Controller
             ->exists();
 
         if ($already) {
-            // Fixed: order of parameters matches the ApiResponse::error method definition
             return ApiResponse::error('You already voted for this suggestion', 409, [], 'ALREADY_VOTED');
         }
 

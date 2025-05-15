@@ -4,6 +4,8 @@ namespace App\Filament\Widgets;
 
 use App\Models\ApiEndpointLog;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -28,7 +30,7 @@ class ApiLogsTable extends BaseWidget
             /* Timestamp */
             Tables\Columns\TextColumn::make('created_at')
                 ->label('When')
-                ->dateTime('Y‑m‑d H:i:s')
+                ->dateTime('Y‑m‑d H:i:s')
                 ->sortable(),
 
             /* HTTP verb */
@@ -47,7 +49,7 @@ class ApiLogsTable extends BaseWidget
                 ->numeric()
                 ->sortable(),
 
-            /* ← NEW column */
+            /* User info */
             Tables\Columns\TextColumn::make('user_display')
                 ->label('User')
                 ->state(function (ApiEndpointLog $record): string {
@@ -57,6 +59,14 @@ class ApiLogsTable extends BaseWidget
                 })
                 ->searchable(),
 
+            /* Sandbox Flag */
+            Tables\Columns\IconColumn::make('is_sandbox')
+                ->label('Sandbox')
+                ->boolean()
+                ->trueIcon('heroicon-o-beaker')
+                ->falseIcon('')
+                ->size('sm'),
+
             /* IP address */
             Tables\Columns\TextColumn::make('ip_address')
                 ->label('IP')
@@ -64,8 +74,57 @@ class ApiLogsTable extends BaseWidget
         ];
     }
 
+    protected function getTableFilters(): array
+    {
+        return [
+            SelectFilter::make('is_sandbox')
+                ->label('Environment')
+                ->options([
+                    '0' => 'Production',
+                    '1' => 'Sandbox',
+                ])
+                ->placeholder('All Environments'),
+
+            Filter::make('endpoint_type')
+                ->label('Endpoint Type')
+                ->form([
+                    Tables\Filters\SelectFilter::make('endpoint_category')
+                        ->options([
+                            'health_ready' => 'Health & Ready',
+                            'inspector' => 'Inspector APIs',
+                            'other' => 'Other APIs',
+                        ])
+                        ->placeholder('All Endpoints'),
+                ])
+                ->query(function (Builder $query, array $data): Builder {
+                    if (!$data['endpoint_category']) {
+                        return $query;
+                    }
+
+                    return match ($data['endpoint_category']) {
+                        'health_ready' => $query->where(function ($query) {
+                            $query->where('endpoint', 'like', '%health%')
+                                ->orWhere('endpoint', 'like', '%ready%');
+                        }),
+                        'inspector' => $query->where('endpoint', 'like', '%inspect%'),
+                        'other' => $query->where(function ($query) {
+                            $query->where('endpoint', 'not like', '%health%')
+                                ->where('endpoint', 'not like', '%ready%')
+                                ->where('endpoint', 'not like', '%inspect%');
+                        }),
+                        default => $query,
+                    };
+                }),
+        ];
+    }
+
     protected function isTablePaginationEnabled(): bool
     {
-        return false;   // show 100 rows without a paginator
+        return true;
+    }
+
+    protected function getTableRecordsPerPageSelectOptions(): array
+    {
+        return [25, 50, 100];
     }
 }

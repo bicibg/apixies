@@ -52,7 +52,6 @@ class WebApiKeyController extends Controller
             Carbon::now()->addDays(30)
         );
 
-        // record in activity log
         activity('api-key')
             ->causedBy($user)
             ->withProperties([

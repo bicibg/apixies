@@ -35,18 +35,19 @@ $app = Application::configure(basePath: dirname(__DIR__))
         // Set up auth middleware
         $mw->alias(['auth' => \App\Http\Middleware\Authenticate::class]);
 
-        // API middleware group
+        // API middleware group - IMPORTANT: Keep EnsureApiKey before ApiEndpointCounter
         $mw->group('api', [
             \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
             'throttle:100,1',
             \App\Http\Middleware\ForceJsonResponseMiddleware::class,
             \App\Http\Middleware\CorsMiddleware::class,
             \App\Http\Middleware\SanitizeInputMiddleware::class,
+            // EnsureApiKey must come before ApiEndpointCounter to properly set sandbox flag
+            \App\Http\Middleware\EnsureApiKey::class,
+            \App\Http\Middleware\ApiEndpointCounter::class,
             \App\Http\Middleware\TransformMiddleware::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \App\Http\Middleware\EnsureApiKey::class,
             \App\Http\Middleware\SecureHeaders::class,
-            \App\Http\Middleware\ApiEndpointCounter::class,
             CorrelationId::class,
             ExceptionHandlerMiddleware::class,
             LogRequests::class,

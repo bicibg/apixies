@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Widgets\ApiLogsTable;
 use App\Filament\Widgets\ApiStatsOverview;
+use App\Filament\Widgets\SandboxStatsWidget;
 use Filament\Pages\Page;
 
 class ApiStats extends Page
@@ -11,7 +12,7 @@ class ApiStats extends Page
     protected static ?string $navigationIcon  = 'heroicon-o-chart-bar';
     protected static ?string $navigationGroup = 'Dashboard';
     protected static ?int    $navigationSort  = 0;
-    protected static ?string $title           = 'API Stats';
+    protected static ?string $title           = 'API Stats';
 
     protected static ?string $slug  = 'api-stats';           // URL = /admin/api-stats
     protected static string  $view  = 'filament.pages.api-stats';
@@ -19,7 +20,10 @@ class ApiStats extends Page
     /**  Header widgets (cards) */
     protected function getHeaderWidgets(): array
     {
-        return [ ApiStatsOverview::class ];
+        return [
+            ApiStatsOverview::class,
+            SandboxStatsWidget::class,
+        ];
     }
 
     /**  Footer widgets (table) */

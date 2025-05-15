@@ -33,7 +33,6 @@ class ExceptionHandlerMiddleware
                 'method' => $request->method(),
             ]);
 
-            // Determine appropriate status code
             $statusCode = method_exists($e, 'getStatusCode')
                 ? $e->getStatusCode()
                 : ($e instanceof \Illuminate\Auth\AuthenticationException
