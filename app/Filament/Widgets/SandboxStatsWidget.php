@@ -7,11 +7,10 @@ use Filament\Widgets\StatsOverviewWidget\Card;
 use App\Models\ApiEndpointCount;
 use App\Models\ApiEndpointLog;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
 
 class SandboxStatsWidget extends StatsOverviewWidget
 {
-    protected int|string|array $columnSpan = 'full';
-
     protected function getCards(): array
     {
         // Get sandbox usage data
@@ -45,17 +44,26 @@ class SandboxStatsWidget extends StatsOverviewWidget
             ->limit(3)
             ->get();
 
-        // Format as a text-based list with line breaks
-        $topEndpointsList = '';
+        // Format endpoints as HTML for proper display
+        $topEndpointsHtml = '';
+
         if ($topSandboxEndpoints->isEmpty()) {
-            $topEndpointsList = 'No sandbox data yet';
+            $topEndpointsHtml = '<div class="text-center text-gray-500 py-2">No sandbox data yet</div>';
         } else {
-            foreach ($topSandboxEndpoints as $index => $endpoint) {
-                $path = $endpoint->endpoint;
-                if ($index > 0) {
-                    $topEndpointsList .= "\n";
-                }
-                $topEndpointsList .= $path . ': ' . number_format($endpoint->count);
+            foreach ($topSandboxEndpoints as $endpoint) {
+                // Extract just the endpoint name
+                $pathParts = explode('/', $endpoint->endpoint);
+                $endpointName = end($pathParts);
+
+                // Build styled HTML row
+                $topEndpointsHtml .= sprintf(
+                    '<div class="flex justify-between py-1 border-b border-gray-100">
+                        <div class="font-mono text-sm">%s:</div>
+                        <div class="font-semibold">%s</div>
+                    </div>',
+                    $endpointName,
+                    number_format($endpoint->count)
+                );
             }
         }
 
@@ -76,7 +84,8 @@ class SandboxStatsWidget extends StatsOverviewWidget
                 )
                 ->color($sandboxTokens->quota_usage_percent > 75 ? 'danger' : 'success'),
 
-            Card::make('Top Sandbox Endpoints', $topEndpointsList)
+            // Top Endpoints - as HTML
+            Card::make('Top Sandbox Endpoints', new HtmlString('<div class="space-y-1">' . $topEndpointsHtml . '</div>'))
                 ->color('warning'),
         ];
     }

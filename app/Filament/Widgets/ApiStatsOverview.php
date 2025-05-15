@@ -6,7 +6,9 @@ use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Card;
 use App\Models\ApiEndpointCount;
 use App\Models\ApiEndpointLog;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
 
 class ApiStatsOverview extends StatsOverviewWidget
 {
@@ -37,21 +39,26 @@ class ApiStatsOverview extends StatsOverviewWidget
             ->limit(3)
             ->get();
 
-        // Format top endpoints as readable text
-        $topEndpointsList = '';
-        foreach ($topEndpoints as $index => $endpoint) {
-            $path = $endpoint->endpoint;
-            if ($index > 0) {
-                $topEndpointsList .= "\n";
-            }
-            $topEndpointsList .= $path . ': ' . number_format($endpoint->total_count);
+        // Format endpoints as HTML to ensure proper display
+        $topEndpointsHtml = '';
+        foreach ($topEndpoints as $endpoint) {
+            // Extract just the endpoint name
+            $pathParts = explode('/', $endpoint->endpoint);
+            $endpointName = end($pathParts);
+
+            // Build styled HTML row
+            $topEndpointsHtml .= sprintf(
+                '<div class="flex justify-between py-1 border-b border-gray-100">
+                    <div class="font-mono text-sm">%s:</div>
+                    <div class="font-semibold">%s</div>
+                </div>',
+                $endpointName,
+                number_format($endpoint->total_count)
+            );
         }
 
-        // Get count of unique API keys/users
-        $uniqueUsers = ApiEndpointLog::where('is_sandbox', false)
-            ->whereNotNull('user_id')
-            ->distinct('user_id')
-            ->count('user_id');
+        // FIXED: Count total registered users correctly
+        $totalUsers = User::count();
 
         // Sandbox token count
         $sandboxTokens = DB::table('sandbox_tokens')->count();
@@ -74,12 +81,12 @@ class ApiStatsOverview extends StatsOverviewWidget
                 )
                 ->color('success'),
 
-            // Top Endpoints - formatted list
-            Card::make('Top Endpoints', $topEndpointsList)
+            // Top Endpoints - as HTML for better structuring
+            Card::make('Top Endpoints', new HtmlString('<div class="space-y-1">' . $topEndpointsHtml . '</div>'))
                 ->color('warning'),
 
-            // User counts
-            Card::make('Users & Tokens', $uniqueUsers . ' users')
+            // User counts - FIXED
+            Card::make('Users & Tokens', number_format($totalUsers) . ' users')
                 ->description($sandboxTokens . ' sandbox tokens')
                 ->color('danger'),
         ];

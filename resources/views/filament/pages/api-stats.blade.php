@@ -3,20 +3,27 @@
         Summary of API usage across the platform.
     </div>
 
-    {{-- Section headings are minimal and can be removed if desired --}}
-    <div class="mb-4">
-        <h2 class="text-lg font-semibold text-gray-700">Overall API Statistics</h2>
+    <!-- Overall API Statistics Section -->
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">Overall API Statistics</h2>
+        <p class="text-sm text-gray-500 mb-4">Combined statistics for production and sandbox</p>
+
+        @livewire(\App\Filament\Widgets\ApiStatsOverview::class)
     </div>
 
-    {{ $this->widgets[0] ?? null }}
+    <!-- Sandbox Environment Section -->
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">Sandbox Environment</h2>
+        <p class="text-sm text-gray-500 mb-4">Data for sandbox token usage only</p>
 
-    <div class="mt-8 mb-4">
-        <h2 class="text-lg font-semibold text-gray-700">Sandbox Environment</h2>
+        @livewire(\App\Filament\Widgets\SandboxStatsWidget::class)
     </div>
 
-    {{ $this->widgets[1] ?? null }}
+    <!-- API Logs Section -->
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">API Logs</h2>
+        <p class="text-sm text-gray-500 mb-4">Recent API requests</p>
 
-    <div class="mt-8 mb-4">
-        <h2 class="text-lg font-semibold text-gray-700">API Logs</h2>
+        @livewire(\App\Filament\Widgets\ApiLogsTable::class)
     </div>
 </x-filament-panels::page>

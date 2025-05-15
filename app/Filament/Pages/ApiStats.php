@@ -17,18 +17,15 @@ class ApiStats extends Page
     protected static ?string $slug  = 'api-stats';           // URL = /admin/api-stats
     protected static string  $view  = 'filament.pages.api-stats';
 
-    /**  Header widgets (cards) */
+    // We're directly rendering the widgets in the template,
+    // so we don't need to register them here
     protected function getHeaderWidgets(): array
     {
-        return [
-            ApiStatsOverview::class,
-            SandboxStatsWidget::class,
-        ];
+        return [];
     }
 
-    /**  Footer widgets (table) */
     protected function getFooterWidgets(): array
     {
-        return [ ApiLogsTable::class ];
+        return [];
     }
 }
