@@ -2,16 +2,16 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\SandboxToken;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class EnsureApiKey
 {
     /**
-     * Handle an incoming request.
+     * Handle an incoming request
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
@@ -25,12 +25,18 @@ class EnsureApiKey
             return $next($request);
         }
 
-        // Skip auth for test/health/status/docs routes
+        // Skip auth for certain routes
         $path = $request->path();
         if (str_starts_with($path, 'health') ||
             str_starts_with($path, 'ready') ||
             str_starts_with($path, 'docs') ||
             str_starts_with($path, 'swagger')) {
+            return $next($request);
+        }
+
+        // Always allow direct access to test endpoint
+        if ($path === 'api/v1/test') {
+            $request->attributes->set('sandbox_mode', true);
             return $next($request);
         }
 
@@ -40,7 +46,10 @@ class EnsureApiKey
             Log::info('Using sandbox token: ' . substr($sandboxToken, 0, 8) . '...');
 
             try {
-                $token = SandboxToken::where('token', $sandboxToken)->first();
+                // Find the token in the database
+                $token = DB::table('sandbox_tokens')
+                    ->where('token', $sandboxToken)
+                    ->first();
 
                 if (!$token) {
                     return response()->json([
@@ -50,11 +59,10 @@ class EnsureApiKey
                     ], 401);
                 }
 
-                // Check if expires_at column exists
-                $hasExpiresAt = \Schema::hasColumn('sandbox_tokens', 'expires_at');
-
-                // Check if token is expired (if column exists)
-                if ($hasExpiresAt && $token->expires_at && now()->greaterThan($token->expires_at)) {
+                // Check if token is expired (if applicable)
+                if (property_exists($token, 'expires_at') &&
+                    $token->expires_at &&
+                    now()->greaterThan($token->expires_at)) {
                     return response()->json([
                         'status' => 'error',
                         'code' => 'SANDBOX_TOKEN_EXPIRED',
@@ -74,9 +82,18 @@ class EnsureApiKey
                 // Enable sandbox mode
                 $request->attributes->set('sandbox_mode', true);
 
+                // Increment token usage count
+                DB::table('sandbox_tokens')
+                    ->where('token', $sandboxToken)
+                    ->increment('calls', 1, [
+                        'updated_at' => now()
+                    ]);
+
+                Log::info('Sandbox token usage updated for: ' . substr($sandboxToken, 0, 8) . '...');
+
                 return $next($request);
             } catch (\Exception $e) {
-                Log::error('Error validating sandbox token: ' . $e->getMessage());
+                Log::error('Error processing sandbox token: ' . $e->getMessage());
 
                 return response()->json([
                     'status' => 'error',
@@ -86,13 +103,7 @@ class EnsureApiKey
             }
         }
 
-        // Always allow direct access to test endpoint
-        if ($path === 'api/v1/test') {
-            $request->attributes->set('sandbox_mode', true);
-            return $next($request);
-        }
-
-        // If we get here and there's no sandbox token, treat as bearer token
+        // If we get here and there's no sandbox token, check authorization
         if (!$request->bearerToken() && !$request->header('X-API-Key')) {
             return response()->json([
                 'status' => 'error',

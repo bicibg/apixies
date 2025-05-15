@@ -24,7 +24,7 @@ return [
     ],
     'ready' => [
         'title' => 'Readiness Check',
-        'description' => 'Check if the API is ready to accept requests',
+        'description' => 'Check if the API is ready to accept requests by verifying database and cache connections',
         'uri' => 'api/v1/ready',
         'method' => 'GET',
         'category' => 'system',
@@ -46,7 +46,7 @@ return [
     ],
     'ssl' => [
         'title' => 'SSL Health Inspector',
-        'description' => 'Inspect SSL certificate details for a domain',
+        'description' => 'Inspect SSL certificate details for a domain, including validity, expiry and chain health',
         'uri' => 'api/v1/inspect-ssl',
         'method' => 'GET',
         'category' => 'inspector',
@@ -74,7 +74,7 @@ return [
     ],
     'headers' => [
         'title' => 'Security Headers Inspector',
-        'description' => 'Inspect security headers for a URL',
+        'description' => 'Inspect security headers for a URL to check for adherence to current best practices',
         'uri' => 'api/v1/inspect-headers',
         'method' => 'GET',
         'category' => 'inspector',
@@ -95,12 +95,16 @@ return [
                     'X-Frame-Options' => 'DENY',
                     'X-XSS-Protection' => '1; mode=block',
                 ],
+                'missing' => [
+                    'Strict-Transport-Security'
+                ],
+                'grade' => 'B',
             ],
         ],
     ],
     'email' => [
         'title' => 'Email Inspector',
-        'description' => 'Inspect email address details',
+        'description' => 'Inspect email address details including format validation, MX record checks, and disposable email detection',
         'uri' => 'api/v1/inspect-email',
         'method' => 'GET',
         'category' => 'inspector',
@@ -127,7 +131,7 @@ return [
     ],
     'user-agent' => [
         'title' => 'User Agent Inspector',
-        'description' => 'Inspect user agent details',
+        'description' => 'Parse a User-Agent string to detect browser, operating system, device type and bot status',
         'uri' => 'api/v1/inspect-user-agent',
         'method' => 'GET',
         'category' => 'inspector',
@@ -153,7 +157,7 @@ return [
     ],
     'html-to-pdf' => [
         'title' => 'HTML to PDF Converter',
-        'description' => 'Convert HTML content to PDF document',
+        'description' => 'Convert HTML content to a PDF document with proper formatting and styling',
         'uri' => 'api/v1/html-to-pdf',
         'method' => 'POST',
         'category' => 'converter',
@@ -166,7 +170,7 @@ return [
     ],
     'test' => [
         'title' => 'Test Endpoint',
-        'description' => 'Simple endpoint for testing API connectivity',
+        'description' => 'Simple endpoint for testing API connectivity and authentication',
         'uri' => 'api/v1/test',
         'method' => 'GET',
         'category' => 'system',
@@ -177,10 +181,11 @@ return [
             'status' => 'success',
             'http_code' => 200,
             'code' => 'SUCCESS',
-            'message' => 'API connection successful',
+            'message' => 'API test successful',
             'data' => [
+                'message' => 'API connection successful',
+                'authenticated' => true,
                 'timestamp' => '2025-05-15T12:34:56Z',
-                'ip' => '127.0.0.1',
             ],
         ],
     ],

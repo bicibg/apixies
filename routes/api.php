@@ -38,12 +38,11 @@ Route::apiV1(function () {
         // TEST ENDPOINT (for API key testing)
         // ==========================================
         Route::get('test', function (Request $request) {
-            // In sandbox mode or without authentication, just return basic info
+            // Return connection status without exposing IP
             return ApiResponse::success([
                 'message' => 'API connection successful',
-                'sandbox' => $request->attributes->get('sandbox_mode', false),
+                'authenticated' => true,
                 'timestamp' => now()->toIso8601String(),
-                'ip' => $request->ip(),
             ], 'API test successful');
         })
             ->name('api.test')

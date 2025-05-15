@@ -6,7 +6,6 @@ use App\Exceptions\Handler;
 use App\Http\Middleware\CorrelationId;
 use App\Http\Middleware\ExceptionHandlerMiddleware;
 use App\Http\Middleware\LogRequests;
-use App\Http\Middleware\SandboxTokenUsageMiddleware;
 
 $app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -51,7 +50,6 @@ $app = Application::configure(basePath: dirname(__DIR__))
             CorrelationId::class,
             ExceptionHandlerMiddleware::class,
             LogRequests::class,
-            SandboxTokenUsageMiddleware::class, // Add the new middleware here
         ]);
     })
     ->create();

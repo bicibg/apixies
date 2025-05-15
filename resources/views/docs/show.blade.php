@@ -212,7 +212,7 @@ curl_setopt($ch, CURLOPT_URL, "{{ config('app.url') }}/{{ $apiRoute['uri'] ?? ''
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
     "Content-Type: application/json",
-    "X-Sandbox-Token: YOUR_SANDBOX_TOKEN"
+    "X-Sandbox-Token: "YOUR_SANDBOX_TOKEN"
 ]);
 
 $response = curl_exec($ch);

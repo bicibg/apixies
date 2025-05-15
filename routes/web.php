@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\DocsController;
 use App\Http\Controllers\SandboxTokenController;
-use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SuggestionController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
