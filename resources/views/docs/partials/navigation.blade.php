@@ -39,12 +39,12 @@
                                     {{ ucfirst($categoryName) }}
                                 </div>
                                 <ul class="space-y-1">
-                                    @foreach($routes as $key => $route)
+                                    @foreach($routes as $routeKey => $route)
                                         <li>
-                                            <!-- Use explicit URL with key as string to avoid numeric indices -->
-                                            <a href="{{ url('/docs/'.$key) }}"
-                                               class="block pl-2 py-1 text-sm border-l-2 {{ isset($activeEndpoint) && $activeEndpoint === $key ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-600 hover:border-gray-300' }}">
-                                                {{ $route['title'] ?? $key }}
+                                            <!-- Use explicit route name and string key -->
+                                            <a href="{{ route('docs.show', ['key' => $routeKey]) }}"
+                                               class="block pl-2 py-1 text-sm border-l-2 {{ isset($activeEndpoint) && $activeEndpoint === $routeKey ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-600 hover:border-gray-300' }}">
+                                                {{ $route['title'] ?? $routeKey }}
                                             </a>
                                         </li>
                                     @endforeach

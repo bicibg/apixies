@@ -2,127 +2,145 @@
 
 namespace App\Http\Middleware;
 
-use App\Helpers\ApiResponse;
 use App\Models\SandboxToken;
 use Closure;
 use Illuminate\Http\Request;
-use App\Models\PersonalAccessToken;
-use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class EnsureApiKey
 {
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @return mixed
+     */
     public function handle(Request $request, Closure $next)
     {
-        // 1) Grab the token from the Authorization header or X-API-KEY
-        $raw = $request->bearerToken() ?: $request->header('X-API-KEY');
-
-        if (!$raw) {
-            Log::warning('API key missing', ['path' => $request->path()]);
-            return ApiResponse::error('No API key provided', Response::HTTP_UNAUTHORIZED);
-        }
-
-        // Debug info
-        $debug = ['token_prefix' => substr($raw, 0, 8) . '...', 'path' => $request->path()];
-
-        // 2) Check for a sandbox token
-        $sandbox = SandboxToken::where('token', $raw)->first();
-
-        if ($sandbox) {
-            // Handle sandbox token
-            Log::info('Sandbox token found', $debug);
-
-            // Check if expired
-            if (isset($sandbox->expires_at) && now()->greaterThan($sandbox->expires_at)) {
-                Log::warning('Sandbox token expired', $debug);
-                return ApiResponse::error('Sandbox token expired', Response::HTTP_UNAUTHORIZED);
-            }
-
-            // Determine which field to use for call tracking
-            // Check all possible field names for tracking calls
-            $callsRemaining = null;
-            $callsField = null;
-
-            if (isset($sandbox->remaining_calls)) {
-                $callsRemaining = $sandbox->remaining_calls;
-                $callsField = 'remaining_calls';
-            } elseif (isset($sandbox->calls)) {
-                // If calls is a counter of used calls
-                $quota = $sandbox->quota ?? 100; // Default quota if not set
-                $callsRemaining = $quota - $sandbox->calls;
-                $callsField = 'calls';
-            } elseif (isset($sandbox->quota)) {
-                $callsRemaining = $sandbox->quota;
-                $callsField = 'quota';
-            }
-
-            // Log the full sandbox token data for debugging
-            Log::info('Sandbox token data', [
-                'token' => substr($raw, 0, 8) . '...',
-                'data' => $sandbox->toArray()
-            ]);
-
-            // Check if we have a valid tracking field
-            if ($callsField && $callsRemaining !== null) {
-                // Check quota
-                if ($callsRemaining <= 0) {
-                    Log::warning('Sandbox quota exhausted', $debug);
-                    return ApiResponse::error('Sandbox quota exhausted', Response::HTTP_TOO_MANY_REQUESTS);
-                }
-
-                // Update call count based on field type
-                if ($callsField === 'remaining_calls' || $callsField === 'quota') {
-                    $sandbox->$callsField = $callsRemaining - 1;
-                } elseif ($callsField === 'calls') {
-                    $sandbox->calls += 1;
-                }
-
-                $sandbox->save();
-            } else {
-                // If no tracking field is found, just proceed without tracking
-                Log::warning('No call tracking field found on sandbox token', $debug);
-            }
-
-            // For sandbox tokens, we don't need a user, so we can proceed
-            Log::info('Sandbox token authorized', $debug);
+        // Check if the route should be public
+        if ($request->route()->getAction('middleware') &&
+            in_array('public', (array) $request->route()->getAction('middleware'))) {
             return $next($request);
         }
 
-        // 3) Standard API token lookup via Sanctum
-        $cacheKey = "api_token:{$raw}";
-        $token = Cache::get($cacheKey);
-        if (!$token) {
-            $token = PersonalAccessToken::findToken($raw);
-            if ($token) {
-                Cache::put($cacheKey, $token, 60);
+        // Skip auth for test/health/status/docs routes
+        $path = $request->path();
+        if (str_starts_with($path, 'health') ||
+            str_starts_with($path, 'ready') ||
+            str_starts_with($path, 'docs') ||
+            str_starts_with($path, 'swagger')) {
+            return $next($request);
+        }
+
+        // Check for Sandbox Token
+        $sandboxToken = $request->header('X-Sandbox-Token');
+        if ($sandboxToken) {
+            Log::info('Using sandbox token: ' . substr($sandboxToken, 0, 8) . '...');
+
+            try {
+                $token = SandboxToken::where('token', $sandboxToken)->first();
+
+                if (!$token) {
+                    return response()->json([
+                        'status' => 'error',
+                        'code' => 'INVALID_SANDBOX_TOKEN',
+                        'message' => 'Invalid sandbox token',
+                    ], 401);
+                }
+
+                // Check if expires_at column exists
+                $hasExpiresAt = \Schema::hasColumn('sandbox_tokens', 'expires_at');
+
+                // Check if token is expired (if column exists)
+                if ($hasExpiresAt && $token->expires_at && now()->greaterThan($token->expires_at)) {
+                    return response()->json([
+                        'status' => 'error',
+                        'code' => 'SANDBOX_TOKEN_EXPIRED',
+                        'message' => 'Sandbox token expired',
+                    ], 401);
+                }
+
+                // Check if quota is exceeded
+                if ($token->calls >= $token->quota) {
+                    return response()->json([
+                        'status' => 'error',
+                        'code' => 'SANDBOX_QUOTA_EXCEEDED',
+                        'message' => 'Sandbox quota exhausted',
+                    ], 429);
+                }
+
+                // Enable sandbox mode
+                $request->attributes->set('sandbox_mode', true);
+
+                return $next($request);
+            } catch (\Exception $e) {
+                Log::error('Error validating sandbox token: ' . $e->getMessage());
+
+                return response()->json([
+                    'status' => 'error',
+                    'code' => 'SANDBOX_ERROR',
+                    'message' => 'Error processing sandbox token',
+                ], 500);
             }
         }
 
-        if (!$token) {
-            Log::warning('API key invalid', ['token_hash' => hash('sha256', $raw)]);
-            return ApiResponse::error('Invalid API key', Response::HTTP_UNAUTHORIZED);
+        // Check for Bearer token authentication
+        if (!$request->bearerToken() && !$request->header('X-API-Key')) {
+            return response()->json([
+                'status' => 'error',
+                'code' => 'MISSING_AUTH',
+                'message' => 'Missing API key or token',
+            ], 401);
         }
 
-        // 4) Expiration check
-        if ($token->expires_at && now()->greaterThan($token->expires_at)) {
-            Log::warning('API key expired', ['uuid' => $token->uuid]);
-            return ApiResponse::error('API key expired', Response::HTTP_UNAUTHORIZED);
+        // Prefer Bearer token if available
+        if ($request->bearerToken()) {
+            $token = $request->bearerToken();
+            Auth::guard('sanctum')->setToken($token);
+
+            try {
+                $user = Auth::guard('sanctum')->user();
+
+                if (!$user) {
+                    return response()->json([
+                        'status' => 'error',
+                        'code' => 'INVALID_TOKEN',
+                        'message' => 'Invalid API token',
+                    ], 401);
+                }
+
+                return $next($request);
+            } catch (\Exception $e) {
+                Log::error('Error validating bearer token: ' . $e->getMessage());
+
+                return response()->json([
+                    'status' => 'error',
+                    'code' => 'AUTH_ERROR',
+                    'message' => 'Authentication error',
+                ], 401);
+            }
         }
 
-        // 5) Scope check
-        if (!$token->can('read')) {
-            Log::warning('API key missing read scope', ['uuid' => $token->uuid]);
-            return ApiResponse::error('Insufficient scope', Response::HTTP_FORBIDDEN);
+        // Check for API key
+        $apiKey = $request->header('X-API-Key');
+        if ($apiKey) {
+            // Implement your API key validation logic here
+            // ...
+
+            // For now, just return unauthorized
+            return response()->json([
+                'status' => 'error',
+                'code' => 'INVALID_API_KEY',
+                'message' => 'Invalid API key',
+            ], 401);
         }
 
-        // 6) All good — update last_used_at and set the user
-        $token->forceFill(['last_used_at' => Carbon::now()])->saveQuietly();
-        $request->setUserResolver(fn() => $token->tokenable);
-
-        Log::info('API key authorized', ['uuid' => $token->uuid, 'path' => $request->path()]);
-
-        return $next($request);
+        return response()->json([
+            'status' => 'error',
+            'code' => 'AUTH_REQUIRED',
+            'message' => 'Authentication required',
+        ], 401);
     }
 }

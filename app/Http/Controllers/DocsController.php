@@ -82,10 +82,14 @@ class DocsController extends Controller
     {
         $apiRoutes = config('api_examples');
 
-        // Handle numeric keys by redirecting to the proper string key
+        // Handle numeric keys if they still exist in URLs
         if (is_numeric($key)) {
-            $keys = array_keys($apiRoutes);
+            // Convert to array to get keys for numeric access
+            $routes = $apiRoutes;
+            $keys = array_keys($routes);
+
             if (isset($keys[(int)$key])) {
+                // Redirect to the named route using the string key
                 return redirect()->route('docs.show', ['key' => $keys[(int)$key]]);
             }
         }

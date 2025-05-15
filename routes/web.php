@@ -68,7 +68,7 @@ Route::middleware('web')->group(function () {
     // Sandbox Token Management
     Route::post('/sandbox/token/create', [SandboxTokenController::class, 'create']);
     Route::post('/sandbox/token/refresh', [SandboxTokenController::class, 'refresh']);
-    Route::post('/sandbox/token/validate', [SandboxTokenController::class, 'validate']);
+    Route::post('/sandbox/token/validate', [SandboxTokenController::class, 'validateToken']); // Updated method name
 
     // PDF Preview
     Route::get('/pdf/preview', function (Illuminate\Http\Request $request) {

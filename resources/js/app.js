@@ -10,7 +10,6 @@ window.Alpine = Alpine;
 // Register Alpine components before initializing
 document.addEventListener('DOMContentLoaded', () => {
     // Register the demoModal component
-    // Inside the Alpine.data('demoModal') function in app.js
     Alpine.data('demoModal', function() {
         return {
             open: false,
@@ -21,10 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
             method: '',
             uri: '',
             params: {},
-            token: '',
+            token: null,
             response: null,
             responseUrl: null,
-            tokenInfo: null,
+            tokenInfo: {
+                remaining_calls: 0,
+                expires_at: null
+            },
 
             // Computed properties
             get needsUrlParam() {
@@ -53,14 +55,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 return true;
             },
-
+            
             init() {
+                // Initialize with default tokenInfo to prevent null errors
+                this.tokenInfo = {
+                    remaining_calls: 0,
+                    expires_at: null
+                };
+
                 // Initialize component with URI and method
                 this.uri = this.$el.getAttribute('data-uri') || '';
                 this.method = this.$el.getAttribute('data-method') || 'get';
 
                 // Check if token already exists in localStorage
-                this.token = localStorage.getItem('sandbox_token');
+                this.token = localStorage.getItem('sandbox_token') || '';
 
                 // Migrate legacy token if exists
                 if (!this.token && localStorage.getItem('apixies_sandbox')) {
@@ -72,17 +80,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Initialize parameters object
                 this.params = {};
 
-                // Get token info
+                // Get token info if token exists, otherwise create a new one
+                // but only for the first modal instance to prevent multiple tokens
                 if (this.token) {
                     this.getTokenInfo();
+                } else if (!document.querySelector('[x-data="demoModal"].initialized')) {
+                    // Only the first modal should create a token
+                    this.$el.classList.add('initialized');
+                    this.refreshToken();
                 }
 
-                // Initialize for debugging
                 console.log("Demo modal initialized with token:", this.token);
                 console.log("API endpoint:", this.uri);
             },
 
             formatExpiryTime(isoString) {
+                if (!isoString) return 'unknown';
+
                 try {
                     const expiryDate = new Date(isoString);
                     const now = new Date();
@@ -103,7 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
             },
 
             getTokenInfo() {
-                if (!this.token) return;
+                if (!this.token) {
+                    console.log("No token to validate");
+                    return;
+                }
 
                 fetch('/sandbox/token/validate', {
                     method: 'POST',
@@ -113,30 +130,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     body: JSON.stringify({ token: this.token })
                 })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Server returned ${response.status}`);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
+                        console.log("Token info received:", data);
                         if (data.valid) {
                             this.tokenInfo = {
-                                remaining_calls: data.remaining_calls,
-                                expires_at: data.expires_at
+                                remaining_calls: data.remaining_calls || 0,
+                                expires_at: data.expires_at || null
                             };
                         } else {
                             // Token is invalid, clear it
                             localStorage.removeItem('sandbox_token');
-                            this.token = null;
-                            this.tokenInfo = null;
+                            this.token = '';
+                            this.tokenInfo = {
+                                remaining_calls: 0,
+                                expires_at: null
+                            };
+                            // Get a new token
+                            this.refreshToken();
                         }
                     })
                     .catch(error => {
                         console.error('Error checking token info:', error);
-                        this.tokenInfo = null;
+                        this.tokenInfo = {
+                            remaining_calls: 0,
+                            expires_at: null
+                        };
                     });
             },
 
             refreshToken() {
                 this.refreshingToken = true;
+                console.log("Refreshing token...");
 
-                fetch('/sandbox/token/create', {  // Changed from /refresh to /create
+                fetch('/sandbox/token/create', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -150,6 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         throw new Error(`Server returned ${response.status}: ${response.statusText}`);
                     })
                     .then(data => {
+                        console.log("Token refresh response:", data);
                         if (data.token) {
                             localStorage.setItem('sandbox_token', data.token);
                             this.token = data.token;
@@ -190,7 +223,22 @@ document.addEventListener('DOMContentLoaded', () => {
             },
 
             toggleFullscreen() {
+                console.log("Toggling fullscreen mode", this.fullscreen);
                 this.fullscreen = !this.fullscreen;
+
+                // Get the response area element
+                const responseArea = this.$el.querySelector('.response-area');
+                if (responseArea) {
+                    if (this.fullscreen) {
+                        responseArea.style.height = 'calc(100vh - 280px)';
+                        console.log("Set to fullscreen height");
+                    } else {
+                        responseArea.style.height = '350px';
+                        console.log("Set to normal height");
+                    }
+                } else {
+                    console.error("Response area not found");
+                }
             },
 
             submit() {
@@ -224,7 +272,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Build request URL and params
                 let requestUrl = this.uri;
-                let requestParams = {};
+
+                // Add leading slash if missing
+                if (!requestUrl.startsWith('/') && !requestUrl.startsWith('http')) {
+                    requestUrl = '/' + requestUrl;
+                }
+
+                console.log("API Request URL:", requestUrl);
 
                 // For GET requests with URL parameter
                 if (this.method === 'get' && this.params.url) {
@@ -403,28 +457,49 @@ function setupCopyApiToken() {
  * Set up tab functionality for API documentation
  */
 function initApiDocumentationTabs() {
-    // Don't initialize tabs on the single endpoint page
-    if (document.querySelector('.tab-nav')) {
-        // Skip the docs/show.blade.php page which has its own tab initialization
-        const endpointDetailPage = document.querySelector('h1 + p + div .method-badge');
-        if (endpointDetailPage) {
-            console.log("Skipping tab initialization on endpoint detail page");
-            return;
-        }
+    console.log("Initializing API documentation tabs");
+
+    // Skip initialization on detail pages that have their own tab logic
+    const endpointDetailPage = document.querySelector('.tab-nav');
+    if (endpointDetailPage) {
+        console.log("Skipping tab initialization on endpoint detail page");
+        return;
     }
 
     const tabButtons = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
+    if (!tabButtons || tabButtons.length === 0) {
+        console.log("No tab buttons found");
+        return;
+    }
 
-    if (!tabButtons.length) return;
+    const tabContents = document.querySelectorAll('.tab-content');
+    if (!tabContents || tabContents.length === 0) {
+        console.log("No tab content found");
+        return;
+    }
+
+    console.log(`Found ${tabButtons.length} tab buttons and ${tabContents.length} tab contents`);
+
+    // Debug all tabs
+    tabButtons.forEach((btn, index) => {
+        console.log(`Tab ${index}:`, btn.dataset.tab, btn.textContent.trim());
+    });
 
     // Function to activate a given tab
     function activateTab(button) {
+        if (!button) {
+            console.error("Invalid button provided to activateTab");
+            return;
+        }
+
+        console.log("Activating tab:", button.dataset.tab);
+
         // Deactivate all tabs
         tabButtons.forEach(btn => {
             btn.classList.remove('active', 'text-[#0A2240]', 'border-b-2', 'border-[#0A2240]');
-            btn.classList.add('text-gray-500');
+            btn.classList.add('text-gray-500', 'border-transparent');
         });
+
         // Hide all panes
         tabContents.forEach(content => {
             content.classList.add('hidden');
@@ -432,24 +507,36 @@ function initApiDocumentationTabs() {
 
         // Activate this tab
         button.classList.add('active', 'text-[#0A2240]', 'border-b-2', 'border-[#0A2240]');
-        button.classList.remove('text-gray-500');
+        button.classList.remove('text-gray-500', 'border-transparent');
 
         // Show its pane
-        const tabId = button.dataset.tab;
+        const tabId = button.getAttribute('data-tab');
+        if (!tabId) {
+            console.error("Button doesn't have data-tab attribute:", button);
+            return;
+        }
+
         const pane = document.getElementById(tabId);
         if (pane) {
             pane.classList.remove('hidden');
+            console.log("Showing tab content:", tabId);
+        } else {
+            console.error("Tab content not found for ID:", tabId);
         }
     }
 
     // Bind click handlers
     tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log("Tab clicked:", button.dataset.tab);
             activateTab(button);
+            return false;
         });
     });
 
     // On load, activate the first tab
+    console.log("Activating first tab on load");
     activateTab(tabButtons[0]);
 }
 

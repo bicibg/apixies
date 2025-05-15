@@ -17,17 +17,17 @@
 
     <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
         <div class="border-b border-gray-200">
-            <nav class="tab-nav">
-                <button class="tab-btn active" data-tab="overview">
+            <nav class="tab-nav flex">
+                <button class="tab-btn px-4 py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="overview">
                     Overview
                 </button>
-                <button class="tab-btn" data-tab="parameters">
+                <button class="tab-btn px-4 py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="parameters">
                     Parameters
                 </button>
-                <button class="tab-btn" data-tab="responses">
+                <button class="tab-btn px-4 py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="responses">
                     Response
                 </button>
-                <button class="tab-btn" data-tab="examples">
+                <button class="tab-btn px-4 py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="examples">
                     Examples
                 </button>
             </nav>
@@ -36,7 +36,7 @@
         <div class="p-6">
             <!-- Tab contents here... -->
             <!-- Overview Tab -->
-            <div class="tab-content active" id="overview">
+            <div class="tab-content" id="overview">
                 <p class="mb-4">
                     {{ $apiRoute['description'] ?? 'No detailed description available.' }}
                 </p>
@@ -142,48 +142,6 @@
     </div>
 @endsection
 
-@push('doc-scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Simple tab navigation
-            const tabButtons = document.querySelectorAll('.tab-nav .tab-btn');
-            const tabContents = document.querySelectorAll('.tab-content');
-
-            // Set initial state - ensure first tab is active
-            if (tabButtons.length > 0 && tabContents.length > 0) {
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                tabContents.forEach(content => {
-                    content.classList.add('hidden');
-                    content.classList.remove('active');
-                });
-
-                // Activate first tab
-                tabButtons[0].classList.add('active');
-                tabContents[0].classList.remove('hidden');
-                tabContents[0].classList.add('active');
-            }
-
-            // Add click handlers
-            tabButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // Update active state
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    tabContents.forEach(content => {
-                        content.classList.add('hidden');
-                        content.classList.remove('active');
-                    });
-
-                    // Activate selected tab
-                    this.classList.add('active');
-                    const tabId = this.dataset.tab;
-                    const tabContent = document.getElementById(tabId);
-
-                    if (tabContent) {
-                        tabContent.classList.remove('hidden');
-                        tabContent.classList.add('active');
-                    }
-                });
-            });
-        });
-    </script>
+@push('scripts')
+    <script src="{{ asset('js/tabs.js') }}"></script>
 @endpush
