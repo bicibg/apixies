@@ -3,86 +3,72 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\ApiEndpointCount;
-use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class DocsController extends Controller
 {
     /**
-     * Display the documentation landing page
+     * Display the documentation overview page
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
-    public function index()
+    public function index(): View
     {
-        // Get popular endpoints if available
-        try {
-            $popularEndpoints = ApiEndpointCount::select('endpoint', DB::raw('sum(count) as total'))
-                ->groupBy('endpoint')
-                ->orderBy('total', 'desc')
-                ->limit(5)
-                ->get();
-        } catch (\Exception $e) {
-            $popularEndpoints = collect();
-        }
+        $apiRoutes = config('api_examples');
+        $categories = collect($apiRoutes)->groupBy('category');
 
         return view('docs.index', [
-            'popularEndpoints' => $popularEndpoints,
+            'activeSection' => 'overview',
+            'categories' => $categories
         ]);
     }
 
     /**
-     * Display the features documentation
+     * Display the features documentation page
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
-    public function features()
+    public function features(): View
     {
-        return view('docs.features');
+        $apiRoutes = config('api_examples');
+        $categories = collect($apiRoutes)->groupBy('category');
+
+        return view('docs.features', [
+            'activeSection' => 'features',
+            'categories' => $categories
+        ]);
     }
 
     /**
-     * Display the authentication documentation
+     * Display the authentication documentation page
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
-    public function authentication()
+    public function authentication(): View
     {
-        return view('docs.authentication');
+        $apiRoutes = config('api_examples');
+        $categories = collect($apiRoutes)->groupBy('category');
+
+        return view('docs.authentication', [
+            'activeSection' => 'authentication',
+            'categories' => $categories
+        ]);
     }
 
     /**
-     * Display the response format documentation
+     * Display all API endpoints
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
-    public function responses()
-    {
-        return view('docs.responses');
-    }
-
-    /**
-     * Display the code examples documentation
-     *
-     * @return \Illuminate\View\View
-     */
-    public function examples()
-    {
-        return view('docs.examples');
-    }
-
-    /**
-     * Display the list of API endpoints
-     *
-     * @return \Illuminate\View\View
-     */
-    public function endpoints()
+    public function endpoints(): View
     {
         $apiRoutes = config('api_examples');
         $categories = collect($apiRoutes)->groupBy('category');
 
         return view('docs.endpoints.index', [
             'categories' => $categories,
+            'activeSection' => 'endpoints'
         ]);
     }
 
@@ -90,20 +76,68 @@ class DocsController extends Controller
      * Display a specific API endpoint
      *
      * @param string $key
-     * @return \Illuminate\View\View
+     * @return View|RedirectResponse
      */
-    public function showEndpoint($key)
+    public function endpoint(string $key)
     {
         $apiRoutes = config('api_examples');
 
-        if (!isset($apiRoutes[$key])) {
-            abort(404);
+        // Handle numeric keys by redirecting to the proper string key
+        if (is_numeric($key)) {
+            $keys = array_keys($apiRoutes);
+            if (isset($keys[(int)$key])) {
+                return redirect()->route('docs.show', ['key' => $keys[(int)$key]]);
+            }
         }
 
-        return view('docs.endpoints.show', [
-            'apiRoute' => $apiRoutes[$key],
+        if (!isset($apiRoutes[$key])) {
+            abort(404, 'Endpoint not found');
+        }
+
+        $apiRoute = $apiRoutes[$key];
+        $category = $apiRoute['category'] ?? 'general';
+        $categories = collect($apiRoutes)->groupBy('category');
+
+        return view('docs.show', [
+            'apiRoute' => $apiRoute,
             'key' => $key,
-            'popularEndpoints' => collect(),
+            'activeSection' => 'endpoints',
+            'activeCategory' => $category,
+            'activeEndpoint' => $key,
+            'categories' => $categories,
+            'pageTitle' => $apiRoute['title'] ?? 'API Endpoint'
+        ]);
+    }
+
+    /**
+     * Display information about response formats
+     *
+     * @return View
+     */
+    public function responses(): View
+    {
+        $apiRoutes = config('api_examples');
+        $categories = collect($apiRoutes)->groupBy('category');
+
+        return view('docs.responses', [
+            'activeSection' => 'responses',
+            'categories' => $categories
+        ]);
+    }
+
+    /**
+     * Display code examples for different platforms
+     *
+     * @return View
+     */
+    public function codeExamples(): View
+    {
+        $apiRoutes = config('api_examples');
+        $categories = collect($apiRoutes)->groupBy('category');
+
+        return view('docs.code-examples', [
+            'activeSection' => 'code-examples',
+            'categories' => $categories
         ]);
     }
 }

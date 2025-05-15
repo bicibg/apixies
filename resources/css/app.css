@@ -117,14 +117,12 @@
 
     .tab-btn {
         @apply py-3 px-4 font-medium cursor-pointer;
+        @apply text-gray-500 hover:text-gray-700;
+        @apply transition duration-200;
     }
 
     .tab-btn.active {
         @apply text-[#0A2240] border-b-2 border-[#0A2240];
-    }
-
-    .tab-btn:not(.active) {
-        @apply text-gray-500 hover:text-gray-700;
     }
 
     .tab-content {
@@ -133,6 +131,91 @@
 
     .tab-content:not(.active) {
         @apply hidden;
+    }
+
+    /* -------------------------------------------------------
+       Breadcrumbs (enhanced)
+       -------------------------------------------------------*/
+    .breadcrumbs {
+        @apply flex flex-wrap items-center text-sm text-gray-500 mb-4;
+    }
+
+    .breadcrumbs li {
+        @apply flex items-center;
+    }
+
+    .breadcrumbs li:not(:last-child)::after {
+        content: '/';
+        @apply mx-2 text-gray-400;
+    }
+
+    .breadcrumbs a {
+        @apply text-blue-600 hover:text-blue-800;
+    }
+
+    /* -------------------------------------------------------
+       Code examples tabs (enhanced)
+       -------------------------------------------------------*/
+    .code-example {
+        @apply mb-4;
+    }
+
+    .code-example:not(.active) {
+        @apply hidden;
+    }
+
+    /* -------------------------------------------------------
+       Search input (enhanced)
+       -------------------------------------------------------*/
+    .search-input {
+        @apply w-full p-2 pl-10 border border-gray-300 rounded-md;
+        @apply focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent;
+        @apply bg-white;
+    }
+
+    .search-icon {
+        @apply absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400;
+    }
+
+    /* -------------------------------------------------------
+       API Endpoint Cards (enhanced)
+       -------------------------------------------------------*/
+    .endpoint-card {
+        @apply bg-white p-6 rounded-lg shadow-sm border border-gray-200;
+        @apply hover:border-indigo-300 transition duration-200;
+    }
+
+    .endpoint-card .method {
+        @apply inline-block px-3 py-1 rounded-full text-xs font-semibold;
+        @apply mr-2;
+    }
+
+    .endpoint-card .method.get {
+        @apply bg-green-100 text-green-800;
+    }
+
+    .endpoint-card .method.post {
+        @apply bg-blue-100 text-blue-800;
+    }
+
+    .endpoint-card .method.put {
+        @apply bg-yellow-100 text-yellow-800;
+    }
+
+    .endpoint-card .method.delete {
+        @apply bg-red-100 text-red-800;
+    }
+
+    .endpoint-card .uri {
+        @apply font-mono text-sm bg-gray-100 px-2 py-1 rounded;
+    }
+
+    .endpoint-card .title {
+        @apply font-bold text-lg mb-1;
+    }
+
+    .endpoint-card .description {
+        @apply text-gray-600 text-sm mb-4;
     }
 }
 
@@ -183,6 +266,31 @@ tr:hover      { @apply bg-blue-50; }
     .docs-nav {
         @apply static mb-8;
     }
+
+    /* Improved mobile navigation */
+    .docs-nav .nav-section {
+        @apply border-b pb-4;
+    }
+
+    /* Stack the main layout on mobile */
+    .main-content-wrapper {
+        @apply flex-col;
+    }
+
+    /* Full width content on mobile */
+    .main-content {
+        @apply w-full;
+    }
+
+    /* Adjust tab navigation for small screens */
+    .tab-nav {
+        @apply overflow-x-auto pb-1;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tab-btn {
+        @apply whitespace-nowrap;
+    }
 }
 
 /* hide Alpine elements until JS is ready */
@@ -191,4 +299,9 @@ tr:hover      { @apply bg-blue-50; }
 .modal-backdrop {
     background-color: transparent !important;
     backdrop-filter: blur(1px);
+}
+
+/* Scroll margin for anchor links */
+[id] {
+    scroll-margin-top: 1rem;
 }

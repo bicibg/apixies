@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\ApiEndpointCount;
 use Illuminate\Support\Facades\DB;
 

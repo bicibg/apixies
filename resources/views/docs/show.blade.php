@@ -1,271 +1,189 @@
-{{-- resources/views/docs/show.blade.php --}}
 @extends('docs.layout')
 
 @section('docs-content')
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <!-- Left sidebar for navigation -->
-        <div class="lg:col-span-1">
-            @include('docs.partials.navigation')
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-3">{{ $apiRoute['title'] ?? $key }}</h1>
+        <p class="text-lg text-gray-700">{{ $apiRoute['description'] ?? 'No description available' }}</p>
+
+        <div class="flex items-center mt-4">
+            <span class="method-badge {{ strtolower(explode('|', $apiRoute['method'] ?? 'GET')[0]) }} mr-3">
+                {{ $apiRoute['method'] ?? 'GET' }}
+            </span>
+            <code class="bg-gray-100 px-3 py-1 rounded-md text-sm font-mono">
+                {{ $apiRoute['uri'] ?? '/' }}
+            </code>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
+        <div class="border-b border-gray-200">
+            <nav class="tab-nav">
+                <button class="tab-btn active" data-tab="overview">
+                    Overview
+                </button>
+                <button class="tab-btn" data-tab="parameters">
+                    Parameters
+                </button>
+                <button class="tab-btn" data-tab="responses">
+                    Response
+                </button>
+                <button class="tab-btn" data-tab="examples">
+                    Examples
+                </button>
+            </nav>
         </div>
 
-        <!-- Main content area -->
-        <div class="lg:col-span-3">
-            <div class="mb-8">
-                <!-- Back button -->
-                <a href="{{ route('docs.index') }}" class="text-blue-600 hover:text-blue-800 flex items-center mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Back to API endpoints
-                </a>
+        <div class="p-6">
+            <!-- Tab contents here... -->
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overview">
+                <p class="mb-4">
+                    {{ $apiRoute['description'] ?? 'No detailed description available.' }}
+                </p>
 
-                <!-- Hero section for this endpoint -->
-                @include('docs.partials.hero', [
-                    'title' => $apiRoute['title'] ?? 'API Endpoint',
-                    'subtitle' => $apiRoute['description'] ?? 'API endpoint details',
-                    'showCta' => false,
-                    'route' => $apiRoute ?? null,
-                ])
+                <h3 class="text-lg font-medium mb-2">Rate Limiting</h3>
+                <p class="mb-4">
+                    Standard rate limits apply to this endpoint.
+                </p>
+
+                <h3 class="text-lg font-medium mb-2">Authentication</h3>
+                <p>
+                    This endpoint can be accessed in sandbox mode without authentication, or via a valid API key in production.
+                </p>
             </div>
 
-            <!-- API route details -->
-            <div class="bg-white p-6 rounded-lg shadow-sm mb-8">
-                <h2 class="text-xl font-bold mb-4">API Information</h2>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                        <h3 class="text-sm font-medium text-gray-500">Method</h3>
-                        <p class="mt-1">{{ $apiRoute['method'] ?? 'GET' }}</p>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-medium text-gray-500">Endpoint</h3>
-                        <p class="mt-1">/{{ $apiRoute['uri'] ?? '' }}</p>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-medium text-gray-500">Category</h3>
-                        <p class="mt-1 capitalize">{{ $apiRoute['category'] ?? 'system' }}</p>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-medium text-gray-500">Demo Available</h3>
-                        <p class="mt-1">{{ ($apiRoute['demo'] ?? false) ? 'Yes' : 'No' }}</p>
-                    </div>
-                </div>
-
-                <!-- Endpoint parameters -->
-                @if(isset($apiRoute['route_params']) || isset($apiRoute['query_params']))
-                    <h3 class="font-semibold text-lg mb-2">Parameters</h3>
-
+            <!-- Parameters Tab -->
+            <div class="tab-content hidden" id="parameters">
+                <!-- Parameters content here... -->
+                @if((isset($apiRoute['route_params']) && count($apiRoute['route_params']) > 0) || (isset($apiRoute['query_params']) && count($apiRoute['query_params']) > 0))
                     @if(isset($apiRoute['route_params']) && count($apiRoute['route_params']) > 0)
-                        <h4 class="font-medium text-gray-700 mt-4 mb-2">Route Parameters</h4>
-                        <div class="bg-gray-50 p-4 rounded mb-4">
-                            <ul class="list-disc pl-5 space-y-2">
-                                @foreach($apiRoute['route_params'] as $param)
-                                    <li class="text-gray-700">
-                                        <span class="font-mono text-blue-600">{{ $param }}</span>
-                                    </li>
-                                @endforeach
-                            </ul>
+                        <div class="mb-6">
+                            <h3 class="text-lg font-medium mb-3">URL Parameters</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200 api-table">
+                                    <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Parameter
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Type
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Required
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Description
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach($apiRoute['route_params'] as $param)
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                <code>{{ $param }}</code>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                string
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
+                                                        Required
+                                                    </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-500">
+                                                The {{ $param }} parameter
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     @endif
 
                     @if(isset($apiRoute['query_params']) && count($apiRoute['query_params']) > 0)
-                        <h4 class="font-medium text-gray-700 mt-4 mb-2">Query Parameters</h4>
-                        <div class="bg-gray-50 p-4 rounded mb-4">
-                            <ul class="list-disc pl-5 space-y-2">
-                                @foreach($apiRoute['query_params'] as $param)
-                                    <li class="text-gray-700">
-                                        <span class="font-mono text-blue-600">{{ $param }}</span>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
+                        <!-- Query parameters table here... -->
                     @endif
-                @endif
-
-                <!-- Response example -->
-                @if(isset($apiRoute['response_example']))
-                    <h3 class="font-semibold text-lg mt-6 mb-2">Example Response</h3>
-                    <div class="bg-gray-50 p-4 rounded">
-                        <pre class="text-sm overflow-x-auto">{{ is_array($apiRoute['response_example']) ? json_encode($apiRoute['response_example'], JSON_PRETTY_PRINT) : $apiRoute['response_example'] }}</pre>
+                @else
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <p class="text-gray-700">This endpoint does not require any parameters.</p>
                     </div>
                 @endif
             </div>
 
-            <!-- Implementation examples -->
-            <div class="bg-white p-6 rounded-lg shadow-sm mb-8">
-                <h2 class="text-xl font-bold mb-4">Implementation Examples</h2>
-
-                <!-- Example tabs -->
-                <div class="border-b border-gray-200">
-                    <nav class="flex space-x-8 tab-nav">
-                        <button class="tab-btn active" data-tab="curl">cURL</button>
-                        <button class="tab-btn" data-tab="php">PHP</button>
-                        <button class="tab-btn" data-tab="javascript">JavaScript</button>
-                        <button class="tab-btn" data-tab="python">Python</button>
-                    </nav>
-                </div>
-
-                <!-- Example panes -->
-                <div class="py-4">
-                    <!-- cURL Example -->
-                    <div id="curl" class="tab-content">
-                        <pre class="bg-gray-100 p-4 rounded overflow-x-auto text-sm">
-@if(isset($apiRoute['method']) && $apiRoute['method'] === 'GET')
-                                curl -X GET "{{ config('app.url') }}/{{ $apiRoute['uri'] ?? '' }}@if(isset($apiRoute['query_params']) && count($apiRoute['query_params']) > 0)?{{ implode('=example&', $apiRoute['query_params']) }}=example@endif" \
-                                -H "Authorization: Bearer YOUR_API_KEY"
-                            @else
-                                curl -X POST "{{ config('app.url') }}/{{ $apiRoute['uri'] ?? '' }}" \
-                                -H "Authorization: Bearer YOUR_API_KEY" \
-                                -H "Content-Type: application/json" \
-                                -d '{
-                                @if(isset($apiRoute['query_params']))
-                                    @foreach($apiRoute['query_params'] as $param)
-                                        "{{ $param }}": "example"@if(!$loop->last),@endif
-                                    @endforeach
-                                @endif
-                                }'
-                            @endif</pre>
-                    </div>
-
-                    <!-- PHP Example -->
-                    <div id="php" class="tab-content hidden">
-                        <pre class="bg-gray-100 p-4 rounded overflow-x-auto text-sm">
-$apiKey = 'YOUR_API_KEY';
-
-$client = new \GuzzleHttp\Client();
-@if(isset($apiRoute['method']) && $apiRoute['method'] === 'GET')
-                                $response = $client->request('GET', '{{ config('app.url') }}/{{ $apiRoute['uri'] ?? '' }}', [
-                                'headers' => [
-                                'Authorization' => 'Bearer ' . $apiKey,
-                                ],
-                                'query' => [
-                                @if(isset($apiRoute['query_params']))
-                                    @foreach($apiRoute['query_params'] as $param)
-                                        '{{ $param }}' => 'example',
-                                    @endforeach
-                                @endif
-                                ],
-                                ]);
-                            @else
-                                $response = $client->request('POST', '{{ config('app.url') }}/{{ $apiRoute['uri'] ?? '' }}', [
-                                'headers' => [
-                                'Authorization' => 'Bearer ' . $apiKey,
-                                'Content-Type' => 'application/json',
-                                ],
-                                'json' => [
-                                @if(isset($apiRoute['query_params']))
-                                    @foreach($apiRoute['query_params'] as $param)
-                                        '{{ $param }}' => 'example',
-                                    @endforeach
-                                @endif
-                                ],
-                                ]);
-                            @endif
-
-$data = json_decode($response->getBody(), true);
-print_r($data);</pre>
-                    </div>
-
-                    <!-- JavaScript Example -->
-                    <div id="javascript" class="tab-content hidden">
-                        <pre class="bg-gray-100 p-4 rounded overflow-x-auto text-sm">
-const apiKey = 'YOUR_API_KEY';
-
-@if(isset($apiRoute['method']) && $apiRoute['method'] === 'GET')
-                                // Build the URL with query parameters
-                                const params = new URLSearchParams({
-                                @if(isset($apiRoute['query_params']))
-                                    @foreach($apiRoute['query_params'] as $param)
-                                        '{{ $param }}': 'example',
-                                    @endforeach
-                                @endif
-                                });
-
-                                fetch(`{{ config('app.url') }}/{{ $apiRoute['uri'] ?? '' }}?${params}`, {
-                                method: 'GET',
-                                headers: {
-                                'Authorization': `Bearer ${apiKey}`,
-                                },
-                                })
-                            @else
-                                fetch('{{ config('app.url') }}/{{ $apiRoute['uri'] ?? '' }}', {
-                                method: 'POST',
-                                headers: {
-                                'Authorization': `Bearer ${apiKey}`,
-                                'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                @if(isset($apiRoute['query_params']))
-                                    @foreach($apiRoute['query_params'] as $param)
-                                        '{{ $param }}': 'example',
-                                    @endforeach
-                                @endif
-                                }),
-                                })
-                            @endif
-.then(response => response.json())
-.then(data => console.log(data))
-.catch(error => console.error('Error:', error));</pre>
-                    </div>
-
-                    <!-- Python Example -->
-                    <div id="python" class="tab-content hidden">
-                        <pre class="bg-gray-100 p-4 rounded overflow-x-auto text-sm">
-import requests
-import json
-
-api_key = 'YOUR_API_KEY'
-@if(isset($apiRoute['method']) && $apiRoute['method'] === 'GET')
-                                params = {
-                                @if(isset($apiRoute['query_params']))
-                                    @foreach($apiRoute['query_params'] as $param)
-                                        '{{ $param }}': 'example',
-                                    @endforeach
-                                @endif
-                                }
-
-                                response = requests.get(
-                                '{{ config('app.url') }}/{{ $apiRoute['uri'] ?? '' }}',
-                                headers={'Authorization': f'Bearer {api_key}'},
-                                params=params
-                                )
-                            @else
-                                data = {
-                                @if(isset($apiRoute['query_params']))
-                                    @foreach($apiRoute['query_params'] as $param)
-                                        '{{ $param }}': 'example',
-                                    @endforeach
-                                @endif
-                                }
-
-                                response = requests.post(
-                                '{{ config('app.url') }}/{{ $apiRoute['uri'] ?? '' }}',
-                                headers={
-                                'Authorization': f'Bearer {api_key}',
-                                'Content-Type': 'application/json'
-                                },
-                                data=json.dumps(data)
-                                )
-                            @endif
-
-print(response.json())</pre>
-                    </div>
-                </div>
+            <!-- Responses Tab -->
+            <div class="tab-content hidden" id="responses">
+                <!-- Responses content here... -->
             </div>
 
-            <!-- Try it yourself box -->
-            <div class="bg-white p-6 rounded-lg shadow-sm">
-                <h2 class="text-xl font-bold mb-4">Try It Yourself</h2>
-                <p class="mb-4">Test this endpoint with your own parameters using our interactive demo:</p>
-
-                <!-- Demo modal component -->
-                <x-demo-modal :route="[
-                    'uri' => $apiRoute['uri'] ?? '',
-                    'method' => $apiRoute['method'] ?? 'GET',
-                    'route_params' => $apiRoute['route_params'] ?? [],
-                    'query_params' => $apiRoute['query_params'] ?? []
-                ]" />
+            <!-- Examples Tab -->
+            <div class="tab-content hidden" id="examples">
+                <!-- Examples content here... -->
             </div>
         </div>
     </div>
+
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
+        <div class="p-6">
+            <h2 class="text-xl font-bold mb-4">Try It Yourself</h2>
+            <p class="mb-4">
+                Test this endpoint directly from your browser using our API sandbox.
+                No authentication required for testing.
+            </p>
+
+            <x-demo-modal :route="[
+                'uri' => $apiRoute['uri'] ?? '',
+                'method' => $apiRoute['method'] ?? 'GET',
+                'route_params' => $apiRoute['route_params'] ?? [],
+                'query_params' => $apiRoute['query_params'] ?? []
+            ]" />
+        </div>
+    </div>
 @endsection
+
+@push('doc-scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simple tab navigation
+            const tabButtons = document.querySelectorAll('.tab-nav .tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            // Set initial state - ensure first tab is active
+            if (tabButtons.length > 0 && tabContents.length > 0) {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
+                    content.classList.remove('active');
+                });
+
+                // Activate first tab
+                tabButtons[0].classList.add('active');
+                tabContents[0].classList.remove('hidden');
+                tabContents[0].classList.add('active');
+            }
+
+            // Add click handlers
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Update active state
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => {
+                        content.classList.add('hidden');
+                        content.classList.remove('active');
+                    });
+
+                    // Activate selected tab
+                    this.classList.add('active');
+                    const tabId = this.dataset.tab;
+                    const tabContent = document.getElementById(tabId);
+
+                    if (tabContent) {
+                        tabContent.classList.remove('hidden');
+                        tabContent.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+@endpush

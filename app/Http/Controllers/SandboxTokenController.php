@@ -10,11 +10,11 @@ use Illuminate\Support\Str;
 class SandboxTokenController extends Controller
 {
     /**
-     * Issue a new sandbox token via GET request
+     * Issue a new sandbox token
      *
      * @return JsonResponse
      */
-    public function issue(): JsonResponse
+    public function create(): JsonResponse
     {
         // Generate a new token
         $token = Str::random(40);
@@ -22,8 +22,8 @@ class SandboxTokenController extends Controller
         // Create a new sandbox token record
         SandboxToken::create([
             'token' => $token,
-            'calls' => 0,             // Start with 0 calls
-            'quota' => 50,            // Allow 50 calls per token
+            'calls' => 0,
+            'quota' => 50, // 50 requests per token
             'expires_at' => now()->addMinutes(30), // 30 minute expiry
         ]);
 
@@ -34,23 +34,14 @@ class SandboxTokenController extends Controller
     }
 
     /**
-     * Create a new sandbox token via POST request
-     *
-     * @return JsonResponse
-     */
-    public function create(): JsonResponse
-    {
-        return $this->issue();
-    }
-
-    /**
      * Refresh a sandbox token
      *
      * @return JsonResponse
      */
     public function refresh(): JsonResponse
     {
-        return $this->issue();
+        // This is just a proxy to create for backward compatibility
+        return $this->create();
     }
 
     /**
@@ -70,7 +61,7 @@ class SandboxTokenController extends Controller
             ]);
         }
 
-        $sandboxToken = SandboxToken::findToken($token);
+        $sandboxToken = SandboxToken::where('token', $token)->first();
 
         if (!$sandboxToken) {
             return response()->json([
@@ -79,14 +70,14 @@ class SandboxTokenController extends Controller
             ]);
         }
 
-        if ($sandboxToken->isExpired()) {
+        if ($sandboxToken->expires_at && now()->greaterThan($sandboxToken->expires_at)) {
             return response()->json([
                 'valid' => false,
                 'message' => 'Sandbox token expired'
             ]);
         }
 
-        if ($sandboxToken->isQuotaExhausted()) {
+        if ($sandboxToken->calls >= $sandboxToken->quota) {
             return response()->json([
                 'valid' => false,
                 'message' => 'Sandbox quota exhausted'

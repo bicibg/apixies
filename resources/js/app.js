@@ -10,18 +10,56 @@ window.Alpine = Alpine;
 // Register Alpine components before initializing
 document.addEventListener('DOMContentLoaded', () => {
     // Register the demoModal component
+    // Inside the Alpine.data('demoModal') function in app.js
     Alpine.data('demoModal', function() {
         return {
             open: false,
-            token: null,
-            params: {},
-            response: '{ }',
-            responseUrl: null,
-            isLoading: false,
             fullscreen: false,
+            loading: false,
+            refreshingToken: false,
+            baseUrl: window.location.origin,
+            method: '',
+            uri: '',
+            params: {},
+            token: '',
+            response: null,
+            responseUrl: null,
+            tokenInfo: null,
+
+            // Computed properties
+            get needsUrlParam() {
+                return this.uri.includes('inspect') ||
+                    this.uri.includes('email') ||
+                    this.uri.includes('ssl') ||
+                    this.uri.includes('headers');
+            },
+
+            get paramLabel() {
+                if (this.uri.includes('email')) return 'Email to inspect';
+                if (this.uri.includes('ssl')) return 'Domain to inspect';
+                if (this.uri.includes('headers')) return 'URL to inspect';
+                return 'Target URL to inspect';
+            },
+
+            get paramPlaceholder() {
+                if (this.uri.includes('email')) return 'user@example.com';
+                if (this.uri.includes('ssl')) return 'example.com';
+                return 'https://example.com';
+            },
+
+            get hasRequiredParams() {
+                if (this.needsUrlParam) {
+                    return !!this.params.url;
+                }
+                return true;
+            },
 
             init() {
-                // Get token from localStorage
+                // Initialize component with URI and method
+                this.uri = this.$el.getAttribute('data-uri') || '';
+                this.method = this.$el.getAttribute('data-method') || 'get';
+
+                // Check if token already exists in localStorage
                 this.token = localStorage.getItem('sandbox_token');
 
                 // Migrate legacy token if exists
@@ -31,73 +69,152 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.removeItem('apixies_sandbox');
                 }
 
+                // Initialize parameters object
+                this.params = {};
+
+                // Get token info
+                if (this.token) {
+                    this.getTokenInfo();
+                }
+
                 // Initialize for debugging
                 console.log("Demo modal initialized with token:", this.token);
-                console.log("API endpoint:", this.$el.getAttribute('data-uri'));
+                console.log("API endpoint:", this.uri);
             },
 
-            getNewToken() {
-                this.isLoading = true;
-                console.log("Getting new token...");
+            formatExpiryTime(isoString) {
+                try {
+                    const expiryDate = new Date(isoString);
+                    const now = new Date();
 
-                fetch('/sandbox/token', {
-                    method: 'GET',
+                    // Calculate time difference in minutes
+                    const diffMs = expiryDate - now;
+                    const diffMins = Math.round(diffMs / 60000);
+
+                    if (diffMins < 0) return 'expired';
+                    if (diffMins < 60) return `in ${diffMins} min`;
+
+                    const hours = Math.floor(diffMins / 60);
+                    const mins = diffMins % 60;
+                    return `in ${hours}h ${mins}m`;
+                } catch (e) {
+                    return 'unknown';
+                }
+            },
+
+            getTokenInfo() {
+                if (!this.token) return;
+
+                fetch('/sandbox/token/validate', {
+                    method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                     },
-                    credentials: 'same-origin'
+                    body: JSON.stringify({ token: this.token })
                 })
-                    .then(res => res.json())
+                    .then(response => response.json())
                     .then(data => {
-                        console.log("Token response:", data);
-                        if (data.token) {
-                            // Store only the token
-                            this.token = data.token;
-                            localStorage.setItem('sandbox_token', data.token);
+                        if (data.valid) {
+                            this.tokenInfo = {
+                                remaining_calls: data.remaining_calls,
+                                expires_at: data.expires_at
+                            };
+                        } else {
+                            // Token is invalid, clear it
+                            localStorage.removeItem('sandbox_token');
+                            this.token = null;
+                            this.tokenInfo = null;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking token info:', error);
+                        this.tokenInfo = null;
+                    });
+            },
 
-                            // Remove legacy token if exists
+            refreshToken() {
+                this.refreshingToken = true;
+
+                fetch('/sandbox/token/create', {  // Changed from /refresh to /create
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                    }
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                    })
+                    .then(data => {
+                        if (data.token) {
+                            localStorage.setItem('sandbox_token', data.token);
+                            this.token = data.token;
+
+                            // Remove legacy key if exists
                             if (localStorage.getItem('apixies_sandbox')) {
                                 localStorage.removeItem('apixies_sandbox');
                             }
 
-                            // Clear response data
-                            this.response = '{ }';
-                            if (this.responseUrl) {
-                                URL.revokeObjectURL(this.responseUrl);
-                                this.responseUrl = null;
-                            }
+                            // Update token info
+                            this.getTokenInfo();
+
+                            // Show success message
+                            this.response = {
+                                status: "success",
+                                message: "Token refreshed successfully",
+                                data: { token: data.token }
+                            };
                         } else {
-                            this.response = 'Error getting sandbox token';
+                            this.response = {
+                                status: "error",
+                                message: "Failed to refresh token",
+                                error: data.message || "Unknown error"
+                            };
                         }
-                        this.isLoading = false;
                     })
-                    .catch(err => {
-                        console.error("Token error:", err);
-                        this.response = `Error: ${err.toString()}`;
-                        this.isLoading = false;
+                    .catch(error => {
+                        console.error('Error refreshing token:', error);
+                        this.response = {
+                            status: "error",
+                            message: "Failed to refresh token",
+                            error: error.message
+                        };
+                    })
+                    .finally(() => {
+                        this.refreshingToken = false;
                     });
             },
 
             toggleFullscreen() {
                 this.fullscreen = !this.fullscreen;
-
-                // Allow time for the DOM to update
-                setTimeout(() => {
-                    // If entering fullscreen, focus on the response area
-                    if (this.fullscreen) {
-                        const responseArea = document.querySelector('.response-area');
-                        if (responseArea) responseArea.focus();
-                    }
-                }, 100);
             },
 
             submit() {
-                if (!this.token) {
-                    this.response = 'Please get a sandbox token first';
+                if (!this.uri) {
+                    this.response = {
+                        status: "error",
+                        message: "API endpoint URI is not defined",
+                        error: "The URI for this API endpoint is missing. Please check the configuration."
+                    };
                     return;
                 }
 
-                this.isLoading = true;
+                // Check if URL parameter is required
+                if (this.needsUrlParam && !this.params.url) {
+                    this.response = {
+                        status: "error",
+                        message: `${this.paramLabel} is required`,
+                        error: `Please provide a ${this.paramLabel.toLowerCase()}`
+                    };
+                    return;
+                }
+
+                this.loading = true;
+                this.response = null;
 
                 // Clean up previous response URL
                 if (this.responseUrl) {
@@ -105,113 +222,122 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.responseUrl = null;
                 }
 
-                // Get endpoint details from data attributes
-                const uri = this.$el.getAttribute('data-uri');
-                const method = this.$el.getAttribute('data-method') || 'get';
+                // Build request URL and params
+                let requestUrl = this.uri;
+                let requestParams = {};
 
-                console.log("Submitting request to:", uri, "Method:", method);
-                console.log("Parameters:", this.params);
+                // For GET requests with URL parameter
+                if (this.method === 'get' && this.params.url) {
+                    // Check if the URI already has query parameters
+                    const separator = requestUrl.includes('?') ? '&' : '?';
 
-                if (!uri) {
-                    this.response = "Error: API endpoint URI is not defined";
-                    this.isLoading = false;
-                    return;
+                    // Add the appropriate parameter based on endpoint type
+                    let paramName = 'url';
+                    if (this.uri.includes('email')) paramName = 'email';
+                    if (this.uri.includes('ssl')) paramName = 'domain';
+
+                    requestUrl += `${separator}${paramName}=${encodeURIComponent(this.params.url)}`;
                 }
 
-                const isPostMethod = method.toLowerCase() === 'post';
+                // For POST requests
+                let requestBody = null;
+                if (this.method === 'post' && this.params.url) {
+                    // Create the appropriate request body based on endpoint type
+                    let bodyParam = 'url';
+                    if (this.uri.includes('email')) bodyParam = 'email';
+                    if (this.uri.includes('ssl')) bodyParam = 'domain';
+                    if (this.uri.includes('html-to-pdf')) bodyParam = 'html';
 
-                // Build URL and request options
-                const url = uri;  // Don't add a slash prefix since the URI should already have it
-                const headers = {
-                    'Authorization': `Bearer ${this.token}`,
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                };
-
-                // For POST requests, set Content-Type to application/json
-                if (isPostMethod) {
-                    headers['Content-Type'] = 'application/json';
+                    requestBody = { [bodyParam]: this.params.url };
                 }
 
-                const options = {
-                    method: method.toUpperCase(),
-                    headers,
-                    credentials: 'same-origin'
-                };
-
-                // Add body for POST requests
-                if (isPostMethod) {
-                    options.body = JSON.stringify(this.params);
-                }
-
-                // For GET requests, append query params to URL
-                const requestUrl = isPostMethod ? url : `${url}${Object.keys(this.params).length > 0 ? '?' + new URLSearchParams(this.params) : ''}`;
-
-                console.log("Final request URL:", requestUrl);
-
-                fetch(requestUrl, options)
-                    .then(res => {
-                        console.log("Response status:", res.status);
-
-                        // Check for token-related errors
-                        if (res.status === 401 || res.status === 429) {
-                            return res.json().then(errorData => {
-                                // If token expired or quota exhausted, clear token and show message
+                // Make the API request
+                fetch(requestUrl, {
+                    method: this.method.toUpperCase(),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Sandbox-Token': this.token || ''
+                    },
+                    body: requestBody ? JSON.stringify(requestBody) : null
+                })
+                    .then(response => {
+                        // Handle token-related errors
+                        if (response.status === 401 || response.status === 429) {
+                            return response.json().then(errorData => {
+                                // If token expired or quota exhausted, update token info
                                 if (errorData.message === 'Sandbox token expired' ||
                                     errorData.message === 'Sandbox quota exhausted') {
-                                    localStorage.removeItem('sandbox_token');
-                                    this.token = null;
-                                    throw new Error(`${errorData.message}. Please get a new token.`);
+                                    this.getTokenInfo();
                                 }
-                                return { error: errorData.message };
+                                throw new Error(errorData.message || 'Authentication error');
                             });
                         }
 
-                        // Handle other error status codes
-                        if (!res.ok) {
-                            return res.text().then(text => {
-                                try {
-                                    return JSON.parse(text);
-                                } catch {
-                                    return { error: text };
-                                }
-                            });
-                        }
+                        const contentType = response.headers.get('content-type') || '';
 
-                        // Check content type
-                        const contentType = res.headers.get('Content-Type') || '';
-                        console.log("Response content type:", contentType);
-
-                        if (contentType.includes('application/pdf')) {
-                            // For PDF responses, create a blob URL and use iframe
-                            return res.blob().then(blob => {
+                        if (contentType.includes('application/json')) {
+                            return response.json().then(data => ({
+                                status: response.status,
+                                ok: response.ok,
+                                data: data
+                            }));
+                        } else if (contentType.includes('application/pdf')) {
+                            return response.blob().then(blob => {
                                 this.responseUrl = URL.createObjectURL(blob);
-                                return 'PDF document generated successfully.';
+                                return {
+                                    status: response.status,
+                                    ok: response.ok,
+                                    data: {
+                                        message: "PDF generated successfully",
+                                        pdf_url: this.responseUrl,
+                                        type: "pdf"
+                                    }
+                                };
                             });
                         } else {
-                            // For JSON or text responses
-                            return res.text().then(text => {
-                                try {
-                                    return JSON.parse(text);
-                                } catch {
-                                    return text;
-                                }
-                            });
+                            return response.text().then(text => ({
+                                status: response.status,
+                                ok: response.ok,
+                                data: { message: text }
+                            }));
                         }
                     })
-                    .then(data => {
-                        console.log("Processed response:", data);
-                        if (typeof data === 'string') {
-                            this.response = data;
+                    .then(({ status, ok, data }) => {
+                        if (ok) {
+                            this.response = {
+                                status: "success",
+                                message: "Request successful",
+                                http_status: status,
+                                data: data
+                            };
+
+                            // Update token info after successful request
+                            this.getTokenInfo();
+
+                            // Special handling for PDF responses
+                            if (data?.type === "pdf") {
+                                // Open PDF in new tab
+                                window.open(this.responseUrl, '_blank');
+                            }
                         } else {
-                            this.response = JSON.stringify(data, null, 2);
+                            this.response = {
+                                status: "error",
+                                message: "Request failed",
+                                http_status: status,
+                                error: data.message || "Unknown error"
+                            };
                         }
                     })
-                    .catch(err => {
-                        console.error("Request error:", err);
-                        this.response = `Error: ${err.toString()}`;
+                    .catch(error => {
+                        console.error('API request error:', error);
+                        this.response = {
+                            status: "error",
+                            message: "Request failed",
+                            error: error.message
+                        };
                     })
                     .finally(() => {
-                        this.isLoading = false;
+                        this.loading = false;
                     });
             },
 
@@ -220,7 +346,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     URL.revokeObjectURL(this.responseUrl);
                     this.responseUrl = null;
                 }
-
                 this.fullscreen = false;
                 this.open = false;
             }
@@ -278,6 +403,16 @@ function setupCopyApiToken() {
  * Set up tab functionality for API documentation
  */
 function initApiDocumentationTabs() {
+    // Don't initialize tabs on the single endpoint page
+    if (document.querySelector('.tab-nav')) {
+        // Skip the docs/show.blade.php page which has its own tab initialization
+        const endpointDetailPage = document.querySelector('h1 + p + div .method-badge');
+        if (endpointDetailPage) {
+            console.log("Skipping tab initialization on endpoint detail page");
+            return;
+        }
+    }
+
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 

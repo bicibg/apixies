@@ -47,7 +47,7 @@
                             </div>
 
                             <div>
-                                <a href="{{ route('docs.show', $key) }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                                <a href="{{ url('/docs/' . $key) }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
                                     View Details
                                 </a>
                             </div>

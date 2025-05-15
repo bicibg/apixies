@@ -1,95 +1,84 @@
-{{-- resources/views/docs/partials/navigation.blade.php --}}
 <div class="docs-nav sticky top-4">
-    <div class="nav-section bg-white p-4 rounded-lg shadow-sm">
-        <h3 class="text-lg font-bold mb-4">Documentation</h3>
+    <div class="nav-section rounded-lg overflow-hidden shadow-sm bg-white">
+        <div class="p-4 bg-gradient-to-r from-[#0A2240] to-[#007C91] text-white">
+            <h3 class="font-bold text-lg">Documentation</h3>
+        </div>
 
-        <ul class="space-y-1">
-            <li>
-                <a href="{{ route('docs.index') }}"
-                   class="block px-3 py-2 rounded transition-colors {{ request()->routeIs('docs.index') ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
-                    Overview
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('docs.features') }}"
-                   class="block px-3 py-2 rounded transition-colors {{ request()->routeIs('docs.features') ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
-                    Features
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('docs.authentication') }}"
-                   class="block px-3 py-2 rounded transition-colors {{ request()->routeIs('docs.authentication') ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
-                    Authentication
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('docs.endpoints.index') }}"
-                   class="block px-3 py-2 rounded transition-colors {{ request()->routeIs('docs.endpoints.*') ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
-                    API Endpoints
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('docs.responses') }}"
-                   class="block px-3 py-2 rounded transition-colors {{ request()->routeIs('docs.responses') ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
-                    Response Format
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('docs.examples') }}"
-                   class="block px-3 py-2 rounded transition-colors {{ request()->routeIs('docs.examples') ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
-                    Code Examples
-                </a>
-            </li>
-        </ul>
-    </div>
+        <div class="p-4">
+            <ul class="space-y-2">
+                <li>
+                    <a href="{{ route('docs.index') }}"
+                       class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'overview' ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                        Overview
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('docs.features') }}"
+                       class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'features' ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                        Features
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('docs.authentication') }}"
+                       class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'authentication' ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                        Authentication
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('docs.endpoints.index') }}"
+                       class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'endpoints' ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                        API Endpoints
+                    </a>
+                </li>
 
-    <!-- Endpoint Categories - Only show on endpoints pages -->
-    @if(request()->routeIs('docs.endpoints.*'))
-        <div class="nav-section bg-white p-4 rounded-lg shadow-sm mt-4">
-            <h3 class="text-lg font-bold mb-4">Endpoint Categories</h3>
+                @if($activeSection === 'endpoints' && isset($categories))
+                    <div class="pl-4 mt-2 space-y-1 border-l-2 border-gray-200">
+                        @foreach($categories as $categoryName => $routes)
+                            <div class="mb-2">
+                                <div class="font-medium text-sm text-gray-500 uppercase tracking-wider mb-1">
+                                    {{ ucfirst($categoryName) }}
+                                </div>
+                                <ul class="space-y-1">
+                                    @foreach($routes as $key => $route)
+                                        <li>
+                                            <!-- Use explicit URL with key as string to avoid numeric indices -->
+                                            <a href="{{ url('/docs/'.$key) }}"
+                                               class="block pl-2 py-1 text-sm border-l-2 {{ isset($activeEndpoint) && $activeEndpoint === $key ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-600 hover:border-gray-300' }}">
+                                                {{ $route['title'] ?? $key }}
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
 
-            @php
-                $apiRoutes = config('api_examples');
-                $categories = collect($apiRoutes)->groupBy('category');
-            @endphp
-
-            <ul class="space-y-1">
-                @foreach($categories as $category => $endpoints)
-                    <li>
-                        <a href="{{ route('docs.endpoints.index') }}#{{ $category }}"
-                           class="block px-3 py-2 rounded transition-colors text-gray-700 hover:bg-gray-100 {{ isset($apiRoute) && ($apiRoute['category'] ?? '') === $category ? 'font-medium text-[#0A2240]' : '' }}">
-                            {{ ucfirst($category) }}
-                            <span class="text-xs text-gray-500 ml-1">({{ count($endpoints) }})</span>
-                        </a>
-                    </li>
-                @endforeach
+                <li>
+                    <a href="{{ route('docs.responses') }}"
+                       class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'responses' ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                        Response Format
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('docs.code-examples') }}"
+                       class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'code-examples' ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                        Code Examples
+                    </a>
+                </li>
             </ul>
         </div>
-    @endif
+    </div>
 
-    <!-- Popular Endpoints - Only show on main and endpoints pages -->
-    @if(request()->routeIs('docs.index') || request()->routeIs('docs.endpoints.*'))
-        <div class="nav-section bg-white p-4 rounded-lg shadow-sm mt-4">
-            <h3 class="text-lg font-bold mb-4">Popular Endpoints</h3>
-
-            @if(isset($popularEndpoints) && $popularEndpoints->count() > 0)
-                <ul class="space-y-1">
-                    @foreach($popularEndpoints as $endpoint)
-                        @php
-                            $key = \Illuminate\Support\Str::slug(str_replace(['api/v1/', '/'], ['', '-'], $endpoint->endpoint));
-                        @endphp
-
-                        <li>
-                            <a href="{{ route('docs.endpoints.show', $key) }}"
-                               class="block px-3 py-2 rounded transition-colors text-gray-700 hover:bg-gray-100 {{ request()->is('docs/endpoints/'.$key) ? 'font-medium text-[#0A2240]' : '' }}">
-                                {{ $endpoint->endpoint }}
-                            </a>
-                        </li>
-                    @endforeach
-                </ul>
-            @else
-                <p class="text-gray-500 text-sm px-3 py-2">No data available yet.</p>
-            @endif
+    @auth
+        <div class="nav-section bg-white rounded-lg shadow-sm p-4 mt-4">
+            <h3 class="font-medium mb-2">Your API</h3>
+            <a href="{{ route('api-keys.index') }}" class="text-blue-600 hover:text-blue-800 flex items-center">
+                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                </svg>
+                Manage API Keys
+            </a>
         </div>
-    @endif
+    @endauth
 </div>
