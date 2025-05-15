@@ -14,45 +14,21 @@ class AddIsSandboxToApiEndpointTablesAndFixNames extends Migration
     public function up()
     {
         // Add is_sandbox to api_endpoint_counts if it doesn't exist
-        Schema::table('api_endpoint_counts', function (Blueprint $table) {
-            if (!Schema::hasColumn('api_endpoint_counts', 'is_sandbox')) {
+        if (!Schema::hasColumn('api_endpoint_counts', 'is_sandbox')) {
+            Schema::table('api_endpoint_counts', function (Blueprint $table) {
                 $table->boolean('is_sandbox')->default(false)->after('count');
-            }
-
-            // Check if index exists before adding
-            $indexExists = collect(Schema::getConnection()->getDoctrineSchemaManager()->listTableIndexes('api_endpoint_counts'))
-                ->keys()
-                ->contains('api_endpoint_counts_is_sandbox_index');
-
-            if (!$indexExists) {
                 $table->index('is_sandbox');
-            }
-
-            // Check if composite index exists
-            $compositeIndexExists = collect(Schema::getConnection()->getDoctrineSchemaManager()->listTableIndexes('api_endpoint_counts'))
-                ->keys()
-                ->contains('api_endpoint_counts_endpoint_is_sandbox_index');
-
-            if (!$compositeIndexExists) {
                 $table->index(['endpoint', 'is_sandbox']);
-            }
-        });
+            });
+        }
 
         // Add is_sandbox to api_endpoint_logs if it doesn't exist
-        Schema::table('api_endpoint_logs', function (Blueprint $table) {
-            if (!Schema::hasColumn('api_endpoint_logs', 'is_sandbox')) {
+        if (!Schema::hasColumn('api_endpoint_logs', 'is_sandbox')) {
+            Schema::table('api_endpoint_logs', function (Blueprint $table) {
                 $table->boolean('is_sandbox')->default(false)->after('response_code');
-            }
-
-            // Check if index exists before adding
-            $indexExists = collect(Schema::getConnection()->getDoctrineSchemaManager()->listTableIndexes('api_endpoint_logs'))
-                ->keys()
-                ->contains('api_endpoint_logs_is_sandbox_index');
-
-            if (!$indexExists) {
                 $table->index('is_sandbox');
-            }
-        });
+            });
+        }
     }
 
     /**
@@ -65,24 +41,8 @@ class AddIsSandboxToApiEndpointTablesAndFixNames extends Migration
         // Remove is_sandbox from api_endpoint_counts if it exists
         if (Schema::hasColumn('api_endpoint_counts', 'is_sandbox')) {
             Schema::table('api_endpoint_counts', function (Blueprint $table) {
-                // Check if index exists before dropping
-                $indexExists = collect(Schema::getConnection()->getDoctrineSchemaManager()->listTableIndexes('api_endpoint_counts'))
-                    ->keys()
-                    ->contains('api_endpoint_counts_is_sandbox_index');
-
-                if ($indexExists) {
-                    $table->dropIndex(['is_sandbox']);
-                }
-
-                // Check if composite index exists
-                $compositeIndexExists = collect(Schema::getConnection()->getDoctrineSchemaManager()->listTableIndexes('api_endpoint_counts'))
-                    ->keys()
-                    ->contains('api_endpoint_counts_endpoint_is_sandbox_index');
-
-                if ($compositeIndexExists) {
-                    $table->dropIndex(['endpoint', 'is_sandbox']);
-                }
-
+                $table->dropIndex(['is_sandbox']);
+                $table->dropIndex(['endpoint', 'is_sandbox']);
                 $table->dropColumn('is_sandbox');
             });
         }
@@ -90,15 +50,7 @@ class AddIsSandboxToApiEndpointTablesAndFixNames extends Migration
         // Remove is_sandbox from api_endpoint_logs if it exists
         if (Schema::hasColumn('api_endpoint_logs', 'is_sandbox')) {
             Schema::table('api_endpoint_logs', function (Blueprint $table) {
-                // Check if index exists before dropping
-                $indexExists = collect(Schema::getConnection()->getDoctrineSchemaManager()->listTableIndexes('api_endpoint_logs'))
-                    ->keys()
-                    ->contains('api_endpoint_logs_is_sandbox_index');
-
-                if ($indexExists) {
-                    $table->dropIndex(['is_sandbox']);
-                }
-
+                $table->dropIndex(['is_sandbox']);
                 $table->dropColumn('is_sandbox');
             });
         }
