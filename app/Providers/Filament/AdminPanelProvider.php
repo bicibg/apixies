@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\ApiStats;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Support\Assets\Css;
 use Filament\Support\Colors\Color;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -45,7 +46,9 @@ class AdminPanelProvider extends PanelProvider
                 'info' => '#2B6CB0',        // Medium blue
             ])
             ->brandName('Apixies')
-
+            ->assets([
+                Css::make('custom', resource_path('css/filament/admin/custom-styles.css'))
+            ])
             // Larger logo configuration
             ->brandLogo(asset('logo.png'))
             ->brandLogoHeight('5rem') // Increase logo height

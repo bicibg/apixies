@@ -37,11 +37,15 @@ class ApiStatsOverview extends StatsOverviewWidget
             ->limit(3)
             ->get();
 
-        $topEndpointsText = $topEndpoints->map(function ($endpoint) {
+        // Format top endpoints as readable text
+        $topEndpointsList = '';
+        foreach ($topEndpoints as $index => $endpoint) {
             $path = $endpoint->endpoint;
-            $shortPath = strlen($path) > 25 ? '...' . substr($path, -22) : $path;
-            return "{$shortPath}: " . number_format($endpoint->total_count);
-        })->join(', ');
+            if ($index > 0) {
+                $topEndpointsList .= "\n";
+            }
+            $topEndpointsList .= $path . ': ' . number_format($endpoint->total_count);
+        }
 
         // Get count of unique API keys/users
         $uniqueUsers = ApiEndpointLog::where('is_sandbox', false)
@@ -70,8 +74,8 @@ class ApiStatsOverview extends StatsOverviewWidget
                 )
                 ->color('success'),
 
-            // Top Endpoints
-            Card::make('Top Endpoints', $topEndpointsText)
+            // Top Endpoints - formatted list
+            Card::make('Top Endpoints', $topEndpointsList)
                 ->color('warning'),
 
             // User counts

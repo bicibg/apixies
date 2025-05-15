@@ -17,6 +17,16 @@ class SandboxStatsWidget extends StatsOverviewWidget
         // Get sandbox usage data
         $sandboxCalls = ApiEndpointCount::where('is_sandbox', true)->sum('count');
 
+        // Get health/ready counts
+        $healthReadyCount = ApiEndpointCount::where('is_sandbox', true)
+            ->where(function($query) {
+                $query->where('endpoint', 'like', '%health%')
+                    ->orWhere('endpoint', 'like', '%ready%');
+            })
+            ->sum('count');
+
+        $otherSandboxCount = $sandboxCalls - $healthReadyCount;
+
         // Get sandbox token usage
         $sandboxTokens = DB::table('sandbox_tokens')
             ->selectRaw('
@@ -33,23 +43,21 @@ class SandboxStatsWidget extends StatsOverviewWidget
         $topSandboxEndpoints = ApiEndpointCount::where('is_sandbox', true)
             ->orderBy('count', 'desc')
             ->limit(3)
-            ->get()
-            ->map(function ($endpoint) {
+            ->get();
+
+        // Format as a text-based list with line breaks
+        $topEndpointsList = '';
+        if ($topSandboxEndpoints->isEmpty()) {
+            $topEndpointsList = 'No sandbox data yet';
+        } else {
+            foreach ($topSandboxEndpoints as $index => $endpoint) {
                 $path = $endpoint->endpoint;
-                $shortPath = strlen($path) > 20 ? '...' . substr($path, -17) : $path;
-                return "{$shortPath}: " . number_format($endpoint->count);
-            })
-            ->join(', ');
-
-        // Health checks in sandbox
-        $healthReadyCount = ApiEndpointCount::where('is_sandbox', true)
-            ->where(function($query) {
-                $query->where('endpoint', 'like', '%health%')
-                    ->orWhere('endpoint', 'like', '%ready%');
-            })
-            ->sum('count');
-
-        $otherSandboxCount = $sandboxCalls - $healthReadyCount;
+                if ($index > 0) {
+                    $topEndpointsList .= "\n";
+                }
+                $topEndpointsList .= $path . ': ' . number_format($endpoint->count);
+            }
+        }
 
         // Return cards with sandbox statistics
         return [
@@ -68,7 +76,7 @@ class SandboxStatsWidget extends StatsOverviewWidget
                 )
                 ->color($sandboxTokens->quota_usage_percent > 75 ? 'danger' : 'success'),
 
-            Card::make('Top Sandbox Endpoints', $topSandboxEndpoints ?: 'No data')
+            Card::make('Top Sandbox Endpoints', $topEndpointsList)
                 ->color('warning'),
         ];
     }

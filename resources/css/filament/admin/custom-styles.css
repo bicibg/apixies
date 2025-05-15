@@ -1,0 +1,22 @@
+.filament-stats-card-top-endpoints .filament-stats-overview-widget-card-description,
+.filament-stats-card-top-sandbox-endpoints .filament-stats-overview-widget-card-description {
+    padding-top: 0.5rem;
+    font-size: 0.875rem;
+    width: 100%;
+}
+
+/* Add custom styles to make the endpoint lists more readable */
+.filament-stats-overview-widget-card-description .flex {
+    margin-bottom: 0.25rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.filament-stats-overview-widget-card-description .flex:last-child {
+    border-bottom: none;
+}
+
+.filament-stats-overview-widget-card-description .font-medium {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.8125rem;
+}

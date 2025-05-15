@@ -6,6 +6,7 @@ use App\Models\ApiEndpointLog;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
+use Filament\Forms\Components\Select;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -77,6 +78,7 @@ class ApiLogsTable extends BaseWidget
     protected function getTableFilters(): array
     {
         return [
+            // Environment filter - production vs sandbox
             SelectFilter::make('is_sandbox')
                 ->label('Environment')
                 ->options([
@@ -85,10 +87,13 @@ class ApiLogsTable extends BaseWidget
                 ])
                 ->placeholder('All Environments'),
 
+            // Endpoint type filter
             Filter::make('endpoint_type')
                 ->label('Endpoint Type')
                 ->form([
-                    Tables\Filters\SelectFilter::make('endpoint_category')
+                    // Use Filament\Forms\Components\Select for form filters
+                    Select::make('endpoint_category')
+                        ->label('Endpoint Category')
                         ->options([
                             'health_ready' => 'Health & Ready',
                             'inspector' => 'Inspector APIs',
@@ -97,7 +102,7 @@ class ApiLogsTable extends BaseWidget
                         ->placeholder('All Endpoints'),
                 ])
                 ->query(function (Builder $query, array $data): Builder {
-                    if (!$data['endpoint_category']) {
+                    if (empty($data['endpoint_category'])) {
                         return $query;
                     }
 
@@ -120,7 +125,7 @@ class ApiLogsTable extends BaseWidget
 
     protected function isTablePaginationEnabled(): bool
     {
-        return true;
+        return true;  // Enable pagination for better performance
     }
 
     protected function getTableRecordsPerPageSelectOptions(): array
