@@ -9,6 +9,7 @@ window.Alpine = Alpine;
 
 // Global variable to track if a token has already been created
 window.tokenCreationInProgress = false;
+window.lastTokenCreation = 0;
 
 // Register Alpine components before initializing
 document.addEventListener('DOMContentLoaded', () => {
@@ -16,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     Alpine.data('demoModal', function() {
         return {
             open: false,
-            fullscreen: false,
             loading: false,
             refreshingToken: false,
             baseUrl: window.location.origin,
@@ -33,28 +33,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Computed properties
             get needsUrlParam() {
-                return this.uri.includes('inspect') ||
-                    this.uri.includes('email') ||
-                    this.uri.includes('ssl') ||
-                    this.uri.includes('headers');
+                return this.uri.includes('inspect-ssl') ||
+                    this.uri.includes('inspect-email') ||
+                    this.uri.includes('inspect-headers');
             },
 
             get paramLabel() {
-                if (this.uri.includes('email')) return 'Email to inspect';
-                if (this.uri.includes('ssl')) return 'Domain to inspect';
-                if (this.uri.includes('headers')) return 'URL to inspect';
+                if (this.uri.includes('inspect-email')) return 'Email to inspect';
+                if (this.uri.includes('inspect-ssl')) return 'Domain to inspect';
+                if (this.uri.includes('inspect-headers')) return 'URL to inspect';
                 return 'Target URL to inspect';
             },
 
             get paramPlaceholder() {
-                if (this.uri.includes('email')) return 'user@example.com';
-                if (this.uri.includes('ssl')) return 'example.com';
+                if (this.uri.includes('inspect-email')) return 'user@example.com';
+                if (this.uri.includes('inspect-ssl')) return 'example.com';
                 return 'https://example.com';
             },
 
             get hasRequiredParams() {
                 if (this.needsUrlParam) {
                     return !!this.params.url;
+                }
+                if (this.uri.includes('inspect-user-agent')) {
+                    return !!this.params.user_agent;
+                }
+                if (this.uri.includes('html-to-pdf')) {
+                    return !!this.params.html;
                 }
                 return true;
             },
@@ -80,20 +85,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.removeItem('apixies_sandbox');
                 }
 
-                // Initialize parameters object
+                // Initialize parameters object based on endpoint type
                 this.params = {};
 
+                // Default user agent is current browser's user agent if on user-agent endpoint
+                if (this.uri.includes('inspect-user-agent')) {
+                    this.params.user_agent = navigator.userAgent;
+                }
+
+                // Prevent multiple token creations within a short time period
+                const now = Date.now();
+                const minInterval = 2000; // 2 seconds minimum between token creations
+
                 // Get token info if token exists, otherwise create a new one
-                // but only if not already in progress
                 if (this.token) {
                     this.getTokenInfo();
-                } else if (!window.tokenCreationInProgress) {
+                } else if (!window.tokenCreationInProgress && (now - window.lastTokenCreation > minInterval)) {
                     // Mark that we're creating a token and prevent others from doing so
                     window.tokenCreationInProgress = true;
+                    window.lastTokenCreation = now;
                     console.log("Creating initial sandbox token");
                     this.refreshToken();
                 } else {
-                    console.log("Token creation already in progress, skipping");
+                    console.log("Token creation already in progress or recently occurred, skipping");
                 }
 
                 console.log("Demo modal initialized with token:", this.token);
@@ -157,8 +171,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                 remaining_calls: 0,
                                 expires_at: null
                             };
-                            // Get a new token
-                            this.refreshToken();
+                            // Get a new token - but with rate limiting
+                            const now = Date.now();
+                            if (now - window.lastTokenCreation > 2000) {
+                                window.lastTokenCreation = now;
+                                this.refreshToken();
+                            } else {
+                                console.log("Skipping immediate token refresh due to rate limiting");
+                            }
                         }
                     })
                     .catch(error => {
@@ -230,25 +250,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
             },
 
-            toggleFullscreen() {
-                console.log("Toggling fullscreen mode", this.fullscreen);
-                this.fullscreen = !this.fullscreen;
-
-                // Get the response area element
-                const responseArea = this.$el.querySelector('.response-area');
-                if (responseArea) {
-                    if (this.fullscreen) {
-                        responseArea.style.height = 'calc(100vh - 280px)';
-                        console.log("Set to fullscreen height");
-                    } else {
-                        responseArea.style.height = '350px';
-                        console.log("Set to normal height");
-                    }
-                } else {
-                    console.error("Response area not found");
-                }
-            },
-
             submit() {
                 if (!this.uri) {
                     this.response = {
@@ -259,12 +260,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                // Check if URL parameter is required
+                // Check if required parameters exist based on endpoint type
                 if (this.needsUrlParam && !this.params.url) {
                     this.response = {
                         status: "error",
                         message: `${this.paramLabel} is required`,
                         error: `Please provide a ${this.paramLabel.toLowerCase()}`
+                    };
+                    return;
+                }
+
+                if (this.uri.includes('inspect-user-agent') && !this.params.user_agent) {
+                    this.response = {
+                        status: "error",
+                        message: `User agent string is required`,
+                        error: `Please provide a user agent string to inspect`
+                    };
+                    return;
+                }
+
+                if (this.uri.includes('html-to-pdf') && !this.params.html) {
+                    this.response = {
+                        status: "error",
+                        message: `HTML content is required`,
+                        error: `Please provide HTML content to convert to PDF`
                     };
                     return;
                 }
@@ -288,37 +307,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 console.log("API Request URL:", requestUrl);
 
-                // For GET requests with URL parameter
-                if (this.method === 'get' && this.params.url) {
+                // For GET requests with URL parameters
+                if (this.method === 'get') {
                     // Check if the URI already has query parameters
                     const separator = requestUrl.includes('?') ? '&' : '?';
 
-                    // Add the appropriate parameter based on endpoint type
-                    let paramName = 'url';
-                    if (this.uri.includes('email')) paramName = 'email';
-                    if (this.uri.includes('ssl')) paramName = 'domain';
+                    if (this.needsUrlParam && this.params.url) {
+                        // Add the appropriate parameter based on endpoint type
+                        let paramName = 'url';
+                        if (this.uri.includes('inspect-email')) paramName = 'email';
+                        if (this.uri.includes('inspect-ssl')) paramName = 'domain';
 
-                    requestUrl += `${separator}${paramName}=${encodeURIComponent(this.params.url)}`;
+                        requestUrl += `${separator}${paramName}=${encodeURIComponent(this.params.url)}`;
+                    } else if (this.uri.includes('inspect-user-agent') && this.params.user_agent) {
+                        // Add user_agent parameter
+                        requestUrl += `${separator}user_agent=${encodeURIComponent(this.params.user_agent)}`;
+                    }
                 }
 
                 // For POST requests
                 let requestBody = null;
-                if (this.method === 'post' && this.params.url) {
-                    // Create the appropriate request body based on endpoint type
-                    let bodyParam = 'url';
-                    if (this.uri.includes('email')) bodyParam = 'email';
-                    if (this.uri.includes('ssl')) bodyParam = 'domain';
-                    if (this.uri.includes('html-to-pdf')) bodyParam = 'html';
+                let contentType = 'application/json';
 
-                    requestBody = { [bodyParam]: this.params.url };
+                if (this.method === 'post') {
+                    if (this.uri.includes('html-to-pdf') && this.params.html) {
+                        requestBody = { html: this.params.html };
+                    } else if (this.needsUrlParam && this.params.url) {
+                        // Create the appropriate request body based on endpoint type
+                        let bodyParam = 'url';
+                        if (this.uri.includes('inspect-email')) bodyParam = 'email';
+                        if (this.uri.includes('inspect-ssl')) bodyParam = 'domain';
+
+                        requestBody = { [bodyParam]: this.params.url };
+                    } else if (this.uri.includes('inspect-user-agent') && this.params.user_agent) {
+                        requestBody = { user_agent: this.params.user_agent };
+                    }
                 }
 
                 // Make the API request
                 fetch(requestUrl, {
                     method: this.method.toUpperCase(),
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-Sandbox-Token': this.token || ''
+                        'Content-Type': contentType,
+                        'X-Sandbox-Token': this.token || '',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                     },
                     body: requestBody ? JSON.stringify(requestBody) : null
                 })
@@ -408,7 +440,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     URL.revokeObjectURL(this.responseUrl);
                     this.responseUrl = null;
                 }
-                this.fullscreen = false;
                 this.open = false;
             }
         };
@@ -416,8 +447,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Other components or initialization code
     setupLogoutForm();
-    initApiDocumentationTabs();
-    initApiEndpointSearch();
     setupCopyApiToken();
 
     // Start Alpine
@@ -459,93 +488,6 @@ function setupCopyApiToken() {
                 console.error('Failed to copy text: ', err);
             });
     });
-}
-
-/**
- * Set up tab functionality for API documentation
- */
-function initApiDocumentationTabs() {
-    console.log("Initializing API documentation tabs");
-
-    // Skip initialization on detail pages that have their own tab logic
-    const endpointDetailPage = document.querySelector('.tab-nav');
-    if (endpointDetailPage) {
-        console.log("Skipping tab initialization on endpoint detail page");
-        return;
-    }
-
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    if (!tabButtons || tabButtons.length === 0) {
-        console.log("No tab buttons found");
-        return;
-    }
-
-    const tabContents = document.querySelectorAll('.tab-content');
-    if (!tabContents || tabContents.length === 0) {
-        console.log("No tab content found");
-        return;
-    }
-
-    console.log(`Found ${tabButtons.length} tab buttons and ${tabContents.length} tab contents`);
-
-    // Debug all tabs
-    tabButtons.forEach((btn, index) => {
-        console.log(`Tab ${index}:`, btn.dataset.tab, btn.textContent.trim());
-    });
-
-    // Function to activate a given tab
-    function activateTab(button) {
-        if (!button) {
-            console.error("Invalid button provided to activateTab");
-            return;
-        }
-
-        console.log("Activating tab:", button.dataset.tab);
-
-        // Deactivate all tabs
-        tabButtons.forEach(btn => {
-            btn.classList.remove('active', 'text-[#0A2240]', 'border-b-2', 'border-[#0A2240]');
-            btn.classList.add('text-gray-500', 'border-transparent');
-        });
-
-        // Hide all panes
-        tabContents.forEach(content => {
-            content.classList.add('hidden');
-        });
-
-        // Activate this tab
-        button.classList.add('active', 'text-[#0A2240]', 'border-b-2', 'border-[#0A2240]');
-        button.classList.remove('text-gray-500', 'border-transparent');
-
-        // Show its pane
-        const tabId = button.getAttribute('data-tab');
-        if (!tabId) {
-            console.error("Button doesn't have data-tab attribute:", button);
-            return;
-        }
-
-        const pane = document.getElementById(tabId);
-        if (pane) {
-            pane.classList.remove('hidden');
-            console.log("Showing tab content:", tabId);
-        } else {
-            console.error("Tab content not found for ID:", tabId);
-        }
-    }
-
-    // Bind click handlers
-    tabButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            console.log("Tab clicked:", button.dataset.tab);
-            activateTab(button);
-            return false;
-        });
-    });
-
-    // On load, activate the first tab
-    console.log("Activating first tab on load");
-    activateTab(tabButtons[0]);
 }
 
 /**
@@ -600,4 +542,12 @@ document.addEventListener('alpine:initialized', () => {
     }
 
     console.log("Sandbox token status:", token ? "Found" : "Not found");
+
+    // Initialize lastTokenCreation
+    if (!window.lastTokenCreation) {
+        window.lastTokenCreation = 0;
+    }
+
+    // Initialize the endpoint search
+    initApiEndpointSearch();
 });

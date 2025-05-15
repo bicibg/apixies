@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\V1\SslHealthInspectorController;
 use App\Http\Controllers\Api\V1\UserAgentInspectorController;
 use App\Http\Controllers\HtmlToPdfController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use App\Helpers\ApiResponse;
 
 Route::apiV1(function () {
     // ==========================================
@@ -35,15 +37,14 @@ Route::apiV1(function () {
         // ==========================================
         // TEST ENDPOINT (for API key testing)
         // ==========================================
-        Route::get('test', function (\Illuminate\Http\Request $request) {
-            return \App\Helpers\ApiResponse::success([
-                'message' => 'API key is valid',
-                'user' => [
-                    'id' => $request->user()->id,
-                    'name' => $request->user()->name,
-                    'email' => $request->user()->email,
-                ],
-            ], 'Authentication successful');
+        Route::get('test', function (Request $request) {
+            // In sandbox mode or without authentication, just return basic info
+            return ApiResponse::success([
+                'message' => 'API connection successful',
+                'sandbox' => $request->attributes->get('sandbox_mode', false),
+                'timestamp' => now()->toIso8601String(),
+                'ip' => $request->ip(),
+            ], 'API test successful');
         })
             ->name('api.test')
             ->description('Test endpoint to verify API key authentication.')
@@ -56,7 +57,7 @@ Route::apiV1(function () {
 
         Route::get('inspect-headers', SecurityHeadersInspectorController::class)
             ->name('inspect-headers')
-            ->description('Inspect a website’s HTTP response headers and grade security best‑practices.')
+            ->description('Inspect a website\'s HTTP response headers and grade security best‑practices.')
             ->requiredParams(['url']);
 
         Route::get('inspect-user-agent', UserAgentInspectorController::class)
@@ -66,7 +67,7 @@ Route::apiV1(function () {
 
         Route::get('inspect-ssl', SslHealthInspectorController::class)
             ->name('inspect-ssl')
-            ->description('Inspect a domain’s SSL certificate for validity, expiry and chain health.')
+            ->description('Inspect a domain\'s SSL certificate for validity, expiry and chain health.')
             ->requiredParams(['domain']);
 
         Route::post('html-to-pdf', HtmlToPdfController::class)

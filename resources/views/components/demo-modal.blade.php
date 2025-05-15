@@ -72,6 +72,29 @@
                         </div>
                     </template>
 
+                    {{-- Special handling for user-agent inspector --}}
+                    <template x-if="uri.includes('inspect-user-agent')">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                User Agent String
+                            </label>
+                            <input type="text" x-model="params.user_agent" placeholder="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36..."
+                                   class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                    </template>
+
+                    {{-- Special handling for HTML to PDF converter --}}
+                    <template x-if="uri.includes('html-to-pdf')">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                HTML Content
+                            </label>
+                            <textarea x-model="params.html" placeholder="<div>Your HTML content here</div>"
+                                      class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                                      rows="5"></textarea>
+                        </div>
+                    </template>
+
                     {{-- Sandbox token info --}}
                     <div class="mb-4 p-3 bg-gray-50 rounded-md">
                         <div class="flex justify-between items-center">
@@ -112,20 +135,9 @@
                 <div class="border-t border-gray-200">
                     <div class="flex justify-between p-4 bg-gray-50">
                         <h4 class="text-sm font-medium text-gray-700">Response</h4>
-
-                        {{-- Toggle fullscreen button --}}
-                        <button @click="toggleFullscreen" class="text-gray-500 hover:text-gray-700">
-                            <svg x-show="!fullscreen" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"></path>
-                            </svg>
-                            <svg x-show="fullscreen" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
                     </div>
 
-                    <div class="border-t border-gray-200 bg-gray-50 rounded-md overflow-hidden response-area"
-                         :style="fullscreen ? 'height: calc(100vh - 280px);' : 'height: 350px;'">
+                    <div class="border-t border-gray-200 bg-gray-50 rounded-md overflow-hidden response-area" style="height: 350px;">
                         <div x-show="!response" class="flex items-center justify-center h-full text-gray-500">
                             <span>Send a request to see the response</span>
                         </div>

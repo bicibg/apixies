@@ -22,6 +22,28 @@ return [
             ],
         ],
     ],
+    'ready' => [
+        'title' => 'Readiness Check',
+        'description' => 'Check if the API is ready to accept requests',
+        'uri' => 'api/v1/ready',
+        'method' => 'GET',
+        'category' => 'system',
+        'route_params' => [],
+        'query_params' => [],
+        'demo' => true,
+        'response_example' => [
+            'status' => 'success',
+            'http_code' => 200,
+            'code' => 'SUCCESS',
+            'message' => 'API is ready',
+            'data' => [
+                'version' => '1.0.0',
+                'database' => 'connected',
+                'cache' => 'connected',
+                'timestamp' => '2025-05-15T12:34:56Z',
+            ],
+        ],
+    ],
     'ssl' => [
         'title' => 'SSL Health Inspector',
         'description' => 'Inspect SSL certificate details for a domain',
@@ -29,7 +51,7 @@ return [
         'method' => 'GET',
         'category' => 'inspector',
         'route_params' => [],
-        'query_params' => ['url'],
+        'query_params' => ['domain'],
         'demo' => true,
         'response_example' => [
             'status' => 'success',

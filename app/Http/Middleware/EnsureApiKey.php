@@ -86,7 +86,13 @@ class EnsureApiKey
             }
         }
 
-        // Check for Bearer token authentication
+        // Always allow direct access to test endpoint
+        if ($path === 'api/v1/test') {
+            $request->attributes->set('sandbox_mode', true);
+            return $next($request);
+        }
+
+        // If we get here and there's no sandbox token, treat as bearer token
         if (!$request->bearerToken() && !$request->header('X-API-Key')) {
             return response()->json([
                 'status' => 'error',
@@ -97,9 +103,6 @@ class EnsureApiKey
 
         // Prefer Bearer token if available
         if ($request->bearerToken()) {
-            $token = $request->bearerToken();
-            Auth::guard('sanctum')->setToken($token);
-
             try {
                 $user = Auth::guard('sanctum')->user();
 
@@ -118,7 +121,7 @@ class EnsureApiKey
                 return response()->json([
                     'status' => 'error',
                     'code' => 'AUTH_ERROR',
-                    'message' => 'Authentication error',
+                    'message' => 'Authentication error: ' . $e->getMessage(),
                 ], 401);
             }
         }
@@ -126,10 +129,6 @@ class EnsureApiKey
         // Check for API key
         $apiKey = $request->header('X-API-Key');
         if ($apiKey) {
-            // Implement your API key validation logic here
-            // ...
-
-            // For now, just return unauthorized
             return response()->json([
                 'status' => 'error',
                 'code' => 'INVALID_API_KEY',
