@@ -25,7 +25,8 @@ class AddIsSandboxToApiEndpointTablesAndFixNames extends Migration
         // Add is_sandbox to api_endpoint_logs if it doesn't exist
         if (!Schema::hasColumn('api_endpoint_logs', 'is_sandbox')) {
             Schema::table('api_endpoint_logs', function (Blueprint $table) {
-                $table->boolean('is_sandbox')->default(false)->after('response_code');
+                // Just add the column without specifying "after" since response_code doesn't exist
+                $table->boolean('is_sandbox')->default(false);
                 $table->index('is_sandbox');
             });
         }
