@@ -34,9 +34,11 @@ class EnsureApiKey
             return $next($request);
         }
 
-        // Always allow direct access to test endpoint
-        if ($path === 'api/v1/test') {
+        // Always allow direct access to test endpoint - but only for GET requests
+        if ($path === 'api/v1/test' && $request->method() === 'GET') {
+            // Set sandbox mode for tracking purposes
             $request->attributes->set('sandbox_mode', true);
+
             return $next($request);
         }
 
@@ -72,8 +74,8 @@ class EnsureApiKey
                     return response()->json([
                         'status' => 'error',
                         'code' => 'SANDBOX_TOKEN_EXPIRED',
-                        'message' => 'Sandbox token expired. Please refresh your token.',
-                        'remaining_calls' => $token->quota - $token->calls,
+                        'message' => 'Sandbox token expired. Please try again tomorrow.',
+                        'remaining_calls' => max(0, $token->quota - $token->calls),
                         'expired' => true
                     ], 401);
                 }
@@ -82,12 +84,12 @@ class EnsureApiKey
                     return response()->json([
                         'status' => 'error',
                         'code' => 'SANDBOX_QUOTA_EXCEEDED',
-                        'message' => 'Sandbox quota exhausted. Please refresh your token.',
+                        'message' => 'Sandbox quota exhausted. Please try again tomorrow.',
                         'quota_exceeded' => true
                     ], 429);
                 }
 
-                // Enable sandbox mode
+                // Mark as sandbox mode for the API endpoint counter middleware
                 $request->attributes->set('sandbox_mode', true);
 
                 // Make token info available
@@ -97,14 +99,16 @@ class EnsureApiKey
                     'is_expired' => $isExpired
                 ]);
 
-                // Increment token usage count
-                DB::table('sandbox_tokens')
-                    ->where('token', $sandboxToken)
-                    ->increment('calls', 1, [
-                        'updated_at' => now()
-                    ]);
+                // Increment token usage count - EXCEPT for test endpoint since we handle that separately
+                if ($path !== 'api/v1/test') {
+                    DB::table('sandbox_tokens')
+                        ->where('token', $sandboxToken)
+                        ->increment('calls', 1, [
+                            'updated_at' => now()
+                        ]);
 
-                Log::info('Sandbox token usage updated for: ' . substr($sandboxToken, 0, 8) . '...');
+                    Log::info('Sandbox token usage updated for: ' . substr($sandboxToken, 0, 8) . '...');
+                }
 
                 return $next($request);
             } catch (\Exception $e) {

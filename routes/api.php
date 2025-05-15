@@ -45,7 +45,7 @@ Route::apiV1(function () {
                 'timestamp' => now()->toIso8601String(),
             ], 'API test successful');
         })
-            ->name('api.test')
+            ->name('test')
             ->description('Test endpoint to verify API key authentication.')
             ->requiredParams([]);
 

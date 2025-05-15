@@ -13,6 +13,16 @@ use Illuminate\Support\Facades\DB;
 class SandboxTokenController extends Controller
 {
     /**
+     * Maximum tokens per day per IP
+     */
+    const MAX_TOKENS_PER_DAY = 1;
+
+    /**
+     * Token call quota
+     */
+    const DEFAULT_QUOTA = 25;
+
+    /**
      * Issue a new sandbox token
      *
      * @return JsonResponse
@@ -24,50 +34,94 @@ class SandboxTokenController extends Controller
             $ip = request()->ip() ?: '127.0.0.1';
             Log::info('Creating sandbox token for IP: ' . $ip);
 
-            // Check for rate limiting - no more than 3 tokens per hour per IP
+            // Check for existing active token for this IP to avoid token farming
+            $existingValidToken = DB::table('sandbox_tokens')
+                ->where('ip_address', $ip)
+                ->where('calls', '<', DB::raw('quota'))
+                ->where('expires_at', '>', now())
+                ->first();
+
+            if ($existingValidToken) {
+                // Return existing token
+                return response()->json([
+                    'token' => $existingValidToken->token,
+                    'expires_at' => $existingValidToken->expires_at,
+                    'quota' => $existingValidToken->quota,
+                    'remaining_calls' => $existingValidToken->quota - $existingValidToken->calls,
+                    'message' => 'Using existing valid token'
+                ]);
+            }
+
+            // Check for daily token limit (1 token per IP per day)
             $tokenCount = DB::table('sandbox_tokens')
                 ->where('ip_address', $ip)
-                ->where('created_at', '>', now()->subHour())
+                ->where('created_at', '>', now()->startOfDay())
                 ->count();
 
-            if ($tokenCount >= 3) {
+            if ($tokenCount >= self::MAX_TOKENS_PER_DAY) {
+                // Find the most recent token for this IP
+                $latestToken = DB::table('sandbox_tokens')
+                    ->where('ip_address', $ip)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                if ($latestToken) {
+                    // If token exists but is expired, reactivate it
+                    if (now()->greaterThan($latestToken->expires_at)) {
+                        DB::table('sandbox_tokens')
+                            ->where('id', $latestToken->id)
+                            ->update([
+                                'expires_at' => now()->addMinutes(30),
+                                'updated_at' => now()
+                            ]);
+
+                        return response()->json([
+                            'token' => $latestToken->token,
+                            'expires_at' => now()->addMinutes(30),
+                            'quota' => $latestToken->quota,
+                            'remaining_calls' => $latestToken->quota - $latestToken->calls,
+                            'message' => 'Token reactivated with same quota'
+                        ]);
+                    }
+
+                    // If token exists but quota exhausted, return error/warning
+                    if ($latestToken->calls >= $latestToken->quota) {
+                        return response()->json([
+                            'status' => 'warning',
+                            'message' => 'Daily token limit reached and quota exhausted. Please try again tomorrow.',
+                            'retry_after' => now()->addDay()->startOfDay()->diffForHumans(),
+                            'token_limit_reached' => true
+                        ], 429);
+                    }
+                }
+
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Rate limit exceeded. Please try again later.',
-                    'rate_limited' => true,
-                    'retry_after' => now()->addHour()->diffInMinutes(now()) . ' minutes'
+                    'message' => 'Daily token limit reached. Please try again tomorrow.',
+                    'retry_after' => now()->addDay()->startOfDay()->diffForHumans(),
+                    'token_limit_reached' => true
                 ], 429);
             }
 
             // Generate a new token
             $token = Str::random(40);
 
-            // Directly insert to avoid model quirks
+            // Insert new token
             DB::table('sandbox_tokens')->insert([
                 'token' => $token,
                 'calls' => 0,
-                'quota' => 50,
+                'quota' => self::DEFAULT_QUOTA,
                 'ip_address' => $ip,
                 'created_at' => now(),
                 'updated_at' => now(),
                 'expires_at' => now()->addMinutes(30)
             ]);
 
-            // Verify it was inserted correctly
-            $inserted = DB::table('sandbox_tokens')
-                ->where('token', $token)
-                ->first();
-
-            Log::info('Inserted token record', [
-                'token_id' => $inserted->id ?? 'unknown',
-                'ip_stored' => $inserted->ip_address ?? 'not set',
-                'token_start' => substr($token, 0, 8)
-            ]);
-
             return response()->json([
                 'token' => $token,
                 'expires_at' => now()->addMinutes(30),
-                'quota' => 50
+                'quota' => self::DEFAULT_QUOTA,
+                'remaining_calls' => self::DEFAULT_QUOTA
             ]);
         } catch (QueryException $e) {
             Log::error('Database error creating sandbox token: ' . $e->getMessage());
@@ -99,48 +153,53 @@ class SandboxTokenController extends Controller
             // Get the client IP address
             $ip = request()->ip() ?: '127.0.0.1';
 
-            // Check for rate limiting - max 5 refreshes per hour
-            $refreshCount = DB::table('sandbox_tokens')
-                ->where('ip_address', $ip)
-                ->where('updated_at', '>', now()->subHour())
-                ->where('created_at', '<>', DB::raw('updated_at'))
-                ->count();
-
-            if ($refreshCount >= 5) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Token refresh rate limit exceeded. Please try again later.',
-                    'rate_limited' => true,
-                    'retry_after' => now()->addHour()->diffInMinutes(now()) . ' minutes'
-                ], 429);
-            }
-
             // Find existing tokens for this IP
             $existingToken = DB::table('sandbox_tokens')
                 ->where('ip_address', $ip)
                 ->orderBy('created_at', 'desc')
                 ->first();
 
-            if ($existingToken) {
-                // Update the existing token's expiration and reset calls
-                DB::table('sandbox_tokens')
-                    ->where('id', $existingToken->id)
-                    ->update([
-                        'expires_at' => now()->addMinutes(30),
-                        'calls' => 0,
-                        'updated_at' => now()
-                    ]);
-
-                return response()->json([
-                    'token' => $existingToken->token,
-                    'message' => 'Token refreshed successfully',
-                    'expires_at' => now()->addMinutes(30),
-                    'quota' => $existingToken->quota
-                ]);
+            if (!$existingToken) {
+                // No existing token, create a new one
+                return $this->create();
             }
 
-            // No existing token, create a new one
-            return $this->create();
+            // Token exists but quota is exhausted
+            if ($existingToken->calls >= $existingToken->quota) {
+                // Check daily token limit
+                $tokenCount = DB::table('sandbox_tokens')
+                    ->where('ip_address', $ip)
+                    ->where('created_at', '>', now()->startOfDay())
+                    ->count();
+
+                if ($tokenCount >= self::MAX_TOKENS_PER_DAY) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Daily token limit reached and quota exhausted. Please try again tomorrow.',
+                        'retry_after' => now()->addDay()->startOfDay()->diffForHumans(),
+                        'token_limit_reached' => true
+                    ], 429);
+                }
+
+                // If under daily limit, create a new token
+                return $this->create();
+            }
+
+            // Token exists and has remaining quota, just refresh expiration
+            DB::table('sandbox_tokens')
+                ->where('id', $existingToken->id)
+                ->update([
+                    'expires_at' => now()->addMinutes(30),
+                    'updated_at' => now()
+                ]);
+
+            return response()->json([
+                'token' => $existingToken->token,
+                'message' => 'Token expiration refreshed',
+                'expires_at' => now()->addMinutes(30),
+                'quota' => $existingToken->quota,
+                'remaining_calls' => $existingToken->quota - $existingToken->calls
+            ]);
         } catch (\Exception $e) {
             Log::error('Error refreshing token: ' . $e->getMessage());
 
@@ -219,7 +278,7 @@ class SandboxTokenController extends Controller
                     'valid' => false,
                     'message' => 'Sandbox token expired',
                     'expired' => true,
-                    'remaining_calls' => $sandboxToken->quota - $sandboxToken->calls
+                    'remaining_calls' => max(0, $sandboxToken->quota - $sandboxToken->calls)
                 ]);
             }
 
@@ -227,7 +286,8 @@ class SandboxTokenController extends Controller
                 return response()->json([
                     'valid' => false,
                     'message' => 'Sandbox quota exhausted',
-                    'quota_exceeded' => true
+                    'quota_exceeded' => true,
+                    'remaining_calls' => 0
                 ]);
             }
 
