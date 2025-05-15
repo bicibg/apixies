@@ -43,8 +43,100 @@ class HtmlToPdfController extends Controller
      */
     private function generateApiPdf(string $html): \Illuminate\Http\Response
     {
-        // For API calls, use standard Browsershot without additional CSS
-        $pdfContent = Browsershot::html($html)
+        $fullHtml = <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Document</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            color: #333;
+            background-color: white;
+        }
+        .header {
+            background: linear-gradient(to right, #2e51a2, #6e8cd5);
+            color: white;
+            padding: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        .container {
+            padding: 20px;
+        }
+        .nav {
+            margin-top: 15px;
+        }
+        .nav a {
+            color: white;
+            margin-right: 15px;
+            text-decoration: none;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th {
+            background-color: #4c6eaf;
+            color: white;
+            text-align: left;
+            padding:.75rem;
+        }
+        td {
+            padding: .75rem;
+            border-top: 1px solid #dee2e6;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #f96052;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Apixies.io PDF Converter Test</h1>
+        <div class="nav">
+            <a href="#">Home</a>
+            <a href="#">Docs</a>
+            <a href="#">API</a>
+            <a href="#">Contact</a>
+        </div>
+    </div>
+    <div class="container">
+        $html
+    </div>
+</body>
+</html>
+HTML;
+
+        // For API calls, generate nice styled PDF
+        $pdfContent = Browsershot::html($fullHtml)
             ->noSandbox()
             ->waitUntilNetworkIdle()
             ->emulateMedia('screen')
@@ -177,31 +269,21 @@ $html
 </html>
 HTML;
 
-        // Create a temporary file to ensure CSS is properly applied
-        $tempFilename = 'temp_' . uniqid() . '.html';
-        Storage::disk('local')->put($tempFilename, $fullHtml);
-        $tempFilePath = Storage::disk('local')->path($tempFilename);
+        // Generate PDF directly from HTML string (no file:// URLs)
+        $pdfContent = Browsershot::html($fullHtml)
+            ->noSandbox()
+            ->waitUntilNetworkIdle()
+            ->emulateMedia('screen')
+            ->showBackground()
+            ->format('A4')
+            ->pdf();
 
-        try {
-            // Generate PDF from the file to ensure proper CSS application
-            $pdfContent = Browsershot::url('file://' . $tempFilePath)
-                ->noSandbox()
-                ->waitUntilNetworkIdle()
-                ->emulateMedia('screen')
-                ->showBackground()
-                ->format('A4')
-                ->pdf();
-
-            // Return the PDF with proper headers
-            return response($pdfContent, 200, [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="document.pdf"',
-                'X-Frame-Options' => 'ALLOWALL',
-                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-            ]);
-        } finally {
-            // Clean up temporary file
-            Storage::disk('local')->delete($tempFilename);
-        }
+        // Return the PDF with proper headers
+        return response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="document.pdf"',
+            'X-Frame-Options' => 'ALLOWALL',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
     }
 }

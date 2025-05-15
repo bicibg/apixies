@@ -13,8 +13,8 @@
      data-method="{{ strtolower(explode('|', $route['method'] ?? 'GET')[0]) }}"
      x-cloak>
 
-    {{-- Trigger button --}}
-    <button @click="open = true" class="w-full px-4 py-3 text-center rounded font-medium bg-white text-[#0A2240] hover:bg-gray-100 transition">
+    {{-- Trigger button with improved visibility --}}
+    <button @click="open = true" class="w-full px-4 py-3 text-center rounded font-medium bg-gradient-to-r from-[#0A2240] to-[#007C91] text-white hover:shadow-md transition">
         Try {{ $route['method'] ?? 'GET' }} {{ $route['uri'] ?? '/api/endpoint' }}
     </button>
 
