@@ -40,16 +40,16 @@ class FixApiEndpointNames extends Command
     {
         $this->info('Fixing API endpoint names...');
 
-        // Fix api.test to test in api_endpoint_counts
+        // Fix api/v1/test to test in api_endpoint_counts
         $countRows = DB::table('api_endpoint_counts')
-            ->where('endpoint', 'api.test')
+            ->where('endpoint', 'api/v1/test')
             ->update(['endpoint' => 'test']);
 
         $this->info("Updated {$countRows} records in api_endpoint_counts.");
 
-        // Fix api.test to test in api_endpoint_logs
+        // Fix api/v1/test to test in api_endpoint_logs
         $logRows = DB::table('api_endpoint_logs')
-            ->where('endpoint', 'api.test')
+            ->where('endpoint', 'api/v1/test')
             ->update(['endpoint' => 'test']);
 
         $this->info("Updated {$logRows} records in api_endpoint_logs.");
