@@ -14,7 +14,7 @@
      x-cloak>
 
     {{-- Trigger button --}}
-    <button @click="openModal" class="w-full px-4 py-3 text-center rounded font-medium bg-[#0A2240] text-white hover:bg-[#143462] transition">
+    <button @click="openModal" class="w-full px-4 py-3 text-center rounded font-medium bg-navy text-white hover:bg-[#143462] transition">
         Try {{ $route['method'] ?? 'GET' }} {{ $route['uri'] ?? '/api/endpoint' }}
     </button>
 

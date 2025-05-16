@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="auth-card">
-        <h2 class="text-3xl font-bold text-center text-[#0A2240] mb-2">
+        <h2 class="text-3xl font-bold text-center text-navy mb-2">
             Create an Account
         </h2>
         <p class="text-center text-gray-600 mb-6">
@@ -12,13 +12,13 @@
         </p>
 
         @if (session('status'))
-            <div class="mb-4 p-2 bg-green-100 border border-green-400 text-green-700 rounded">
+            <div class="alert-success">
                 {{ session('status') }}
             </div>
         @endif
 
         @if ($errors->any())
-            <div class="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div class="alert-error">
                 <ul>
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>

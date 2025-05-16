@@ -11,14 +11,14 @@
     <div x-show="open"
          x-transition.opacity
          class="fixed inset-0 flex items-center justify-center z-[9999]
-            bg-[#0A2240]/50 backdrop-blur-sm">
+            bg-navy/50 backdrop-blur-sm">
 
         <div @click.away="open = false"
              @keydown.escape.window="open = false"
              x-transition.scale
              class="bg-white w-full max-w-md p-6 rounded-lg shadow-lg relative">
 
-            <h2 class="text-lg font-semibold text-[#0A2240] mb-4">Suggest a micro‑API</h2>
+            <h2 class="text-lg font-semibold text-navy mb-4">Suggest a micro‑API</h2>
 
             <form @submit.prevent="submit" class="space-y-4">
 

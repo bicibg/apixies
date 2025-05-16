@@ -64,13 +64,13 @@
 
         <div class="flex flex-wrap">
             <a href="{{ route('docs.endpoints.index') }}"
-               class="px-4 py-2 bg-[#0A2240] text-white rounded hover:bg-[#153458] transition mr-4 mb-2">
+               class="px-4 py-2 bg-navy text-white rounded hover:bg-navy-light transition mr-4 mb-2">
                 Explore Endpoints
             </a>
 
             @guest
                 <a href="{{ route('register') }}"
-                   class="px-4 py-2 bg-white border border-[#0A2240] text-[#0A2240] rounded hover:bg-gray-50 transition mb-2">
+                   class="px-4 py-2 bg-white border border-navy text-navy rounded hover:bg-gray-50 transition mb-2">
                     Sign Up for API Access
                 </a>
             @endguest

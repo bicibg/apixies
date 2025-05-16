@@ -1,6 +1,6 @@
 {{-- docs/partials/features.blade.php --}}
 <div class="p-6 bg-white rounded-lg shadow-md">
-    <h2 class="text-xl font-semibold text-[#0A2240] mb-4">API Features</h2>
+    <h2 class="text-xl font-semibold text-navy mb-4">API Features</h2>
 
     <div class="space-y-6">
         <div>

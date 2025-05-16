@@ -2,62 +2,91 @@
    APPIXIES  –  global Tailwind build
    ──────────────────────────────────────────────────────────── */
 
+/* Import our color theme */
+@import "./colors.css";
+
+/* Import Tailwind */
 @import "tailwindcss";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* -----------------------------------------------------------
-   1.  LOW‑LEVEL UTILITIES
-   ----------------------------------------------------------- */
-@layer utilities {
-    .max-w-md       { max-width: 28rem; }
-}
-
-/* -----------------------------------------------------------
-   2.  COMPONENTS (Tailwind @apply)
+   1.  COMPONENTS (Tailwind @apply)
    ----------------------------------------------------------- */
 @layer components {
+    /* Authentication Components */
     .auth-card {
-        @apply mx-auto bg-white rounded-lg shadow-lg p-6;
-        max-width: 28rem; /* fallback */
+        @apply mx-auto bg-white rounded-lg shadow-lg p-6 max-w-md;
     }
 
-    .form-input {
+    .form-input,
+    .search-input {
         @apply block w-full px-4 py-2 border border-gray-300 rounded-md;
-        @apply focus:ring-2 focus:ring-teal-500 focus:border-transparent;
+        @apply focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent;
     }
 
     .btn-primary {
         @apply w-full text-white font-semibold py-2 rounded-lg shadow-md transition;
-        background-image: linear-gradient(to right, #0694a2, #3182ce);
+        background-image: linear-gradient(to right, var(--color-teal), var(--color-blue-600));
     }
 
-    /* Docs‑specific card */
+    /* Status Alerts */
+    .alert-success {
+        @apply p-3 bg-green-100 border border-green-400 text-green-700 rounded mb-4;
+    }
+
+    .alert-error {
+        @apply p-3 bg-red-100 border border-red-400 text-red-700 rounded mb-4;
+    }
+
+    .alert-info {
+        @apply p-3 bg-blue-50 border border-blue-300 rounded-md mb-4;
+    }
+
+    /* Documentation Components */
     .card         { @apply bg-white rounded-lg shadow-md p-6 mb-6; }
-    .card-heading { @apply text-2xl font-semibold text-[#0A2240] mb-4; }
+    .card-heading { @apply text-2xl font-semibold text-navy mb-4; }
 
-    /* Method badge colours */
-    .method-badge { @apply inline-block px-2 py-1 rounded text-xs font-semibold uppercase min-w-[4.5rem] text-center; }
-    .method-badge.get     { @apply bg-blue-100  text-blue-900;  }
-    .method-badge.post    { @apply bg-green-100 text-green-900; }
+    /* Method badge unified system */
+    .method-badge,
+    .endpoint-card .method {
+        @apply inline-block px-2 py-1 rounded text-xs font-semibold uppercase min-w-[4.5rem] text-center;
+    }
+
+    /* GET method */
+    .method-badge.get,
+    .endpoint-card .method.get {
+        @apply bg-success-100 text-success-800;
+    }
+
+    /* POST method */
+    .method-badge.post,
+    .endpoint-card .method.post {
+        @apply bg-info-100 text-info-800;
+    }
+
+    /* PUT/PATCH methods */
     .method-badge.put,
-    .method-badge.patch   { @apply bg-yellow-100 text-yellow-900; }
-    .method-badge.delete  { @apply bg-red-100   text-red-900; }
+    .method-badge.patch,
+    .endpoint-card .method.put {
+        @apply bg-warning-100 text-warning-800;
+    }
 
-    /* -------------------------------------------------------
-       UPDATED  ➜  Code block (no wrapping, scroll instead)
-       -------------------------------------------------------*/
+    /* DELETE method */
+    .method-badge.delete,
+    .endpoint-card .method.delete {
+        @apply bg-danger-100 text-danger-800;
+    }
+
+    /* Code block */
     .code-block {
         @apply bg-gray-50 p-4 rounded leading-relaxed text-sm font-mono;
-        white-space: pre;            /* preserve long lines */
-        overflow-x: auto;            /* horizontal scroll */
+        @apply whitespace-pre overflow-x-auto;
         -webkit-overflow-scrolling: touch;
     }
 
-    /* -------------------------------------------------------
-       Docs Navigation Styling (new!)
-       -------------------------------------------------------*/
+    /* Documentation Navigation */
     .docs-nav {
         @apply sticky top-4;
     }
@@ -83,12 +112,10 @@
     }
 
     .docs-nav a.active {
-        @apply bg-[#0A2240] text-white font-medium;
+        @apply bg-navy text-white font-medium;
     }
 
-    /* -------------------------------------------------------
-       Documentation Sections (new!)
-       -------------------------------------------------------*/
+    /* Documentation Sections */
     .docs-section {
         @apply mb-16 pb-8 border-b border-gray-200;
     }
@@ -101,16 +128,29 @@
         @apply text-2xl font-bold mb-6 scroll-mt-8;
     }
 
-    /* -------------------------------------------------------
-       Endpoint Rows (new!)
-       -------------------------------------------------------*/
+    /* Endpoint Components */
     .endpoint-row {
-        @apply bg-white p-4 rounded-lg border border-gray-200 hover:border-indigo-300 transition mb-4;
+        @apply bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300 transition mb-4;
     }
 
-    /* -------------------------------------------------------
-       Response examples and tabs (new!)
-       -------------------------------------------------------*/
+    .endpoint-card {
+        @apply bg-white p-6 rounded-lg shadow-sm border border-gray-200;
+        @apply hover:border-blue-300 transition;
+    }
+
+    .endpoint-card .uri {
+        @apply font-mono text-sm bg-gray-100 px-2 py-1 rounded;
+    }
+
+    .endpoint-card .title {
+        @apply font-bold text-lg mb-1;
+    }
+
+    .endpoint-card .description {
+        @apply text-gray-600 text-sm mb-4;
+    }
+
+    /* Tab Components */
     .tab-nav {
         @apply flex border-b border-gray-200;
     }
@@ -122,20 +162,20 @@
     }
 
     .tab-btn.active {
-        @apply text-[#0A2240] border-b-2 border-[#0A2240];
+        @apply text-navy border-b-2 border-navy;
     }
 
-    .tab-content {
+    .tab-content,
+    .code-example {
         @apply py-4;
     }
 
-    .tab-content:not(.active) {
+    .tab-content:not(.active),
+    .code-example:not(.active) {
         @apply hidden;
     }
 
-    /* -------------------------------------------------------
-       Breadcrumbs (enhanced)
-       -------------------------------------------------------*/
+    /* Navigation Components */
     .breadcrumbs {
         @apply flex flex-wrap items-center text-sm text-gray-500 mb-4;
     }
@@ -153,23 +193,10 @@
         @apply text-blue-600 hover:text-blue-800;
     }
 
-    /* -------------------------------------------------------
-       Code examples tabs (enhanced)
-       -------------------------------------------------------*/
-    .code-example {
-        @apply mb-4;
-    }
-
-    .code-example:not(.active) {
-        @apply hidden;
-    }
-
-    /* -------------------------------------------------------
-       Search input (enhanced)
-       -------------------------------------------------------*/
+    /* Search Components */
     .search-input {
         @apply w-full p-2 pl-10 border border-gray-300 rounded-md;
-        @apply focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent;
+        @apply focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent;
         @apply bg-white;
     }
 
@@ -177,63 +204,46 @@
         @apply absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400;
     }
 
-    /* -------------------------------------------------------
-       API Endpoint Cards (enhanced)
-       -------------------------------------------------------*/
-    .endpoint-card {
-        @apply bg-white p-6 rounded-lg shadow-sm border border-gray-200;
-        @apply hover:border-indigo-300 transition duration-200;
+    /* Parameter Badge */
+    .param-badge {
+        @apply inline-block bg-gray-100 rounded px-2 py-1 text-xs font-mono mb-1 mr-1;
     }
 
-    .endpoint-card .method {
-        @apply inline-block px-3 py-1 rounded-full text-xs font-semibold;
-        @apply mr-2;
+    /* Button Variants */
+    .btn-blue {
+        @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition;
     }
 
-    .endpoint-card .method.get {
-        @apply bg-green-100 text-green-800;
+    .btn-outline {
+        @apply border border-blue-600 text-blue-600 hover:bg-blue-50 font-medium py-2 px-4 rounded transition;
     }
 
-    .endpoint-card .method.post {
-        @apply bg-blue-100 text-blue-800;
+    .btn-gray {
+        @apply bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded transition;
     }
 
-    .endpoint-card .method.put {
-        @apply bg-yellow-100 text-yellow-800;
+    /* Gradient Buttons (like API Keys page) */
+    .btn-gradient {
+        @apply text-white px-5 py-2 rounded-md font-medium transition cursor-pointer;
+        background-image: linear-gradient(to right, var(--color-teal-500), var(--color-blue-600));
     }
 
-    .endpoint-card .method.delete {
-        @apply bg-red-100 text-red-800;
-    }
-
-    .endpoint-card .uri {
-        @apply font-mono text-sm bg-gray-100 px-2 py-1 rounded;
-    }
-
-    .endpoint-card .title {
-        @apply font-bold text-lg mb-1;
-    }
-
-    .endpoint-card .description {
-        @apply text-gray-600 text-sm mb-4;
+    .btn-gradient:hover {
+        background-image: linear-gradient(to right, var(--color-teal-600), var(--color-blue-700));
     }
 }
 
 /* -----------------------------------------------------------
-   3.  BASE STYLES
+   2.  BASE STYLES
    ----------------------------------------------------------- */
 
-/* Smooth scrolling for the entire page */
+/* Smooth scrolling with anchor offset */
 html {
     scroll-behavior: smooth;
+    scroll-padding-top: 5rem; /* Adjust based on header height */
 }
 
-/* Ensure fixed header doesn't create issues with anchor links */
-html:not(.no-js) {
-    scroll-padding-top: 5rem; /* Adjust this value based on your header height */
-}
-
-/* Transition for mobile menu */
+/* Mobile menu transitions */
 #mobile-menu {
     transition: all 0.3s ease-in-out;
     opacity: 1;
@@ -246,76 +256,119 @@ html:not(.no-js) {
     overflow: hidden;
 }
 
-/* Shadow effect when scrolling for the header */
+/* Header shadow effect */
 .header-shadow {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* Base body styles */
 body {
     font-family: 'Figtree', sans-serif;
-    @apply m-0 p-0 flex flex-col items-center min-h-screen bg-[#f0f4f8] text-[#102A43];
+    @apply m-0 p-0 flex flex-col items-center min-h-screen text-gray-900;
 }
+
 body.overflow-hidden {
     overflow: hidden !important;
     position: fixed;
     width: 100%;
 }
-button,[type='button'],[type='reset'],[type='submit'] { cursor: pointer; }
+
+/* Button cursor */
+button,[type='button'],[type='reset'],[type='submit'] {
+    cursor: pointer;
+}
 
 /* Hero gradient */
-.api-hero { background-image: linear-gradient(to right, #0A2240, #007C91); }
+.api-hero {
+    background-image: linear-gradient(to right, var(--color-navy), var(--color-teal));
+}
 
-/* High‑contrast focus ring */
-:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+/* Accessibility focus */
+:focus-visible {
+    outline: 3px solid var(--color-blue-600);
+    outline-offset: 2px;
+}
 
-/* Skip‑link helpers */
-.sr-only       { @apply absolute w-px h-px -m-px overflow-hidden whitespace-nowrap border-0; }
-.focus\:not-sr-only:focus { @apply static w-auto h-auto m-0 overflow-visible whitespace-normal; }
+/* Accessibility helpers */
+.sr-only {
+    @apply absolute w-px h-px -m-px overflow-hidden whitespace-nowrap border-0;
+}
 
-/* Header */
+.focus\:not-sr-only:focus {
+    @apply static w-auto h-auto m-0 overflow-visible whitespace-normal;
+}
+
+/* Header styles */
 header {
-    background: linear-gradient(90deg, #0A2240, #007C91);
+    background: linear-gradient(90deg, var(--color-navy), var(--color-teal));
     @apply w-full py-5 text-center flex flex-col items-center;
 }
-header img { @apply max-w-[140px] mb-2 rounded bg-white/85 shadow relative z-[1] p-1.5; }
 
-/* Parameter badge */
-.param-badge { @apply inline-block bg-gray-100 rounded px-2 py-1 text-xs font-mono mb-1 mr-1; }
+header img {
+    @apply max-w-[140px] mb-2 rounded bg-white/85 shadow relative z-[1] p-1.5;
+}
 
-/* Tables */
-.api-table th { @apply uppercase text-xs font-semibold tracking-wide; }
-.api-table td { @apply align-middle; }
-tr:hover      { @apply bg-blue-50; }
+/* Table styles */
+.api-table th {
+    @apply uppercase text-xs font-semibold tracking-wide;
+}
 
-/* Documentation sections - prevent stacking */
+.api-table td {
+    @apply align-middle;
+}
+
+tr:hover {
+    @apply bg-blue-50;
+}
+
+/* Documentation sections */
 #features, #authentication, #endpoints, #responses, #examples {
     @apply pt-4 mb-12 clear-both;
     scroll-margin-top: 2rem;
 }
 
-/* Responsive tweak */
+/* Modal backdrop */
+.modal-backdrop {
+    backdrop-filter: blur(1px);
+    background-color: transparent !important;
+}
+
+/* Scroll margin for anchor links */
+[id] {
+    scroll-margin-top: 1rem;
+}
+
+/* Alpine.js cloak */
+[x-cloak] {
+    display: none !important;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
-    header h1 { font-size: 1.8rem; }
+    /* Header adjustments */
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    /* Documentation navigation */
     .docs-nav {
         @apply static mb-8;
     }
 
-    /* Improved mobile navigation */
     .docs-nav .nav-section {
         @apply border-b pb-4;
     }
 
-    /* Stack the main layout on mobile */
+    /* Layout adjustments */
     .main-content-wrapper {
         @apply flex-col;
     }
 
-    /* Full width content on mobile */
     .main-content {
         @apply w-full;
     }
 
-    /* Adjust tab navigation for small screens */
+    /* Tab navigation */
     .tab-nav {
         @apply overflow-x-auto pb-1;
         -webkit-overflow-scrolling: touch;
@@ -324,17 +377,4 @@ tr:hover      { @apply bg-blue-50; }
     .tab-btn {
         @apply whitespace-nowrap;
     }
-}
-
-/* hide Alpine elements until JS is ready */
-[x-cloak] { display: none !important; }
-
-.modal-backdrop {
-    background-color: transparent !important;
-    backdrop-filter: blur(1px);
-}
-
-/* Scroll margin for anchor links */
-[id] {
-    scroll-margin-top: 1rem;
 }

@@ -7,13 +7,8 @@ export default {
     ],
     theme: {
         extend: {
-            colors: {
-                navy: '#0A2240',
-                teal: '#007C91',
-            },
         },
     },
-    // This ensures default utilities are available
     presets: [
         require('tailwindcss/preset')
     ],

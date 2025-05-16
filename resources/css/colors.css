@@ -1,0 +1,59 @@
+/* resources/css/colors.css */
+@import "tailwindcss";
+
+@theme {
+    /* Primary Brand Colors */
+    --color-navy: #0A2240;
+    --color-navy-light: #143462;
+    --color-navy-dark: #05192E;
+    --color-teal: #007C91;
+
+    /* UI Colors */
+    --color-blue-50: #EFF6FF;
+    --color-blue-100: #DBEAFE;
+    --color-blue-200: #BFDBFE;
+    --color-blue-300: #93C5FD;
+    --color-blue-500: #3B82F6;
+    --color-blue-600: #2563EB;
+    --color-blue-700: #1D4ED8;
+    --color-blue-800: #1E40AF;
+
+    /* Alert/Feedback Colors */
+    --color-green-100: #DCFCE7;
+    --color-green-400: #4ADE80;
+    --color-green-500: #22C55E;
+    --color-green-600: #16A34A;
+    --color-green-700: #15803D;
+
+    --color-red-100: #FEE2E2;
+    --color-red-400: #F87171;
+    --color-red-500: #EF4444;
+    --color-red-600: #DC2626;
+    --color-red-700: #B91C1C;
+
+    /* Button Colors */
+    --color-teal-500: #14B8A6;
+    --color-teal-600: #0D9488;
+
+    /* Status Colors for Method Badges */
+    --color-success-100: #DCFCE7;
+    --color-success-800: #166534;
+    --color-info-100: #DBEAFE;
+    --color-info-800: #1E40AF;
+    --color-warning-100: #FEF3C7;
+    --color-warning-800: #92400E;
+    --color-danger-100: #FEE2E2;
+    --color-danger-800: #991B1B;
+
+    /* Neutrals */
+    --color-gray-50: #F9FAFB;
+    --color-gray-100: #F3F4F6;
+    --color-gray-200: #E5E7EB;
+    --color-gray-300: #D1D5DB;
+    --color-gray-400: #9CA3AF;
+    --color-gray-500: #6B7280;
+    --color-gray-600: #4B5563;
+    --color-gray-700: #374151;
+    --color-gray-800: #1F2937;
+    --color-gray-900: #111827;
+}

@@ -263,12 +263,12 @@ echo $response;</code></pre>
             // Update button states
             var buttons = document.querySelectorAll('.tab-button');
             for (var i = 0; i < buttons.length; i++) {
-                buttons[i].classList.remove('active', 'text-[#0A2240]', 'border-[#0A2240]', 'border-b-2');
+                buttons[i].classList.remove('active', 'text-navy', 'border-navy', 'border-b-2');
                 buttons[i].classList.add('text-gray-500', 'border-transparent');
             }
 
             // Activate clicked button
-            button.classList.add('active', 'text-[#0A2240]', 'border-[#0A2240]', 'border-b-2');
+            button.classList.add('active', 'text-navy', 'border-navy', 'border-b-2');
             button.classList.remove('text-gray-500', 'border-transparent');
         }
 

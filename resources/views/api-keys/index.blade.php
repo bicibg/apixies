@@ -6,11 +6,11 @@
     <div class="max-w-4xl mx-auto">
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
             <div class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl font-bold text-[#0A2240]">Your API Keys</h1>
+                <h1 class="text-2xl font-bold text-navy">Your API Keys</h1>
 
                 <button
                     id="create-key-button"
-                    class="bg-gradient-to-r from-teal-500 to-blue-600 text-white px-5 py-2 rounded-md font-medium hover:from-teal-600 hover:to-blue-700 transition cursor-pointer"
+                    class="btn-gradient"
                 >
                     Create New API Key
                 </button>
@@ -18,14 +18,14 @@
 
             <!-- Success message -->
             @if (session('status'))
-                <div class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+                <div class="alert-success">
                     {{ session('status') }}
                 </div>
             @endif
 
             <!-- New token display -->
             @if (session('new_token'))
-                <div class="mb-6 p-4 bg-blue-50 border border-blue-300 rounded-md">
+                <div class="alert-info">
                     <h3 class="text-lg font-semibold text-blue-800 mb-2">API Key Created</h3>
                     <p class="text-sm text-gray-700 mb-1">
                         Name: <span class="font-medium">{{ session('new_token')['name'] }}</span>
@@ -60,7 +60,7 @@
             <!-- API Keys Table -->
             <div class="overflow-x-auto">
                 @if ($apiKeys->isEmpty())
-                    <div class="bg-blue-50 p-4 rounded-md mb-6">
+                    <div class="alert-info mb-6">
                         <h3 class="text-lg font-semibold text-blue-800 mb-2">Get Started with API Keys</h3>
                         <p class="text-gray-700 mb-2">
                             API keys allow your applications to authenticate with our API services. Create your first API key to start building!
@@ -145,7 +145,7 @@
                             name="name"
                             value="{{ old('name') }}"
                             placeholder="e.g., Development, Production, etc."
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 @error('name') border-red-500 @enderror"
+                            class="form-input @error('name') border-red-500 @enderror"
                             required
                         >
                         @error('name')
@@ -161,13 +161,13 @@
                         <button
                             type="button"
                             id="cancel-create"
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                            class="btn-gray mr-3"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            class="ml-3 px-4 py-2 text-sm font-medium text-white bg-teal-500 border border-transparent rounded-md hover:bg-teal-600"
+                            class="btn-blue"
                         >
                             Create API Key
                         </button>

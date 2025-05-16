@@ -10,7 +10,7 @@
         <div class="api-hero p-8 mb-6 rounded-lg shadow-md text-white flex items-start justify-between">
             <div>
                 <h1 class="text-3xl font-bold mb-3">Community Ideas</h1>
-                <p class="text-xl opacity-90">Up‑vote micro‑APIs you’d like us to build next.</p>
+                <p class="text-xl opacity-90">Up‑vote micro‑APIs you'd like us to build next.</p>
             </div>
 
             {{-- Suggest button --}}
@@ -57,7 +57,7 @@
                 @foreach ($ideas as $idea)
                     <tr class="border-t last:border-b">
                         <td class="py-4">
-                            <div class="font-medium text-[#0A2240]">{{ $idea->title }}</div>
+                            <div class="font-medium text-navy">{{ $idea->title }}</div>
                             @if($idea->details)
                                 <div class="text-gray-600 mt-1">{{ $idea->details }}</div>
                             @endif

@@ -29,7 +29,7 @@
     <div x-show="sidebarOpen"
          class="docs-nav md:block md:max-h-[calc(100vh-5rem)] md:overflow-y-auto sticky top-14 md:top-16 z-10">
         <div class="nav-section rounded-lg overflow-hidden shadow-sm bg-white">
-            <div class="p-3 md:p-4 bg-gradient-to-r from-[#0A2240] to-[#007C91] text-white">
+            <div class="p-3 md:p-4 bg-gradient-to-r from-navy to-teal text-white">
                 <h3 class="font-bold text-lg">Documentation</h3>
             </div>
 
@@ -37,25 +37,25 @@
                 <ul class="space-y-1 md:space-y-2">
                     <li>
                         <a href="{{ route('docs.index') }}" @click="endpointsOpen = false"
-                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'overview' ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'overview' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
                             Overview
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('docs.features') }}" @click="endpointsOpen = false"
-                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'features' ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'features' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
                             Features
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('docs.authentication') }}" @click="endpointsOpen = false"
-                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'authentication' ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'authentication' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
                             Authentication
                         </a>
                     </li>
                     <li class="endpoints-section">
                         <!-- Mobile: Click anywhere on the heading to toggle submenu -->
-                        <div class="md:hidden flex items-center {{ $activeSection === 'endpoints' ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700' }} rounded">
+                        <div class="md:hidden flex items-center {{ $activeSection === 'endpoints' ? 'bg-navy text-white font-medium' : 'text-gray-700' }} rounded">
                             <button @click.prevent="endpointsOpen = !endpointsOpen" class="w-full flex items-center justify-between px-3 py-2 text-left focus:outline-none">
                                 <span>API Endpoints</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform"
@@ -67,7 +67,7 @@
 
                         <!-- Desktop only navigation link -->
                         <a href="{{ route('docs.endpoints.index') }}"
-                           class="hidden md:block px-3 py-2 rounded transition-colors {{ $activeSection === 'endpoints' ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                           class="hidden md:block px-3 py-2 rounded transition-colors {{ $activeSection === 'endpoints' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
                             API Endpoints
                         </a>
 
@@ -108,13 +108,13 @@
                     </li>
                     <li>
                         <a href="{{ route('docs.responses') }}" @click="endpointsOpen = false"
-                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'responses' ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'responses' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
                             Response Format
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('docs.code-examples') }}" @click="endpointsOpen = false"
-                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'code-examples' ? 'bg-[#0A2240] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'code-examples' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
                             Code Examples
                         </a>
                     </li>
