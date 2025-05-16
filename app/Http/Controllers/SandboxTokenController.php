@@ -117,12 +117,12 @@ class SandboxTokenController extends Controller
                 'ip_address' => $ip,
                 'created_at' => now(),
                 'updated_at' => now(),
-                'expires_at' => now()->addMinutes(30)
+                'expires_at' => now()->addMinutes(120)
             ]);
 
             return response()->json([
                 'token' => $token,
-                'expires_at' => now()->addMinutes(30),
+                'expires_at' => now()->addMinutes(120),
                 'quota' => self::DEFAULT_QUOTA,
                 'remaining_calls' => self::DEFAULT_QUOTA
             ]);
