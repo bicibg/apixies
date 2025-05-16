@@ -1,5 +1,5 @@
 {{-- resources/views/docs/partials/endpoints.blade.php --}}
-<div class="mt-10">
+<div class="mt-6" id="api-endpoints-container">
     <h2 class="text-2xl font-bold mb-6">API Endpoints</h2>
 
     <!-- Search box -->
@@ -19,7 +19,7 @@
 
     <!-- No results message (hidden by default) -->
     <div id="no-search-results" class="text-center text-gray-500 p-4 hidden">
-        No endpoints match your search.
+        No endpoints match your search. <a href="#" id="reset-search" class="text-indigo-600 hover:underline">Clear search</a>
     </div>
 
     <!-- Endpoint categories -->
@@ -28,52 +28,61 @@
         $categories = collect($apiRoutes)->groupBy('category');
     @endphp
 
-    @foreach($categories as $category => $endpoints)
-        <div class="mb-8">
-            <h3 class="text-xl font-bold mb-4 capitalize">{{ $category }}</h3>
+    <div id="searchable-endpoints-container">
+        @foreach($categories as $category => $endpoints)
+            <div class="mb-8 category-section">
+                <h3 class="text-xl font-bold mb-4 capitalize">{{ $category }}</h3>
 
-            <div class="space-y-4">
-                @foreach($endpoints as $key => $route)
-                    <div class="endpoint-row bg-white p-4 rounded-lg border border-gray-200 hover:border-indigo-300 transition">
-                        <div class="flex flex-wrap justify-between items-start">
-                            <div class="mb-2">
-                                <div class="flex items-center">
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-md {{ isset($route['method']) && $route['method'] === 'GET' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }} mr-2">
-                                        {{ $route['method'] ?? 'GET' }}
-                                    </span>
-                                    <h4 class="font-bold">{{ $route['title'] ?? 'API Endpoint' }}</h4>
+                <div class="space-y-4">
+                    @foreach($endpoints as $key => $route)
+                        <div class="endpoint-row bg-white p-4 rounded-lg border border-gray-200 hover:border-indigo-300 transition"
+                             data-endpoint-title="{{ $route['title'] ?? 'API Endpoint' }}"
+                             data-endpoint-description="{{ $route['description'] ?? '' }}"
+                             data-endpoint-uri="{{ $route['uri'] ?? '' }}">
+                            <div class="md:flex md:flex-wrap md:justify-between md:items-start">
+                                <div class="mb-3 md:mb-2 md:flex-1">
+                                    <div class="flex items-center flex-wrap">
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-md {{ isset($route['method']) && $route['method'] === 'GET' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }} mr-2 mb-1 md:mb-0">
+                                            {{ $route['method'] ?? 'GET' }}
+                                        </span>
+                                        <h4 class="font-bold">{{ $route['title'] ?? 'API Endpoint' }}</h4>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">{{ $route['description'] ?? '' }}</p>
                                 </div>
-                                <p class="text-sm text-gray-600 mt-1">{{ $route['description'] ?? '' }}</p>
+
+                                <div class="mb-2 md:mb-0">
+                                    <a href="{{ route('docs.show', ['key' => $key]) }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                                        View Details
+                                    </a>
+                                </div>
                             </div>
 
-                            <div>
-                                <a href="{{ route('docs.show', ['key' => $key]) }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
-                                    View Details
-                                </a>
+                            <div class="mt-3 pt-3 border-t border-gray-100 md:flex md:flex-wrap md:justify-between md:items-center">
+                                <code class="text-sm bg-gray-100 p-1 rounded block mb-3 md:mb-0 overflow-x-auto">
+                                    /{{ $route['uri'] ?? '' }}
+                                </code>
+
+                                <div class="flex justify-end">
+                                    @if($route['demo'] ?? false)
+                                        <div>
+                                            <x-demo-modal :route="[
+                                                'uri' => $route['uri'] ?? '',
+                                                'method' => $route['method'] ?? 'GET',
+                                                'route_params' => $route['route_params'] ?? [],
+                                                'query_params' => $route['query_params'] ?? []
+                                            ]" />
+                                        </div>
+                                    @else
+                                        <button disabled class="px-4 py-2 rounded font-medium bg-gray-300 text-gray-500 cursor-not-allowed">
+                                            Demo unavailable
+                                        </button>
+                                    @endif
+                                </div>
                             </div>
                         </div>
-
-                        <div class="mt-3 pt-3 border-t border-gray-100 flex flex-wrap justify-between items-center">
-                            <code class="text-sm bg-gray-100 p-1 rounded">/{{ $route['uri'] ?? '' }}</code>
-
-                            @if($route['demo'] ?? false)
-                                <div>
-                                    <x-demo-modal :route="[
-                                        'uri' => $route['uri'] ?? '',
-                                        'method' => $route['method'] ?? 'GET',
-                                        'route_params' => $route['route_params'] ?? [],
-                                        'query_params' => $route['query_params'] ?? []
-                                    ]" />
-                                </div>
-                            @else
-                                <button disabled class="px-4 py-2 rounded font-medium bg-gray-300 text-gray-500 cursor-not-allowed">
-                                    Demo unavailable
-                                </button>
-                            @endif
-                        </div>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
-        </div>
-    @endforeach
+        @endforeach
+    </div>
 </div>

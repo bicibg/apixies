@@ -603,31 +603,60 @@ function toggleHeaderShadow() {
     }
 }
 
-// API Endpoint search functionality
+// resources/js/app.js - Replace the initializeEndpointSearch function with this version
+
 function initializeEndpointSearch() {
     const searchInput = document.getElementById('endpoint-search');
     if (!searchInput) return; // Exit if search input doesn't exist on this page
 
-    const endpoints = document.querySelectorAll('.endpoint-row');
+    const endpointRows = document.querySelectorAll('.endpoint-row');
     const noResults = document.getElementById('no-search-results');
-    const categories = document.querySelectorAll('.mb-8');
+    const categorySections = document.querySelectorAll('.category-section');
+    const resetSearch = document.getElementById('reset-search');
 
-    // Add the event listener
+    // Intro section should always remain visible - it's now outside of the search area in the HTML structure
+
+    // Add the clear search functionality
+    if (resetSearch) {
+        resetSearch.addEventListener('click', function(e) {
+            e.preventDefault();
+            searchInput.value = '';
+            // Trigger the input event to refresh the search
+            searchInput.dispatchEvent(new Event('input'));
+            // Focus back on the search input
+            searchInput.focus();
+        });
+    }
+
+    // Add the event listener for search
     searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
+        const searchTerm = this.value.toLowerCase().trim();
         let foundAny = false;
 
+        // By default, hide the "no results" message
+        if (noResults) {
+            noResults.style.display = 'none';
+        }
+
+        // If search is empty, show everything and exit early
+        if (searchTerm === '') {
+            endpointRows.forEach(row => row.style.display = '');
+            categorySections.forEach(section => section.style.display = '');
+            return;
+        }
+
         // Loop through each category
-        categories.forEach(category => {
+        categorySections.forEach(category => {
             let categoryHasVisible = false;
 
             // Find endpoints in this category
             const categoryEndpoints = category.querySelectorAll('.endpoint-row');
 
             categoryEndpoints.forEach(endpoint => {
-                const title = endpoint.querySelector('h4')?.textContent.toLowerCase() || '';
-                const description = endpoint.querySelector('p')?.textContent.toLowerCase() || '';
-                const uri = endpoint.querySelector('code')?.textContent.toLowerCase() || '';
+                // Get all searchable content from data attributes
+                const title = endpoint.dataset.endpointTitle?.toLowerCase() || '';
+                const description = endpoint.dataset.endpointDescription?.toLowerCase() || '';
+                const uri = endpoint.dataset.endpointUri?.toLowerCase() || '';
 
                 if (title.includes(searchTerm) || description.includes(searchTerm) || uri.includes(searchTerm)) {
                     endpoint.style.display = '';
