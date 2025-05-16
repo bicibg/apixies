@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class ApiEndpointCounter
 {
@@ -33,6 +34,9 @@ class ApiEndpointCounter
         if (!str_starts_with($path, 'api/')) {
             return $response;
         }
+
+        // Check if this is a health/readiness endpoint
+        $isHealthOrReadinessEndpoint = in_array($path, ['api/v1/health', 'api/v1/ready']);
 
         // IMPORTANT: Explicitly check if sandbox_mode is set, default to false if not set
         $isSandbox = (bool) $request->attributes->get('sandbox_mode', false);
@@ -81,8 +85,6 @@ class ApiEndpointCounter
                 ['count' => DB::raw('count + 1'), 'updated_at' => $now] // Columns to update if record exists
             );
 
-            Log::debug("Upserted count for {$path}, sandbox=" . ($isSandbox ? 'true' : 'false'));
-
         } catch (\Exception $e) {
             // Try a fallback approach if upsert fails
             try {
@@ -102,8 +104,6 @@ class ApiEndpointCounter
                         'updated_at' => now()
                     ]);
                 }
-
-                Log::debug("Used fallback method to count for {$path}, sandbox=" . ($isSandbox ? 'true' : 'false'));
             } catch (\Exception $fallbackError) {
                 // Log the error but don't disrupt the response
                 Log::error("Error incrementing API endpoint count (both methods failed): " . $fallbackError->getMessage());
@@ -121,78 +121,136 @@ class ApiEndpointCounter
             // Get schema information for logs table
             $columns = Schema::getColumnListing('api_endpoint_logs');
 
-            // Build log entry based on available columns
-            $logEntry = [];
+            // Build log entry
+            $logEntry = [
+                'endpoint' => $path,
+                'method' => $request->method(),
+                'created_at' => now(),
+                'updated_at' => now(),
+                'response_code' => $response->getStatusCode(),
+                'latency_ms' => $latencyMs,
+                'sandbox' => $isSandbox,
+            ];
 
-            // Always include these core fields
-            if (in_array('endpoint', $columns)) {
-                $logEntry['endpoint'] = $path;
-            }
-
-            if (in_array('method', $columns)) {
-                $logEntry['method'] = $request->method();
-            }
-
-            if (in_array('created_at', $columns)) {
-                $logEntry['created_at'] = now();
-            }
-
-            if (in_array('updated_at', $columns)) {
-                $logEntry['updated_at'] = now();
-            }
-
-            // Add conditional fields
-            if (in_array('response_code', $columns)) {
-                $logEntry['response_code'] = $response->getStatusCode();
-            }
-
-            if (in_array('user_id', $columns) && $request->user()) {
-                $logEntry['user_id'] = $request->user()->id;
-            }
-
-            if (in_array('user_name', $columns) && $request->user()) {
-                $logEntry['user_name'] = $request->user()->name;
-            }
-
-            if (in_array('ip_address', $columns)) {
-                $logEntry['ip_address'] = $request->ip();
-            }
-
+            // Add request params if column exists
             if (in_array('request_params', $columns)) {
-                // Safely encode request parameters
                 try {
                     $logEntry['request_params'] = json_encode($request->all());
                 } catch (\Exception $jsonError) {
                     $logEntry['request_params'] = '{"error":"Failed to encode request parameters"}';
-                    Log::warning("Failed to encode request parameters for log: " . $jsonError->getMessage());
                 }
             }
 
-            if (in_array('is_sandbox', $columns)) {
-                $logEntry['is_sandbox'] = $isSandbox;
-            }
-
-            // Add sandbox token ID if available
-            if (in_array('sandbox_token_id', $columns) && $sandboxTokenId) {
+            // Add sandbox token ID if it exists and we're in sandbox mode
+            if ($isSandbox && $sandboxTokenId && in_array('sandbox_token_id', $columns)) {
                 $logEntry['sandbox_token_id'] = $sandboxTokenId;
             }
 
-            // IMPORTANT: Add latency_ms field that's required
-            if (in_array('latency_ms', $columns)) {
-                $logEntry['latency_ms'] = $latencyMs;
+            // Only record IP address for non-sandbox, non-health/ready calls
+            // This helps differentiate between real API calls, sandbox calls, and health checks
+            if (!$isSandbox && !$isHealthOrReadinessEndpoint && in_array('ip_address', $columns)) {
+                $logEntry['ip_address'] = $request->ip();
             }
+
+            // Only record user agent for non-sandbox calls
+            if (!$isSandbox && in_array('user_agent', $columns)) {
+                $logEntry['user_agent'] = $request->userAgent() ?? '';
+            }
+
+            // CRITICAL PART: Use Auth::guard('sanctum')->user() to match your EnsureApiKey middleware
+            if (!$isHealthOrReadinessEndpoint && !$isSandbox) {
+                // Get the authenticated user with the right guard
+                $user = Auth::guard('sanctum')->user();
+
+                // Debug log
+                Log::debug("Sanctum user check: " . ($user ? "User found ID: {$user->id}" : "No user found"), [
+                    'endpoint' => $path,
+                    'has_bearer_token' => $request->bearerToken() ? true : false,
+                    'has_api_key' => $request->header('X-API-Key') ? true : false,
+                ]);
+
+                if ($user) {
+                    $logEntry['user_id'] = $user->id;
+
+                    // Find the token used for authentication
+                    $bearerToken = $request->bearerToken();
+                    if ($bearerToken) {
+                        $token = DB::table('personal_access_tokens')
+                            ->where('tokenable_id', $user->id)
+                            ->where('tokenable_type', get_class($user))
+                            ->where('token', hash('sha256', $bearerToken))
+                            ->first();
+
+                        if ($token && in_array('api_key_id', $columns)) {
+                            $logEntry['api_key_id'] = $token->id;
+                        }
+                    }
+                } else {
+                    // No authenticated user, but try to match API key
+                    $apiKey = $request->header('X-API-Key');
+                    if ($apiKey) {
+                        // Try to manually find the user associated with this API key
+                        // This is a fallback in case the authentication middleware didn't authenticate the user
+                        $token = DB::table('personal_access_tokens')
+                            ->where('name', 'api-key')
+                            ->where('token', hash('sha256', $apiKey))
+                            ->first();
+
+                        if ($token) {
+                            $logEntry['user_id'] = $token->tokenable_id;
+                            if (in_array('api_key_id', $columns)) {
+                                $logEntry['api_key_id'] = $token->id;
+                            }
+
+                            Log::debug("Found user ID from API key in personal_access_tokens table", [
+                                'user_id' => $token->tokenable_id,
+                                'api_key_id' => $token->id,
+                            ]);
+                        } else if (Schema::hasTable('api_keys')) {
+                            // Try the custom api_keys table if it exists
+                            $keyRecord = DB::table('api_keys')
+                                ->where('key', $apiKey)
+                                ->first();
+
+                            if ($keyRecord) {
+                                $logEntry['user_id'] = $keyRecord->user_id;
+                                if (in_array('api_key_id', $columns)) {
+                                    $logEntry['api_key_id'] = $keyRecord->id;
+                                }
+
+                                Log::debug("Found user ID from custom api_keys table", [
+                                    'user_id' => $keyRecord->user_id,
+                                    'api_key_id' => $keyRecord->id,
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Filter entry to include only existing columns
+            $filteredEntry = array_intersect_key($logEntry, array_flip($columns));
 
             // Only insert if we have data to insert
-            if (!empty($logEntry)) {
-                $logId = DB::table('api_endpoint_logs')->insertGetId($logEntry);
-                Log::debug("Inserted log entry (ID: {$logId}) for {$path}, sandbox=" . ($isSandbox ? 'true' : 'false'));
-            } else {
-                Log::warning("No valid columns found for api_endpoint_logs table");
-            }
+            if (!empty($filteredEntry)) {
+                $logId = DB::table('api_endpoint_logs')->insertGetId($filteredEntry);
 
+                // Debug log the full inserted entry
+                Log::debug("Inserted API endpoint log entry", [
+                    'log_id' => $logId,
+                    'user_id' => $filteredEntry['user_id'] ?? null,
+                    'api_key_id' => $filteredEntry['api_key_id'] ?? null,
+                    'sandbox' => $filteredEntry['sandbox'] ?? null,
+                    'sandbox_token_id' => $filteredEntry['sandbox_token_id'] ?? null,
+                    'endpoint' => $path,
+                ]);
+            }
         } catch (\Exception $e) {
             // Log the error but don't disrupt the response
-            Log::error("Error logging API endpoint: " . $e->getMessage());
+            Log::error("Error logging API endpoint: " . $e->getMessage(), [
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString()
+            ]);
         }
 
         return $response;

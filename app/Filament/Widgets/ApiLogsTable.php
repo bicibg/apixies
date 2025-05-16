@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\ApiEndpointLog;
+use App\Models\User;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
@@ -10,6 +11,7 @@ use Filament\Forms\Components\Select;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\DB;
 
 class ApiLogsTable extends BaseWidget
 {
@@ -50,42 +52,85 @@ class ApiLogsTable extends BaseWidget
                 ->numeric()
                 ->sortable(),
 
-            /* User info */
+            /* User info - Updated to use relationship */
             Tables\Columns\TextColumn::make('user_display')
                 ->label('User')
                 ->state(function (ApiEndpointLog $record): string {
-                    return $record->user_name
-                        ? "{$record->user_name} ({$record->user_id})"
-                        : 'Guest';
+                    if (!$record->user_id) {
+                        // Identify the type of call based on the pattern we established
+                        if (!is_null($record->sandbox_token_id)) {
+                            return 'Sandbox Call';
+                        } else if (str_contains($record->endpoint, 'health')){
+                            return 'Health Check';
+                        } else if (str_contains($record->endpoint, 'ready')){
+                            return 'Readiness Check';
+                        }
+                        return 'Guest';
+                    }
+
+                    // Efficiently fetch user name from the users table
+                    $user = DB::table('users')
+                        ->select('name')
+                        ->where('id', $record->user_id)
+                        ->first();
+
+                    return $user
+                        ? "{$user->name} ({$record->user_id})"
+                        : "Unknown User ({$record->user_id})";
                 })
                 ->searchable(),
 
-            /* Sandbox Flag */
-            Tables\Columns\IconColumn::make('is_sandbox')
+            /* Sandbox Flag - Updated to check only sandbox_token_id */
+            Tables\Columns\IconColumn::make('sandbox_indicator')
                 ->label('Sandbox')
+                ->state(function (ApiEndpointLog $record): bool {
+                    // Show sandbox icon if sandbox_token_id is not null
+                    return !is_null($record->sandbox_token_id);
+                })
                 ->boolean()
                 ->trueIcon('heroicon-o-beaker')
                 ->falseIcon('')
                 ->size('sm'),
 
-            /* IP address */
+            /* IP address - now may be null for sandbox/health calls */
             Tables\Columns\TextColumn::make('ip_address')
                 ->label('IP')
-                ->size('sm'),
+                ->size('sm')
+                ->placeholder('N/A'),
         ];
     }
 
     protected function getTableFilters(): array
     {
         return [
-            // Environment filter - production vs sandbox
-            SelectFilter::make('is_sandbox')
-                ->label('Environment')
+            // Environment filter - now with enhanced options
+            SelectFilter::make('call_type')
+                ->label('Call Type')
+                ->query(function (Builder $query, array $data): Builder {
+                    if (!isset($data['value']) || $data['value'] === '') {
+                        return $query;
+                    }
+
+                    return match ($data['value']) {
+                        'sandbox' => $query->whereNotNull('sandbox_token_id'),
+                        'health' => $query->where(function($q) {
+                            $q->where('endpoint', 'like', '%health%')
+                                ->orWhere('endpoint', 'like', '%ready%');
+                        }),
+                        'api' => $query->where(function($q) {
+                            $q->whereNull('sandbox_token_id')
+                                ->where('endpoint', 'not like', '%health%')
+                                ->where('endpoint', 'not like', '%ready%');
+                        }),
+                        default => $query,
+                    };
+                })
                 ->options([
-                    '0' => 'Production',
-                    '1' => 'Sandbox',
+                    'api' => 'API Calls',
+                    'sandbox' => 'Sandbox Calls',
+                    'health' => 'Health/Ready Checks',
                 ])
-                ->placeholder('All Environments'),
+                ->placeholder('All Call Types'),
 
             // Endpoint type filter
             Filter::make('endpoint_type')
