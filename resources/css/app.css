@@ -222,11 +222,44 @@
 /* -----------------------------------------------------------
    3.  BASE STYLES
    ----------------------------------------------------------- */
+
+/* Smooth scrolling for the entire page */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Ensure fixed header doesn't create issues with anchor links */
+html:not(.no-js) {
+    scroll-padding-top: 5rem; /* Adjust this value based on your header height */
+}
+
+/* Transition for mobile menu */
+#mobile-menu {
+    transition: all 0.3s ease-in-out;
+    opacity: 1;
+    height: 100%;
+}
+
+#mobile-menu.hidden {
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+/* Shadow effect when scrolling for the header */
+.header-shadow {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
 body {
     font-family: 'Figtree', sans-serif;
     @apply m-0 p-0 flex flex-col items-center min-h-screen bg-[#f0f4f8] text-[#102A43];
 }
-
+body.overflow-hidden {
+    overflow: hidden !important;
+    position: fixed;
+    width: 100%;
+}
 button,[type='button'],[type='reset'],[type='submit'] { cursor: pointer; }
 
 /* Hero gradient */

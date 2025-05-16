@@ -1,4 +1,4 @@
-// resources/js/app.js - Simplified Version
+// resources/js/app.js
 
 // Import Alpine.js and other dependencies
 import './bootstrap';
@@ -12,6 +12,53 @@ window.lastTokenCreation = 0;
 
 // Register Alpine components before initializing
 document.addEventListener('DOMContentLoaded', () => {
+
+    toggleHeaderShadow();
+    window.addEventListener('scroll', toggleHeaderShadow);
+
+    // Register the mobile menu component
+    Alpine.data('mobileMenu', function() {
+        return {
+            open: false,
+
+            toggleMenu() {
+                this.open = !this.open;
+
+                // Toggle body overflow to prevent scrolling when menu is open
+                if (this.open) {
+                    document.body.classList.add('overflow-hidden');
+                } else {
+                    document.body.classList.remove('overflow-hidden');
+                }
+            },
+
+            closeMenu() {
+                this.open = false;
+                document.body.classList.remove('overflow-hidden');
+            },
+
+            init() {
+                // Close menu when pressing ESC key
+                this.$watch('open', value => {
+                    if (value) {
+                        window.addEventListener('keydown', e => {
+                            if (e.key === 'Escape') {
+                                this.closeMenu();
+                            }
+                        }, { once: true });
+                    }
+                });
+
+                // Close menu when window resizes to desktop
+                window.addEventListener('resize', () => {
+                    if (window.innerWidth >= 768 && this.open) {
+                        this.closeMenu();
+                    }
+                });
+            }
+        };
+    });
+
     // Register the demoModal component
     Alpine.data('demoModal', function() {
         return {
@@ -405,3 +452,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Start Alpine
     Alpine.start();
 });
+
+function toggleHeaderShadow() {
+    const header = document.querySelector('header');
+    if (!header) return;
+
+    if (window.scrollY > 10) {
+        header.classList.add('header-shadow');
+    } else {
+        header.classList.remove('header-shadow');
+    }
+}

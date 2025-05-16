@@ -5,9 +5,12 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-E91MYB4CWC"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
 
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
         gtag('config', 'G-E91MYB4CWC');
     </script>
     <!-- End Google Tag Manager -->
@@ -15,136 +18,225 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="{{ config('app.name') }} - {{ config('app.tagline') }}">
+    <meta name="description"
+          content="{{ config('app.name') }} - {{ config('app.tagline', 'Tiny APIs, Mighty Results') }}">
 
     <title>@yield('title', 'Apixies')</title>
 
     <!-- Favicons -->
-    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
-    <link rel="shortcut icon" href="/favicon/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
-    <link rel="manifest" href="/favicon/site.webmanifest" />
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96"/>
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg"/>
+    <link rel="shortcut icon" href="/favicon/favicon.ico"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png"/>
+    <link rel="manifest" href="/favicon/site.webmanifest"/>
 
     <meta name="theme-color" content="#0A2240">
 
     <!-- Fonts & Styles -->
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet"/>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="flex flex-col min-h-screen bg-gray-50 text-gray-800">
 
 <!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MXM728HH"
-                  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MXM728HH"
+            height="0" width="0" style="display:none;visibility:hidden"></iframe>
+</noscript>
 <!-- End Google Tag Manager (noscript) -->
 
-<!-- Header -->
-<header class="bg-gradient-to-r from-[#0A2240] to-[#007C91] py-3">
-    <div class="container mx-auto flex flex-col md:flex-row items-center justify-between px-4">
-        <div class="flex flex-col items-start mb-3 md:mb-0">
-            <a href="/" class="flex items-center hover:opacity-95 transition-opacity">
-                <div class="bg-white p-2 rounded flex items-center justify-center mr-3">
-                    <span class="text-[#0A2240] font-bold text-sm">Apixies</span>
+<!-- Mobile and Desktop Header with Alpine.js -->
+<div x-data="mobileMenu">
+    <!-- Desktop Header - ONLY visible on md screens and up -->
+    <div class="hidden md:block">
+        <header class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-[#05192e] to-[#0a3246]">
+            <div class="container mx-auto flex items-center justify-between h-12 px-4">
+                <!-- Logo with branding -->
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center">
+                        <div class="bg-white rounded px-2 py-1 mr-3">
+                            <span class="text-[#05192e] font-bold text-sm">Apixies</span>
+                        </div>
+                        <div class="hidden md:block">
+                            <span class="text-white text-sm">Developer API Suite</span>
+                            <span
+                                class="block text-xs text-gray-300">{{ config('app.tagline', 'Tiny APIs, Mighty Results') }}</span>
+                        </div>
+                    </a>
                 </div>
-                <span class="text-white text-xl font-medium">Developer API Suite</span>
+
+                <!-- Navigation Links -->
+                <div class="flex items-center space-x-6">
+                    <a href="{{ route('docs.index') }}"
+                       class="text-white text-sm {{ request()->routeIs('docs.*') ? 'font-medium' : '' }} hover:text-gray-300 transition-colors duration-200">
+                        API Docs
+                    </a>
+                    <a href="{{ route('api-keys.index') }}"
+                       class="text-white text-sm {{ request()->routeIs('api-keys.*') ? 'font-medium' : '' }} hover:text-gray-300 transition-colors duration-200">
+                        API Keys
+                    </a>
+                    <a href="{{ route('suggestions.board') }}"
+                       class="text-white text-sm {{ request()->routeIs('suggestions.board') ? 'font-medium' : '' }} hover:text-gray-300 transition-colors duration-200">
+                        Community Ideas
+                    </a>
+                </div>
+
+                <!-- Auth Links -->
+                <div class="flex items-center">
+                    @auth
+                        <span class="text-white text-sm mr-2">{{ Auth::user()->name }}</span>
+                        <form method="POST" action="{{ url('/logout') }}">
+                            @csrf
+                            <button type="submit"
+                                    class="bg-white text-[#05192e] hover:bg-gray-100 px-2 py-0.5 rounded text-sm transition-colors duration-200">
+                                Log Out
+                            </button>
+                        </form>
+                    @else
+                        <a href="{{ url('/login') }}"
+                           class="text-white hover:text-gray-300 text-sm mr-3 transition-colors duration-200">
+                            Log In
+                        </a>
+                        <a href="{{ url('/register') }}"
+                           class="bg-white text-[#05192e] hover:bg-gray-100 px-2 py-0.5 rounded text-sm transition-colors duration-200">
+                            Sign Up
+                        </a>
+                    @endguest
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <!-- Mobile Header - ONLY visible on screens smaller than md -->
+    <div class="md:hidden">
+        <div
+            class="flex items-center justify-between h-12 bg-gradient-to-r from-[#05192e] to-[#0a3246] fixed top-0 left-0 right-0 z-50 px-4 shadow-sm">
+            <!-- Logo for mobile -->
+            <a href="/" class="flex items-center">
+                <div class="bg-white rounded px-2 py-0.5 mr-2">
+                    <span class="text-[#05192e] font-bold text-sm">Apixies</span>
+                </div>
             </a>
-            <span class="text-white text-sm mt-1 ml-1 opacity-90">{{ config('app.tagline') }}</span>
+
+            <!-- Mobile menu button -->
+            <button @click="toggleMenu()" class="text-white p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor">
+                    <path x-show="!open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 6h16M4 12h16m-7 6h7"/>
+                    <path x-show="open" x-cloak stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
         </div>
+    </div>
 
-        <!-- Navigation links -->
-        <div class="flex flex-wrap justify-center md:justify-end items-center space-x-3 md:space-x-5">
-            <a href="{{ route('docs.index') }}"
-               class="text-white hover:text-gray-200 text-sm py-1 {{ request()->routeIs('docs.*') ? 'font-medium' : '' }}">
-                API Docs
-            </a>
+    <!-- Mobile Menu (Full Screen) -->
+    <div x-show="open" x-cloak @click.outside="closeMenu()"
+         class="md:hidden fixed inset-0 z-40 bg-[#05192e] overflow-y-auto pt-16">
+        <!-- Mobile Menu Content -->
+        <div class="flex flex-col items-center mt-6 px-4">
+            <!-- Title and Tagline -->
+            <div class="text-center mb-10">
+                <h1 class="text-white text-xl font-medium mb-1">Developer API Suite</h1>
+                <p class="text-gray-300 text-sm">{{ config('app.tagline', 'Tiny APIs, Mighty Results') }}</p>
+            </div>
 
-            <a href="{{ route('api-keys.index') }}"
-               class="text-white hover:text-gray-200 text-sm py-1 {{ request()->routeIs('api-keys.*') ? 'font-medium' : '' }}">
-                API Keys
-            </a>
-
-            <a href="{{ route('suggestions.board') }}"
-               class="text-white hover:text-gray-200 text-sm py-1 {{ request()->routeIs('suggestions.board') ? 'font-medium' : '' }}">
-                Community Ideas
-            </a>
-
-            @auth
-                <span class="text-white text-sm py-1">{{ Auth::user()->name }}</span>
-                <form method="POST" action="{{ url('/logout') }}" class="ml-2">
-                    @csrf
-                    <button type="submit"
-                            class="bg-white text-[#0A2240] hover:bg-gray-100 px-3 md:px-4 py-1 rounded text-sm">
-                        Log Out
-                    </button>
-                </form>
-            @else
-                <a href="{{ url('/login') }}"    class="text-white hover:text-gray-200 text-sm py-1">Log In</a>
-                <a href="{{ url('/register') }}" class="bg-white text-[#0A2240] hover:bg-gray-100 px-3 md:px-4 py-1 rounded text-sm ml-2">
-                    Sign Up
+            <!-- Main navigation links -->
+            <div class="w-full max-w-md space-y-4 mb-8">
+                <a href="{{ route('docs.index') }}"
+                   class="block text-center text-white text-lg py-3 px-4 rounded bg-[#0a3246]/80 hover:bg-[#0a3246]">
+                    API Docs
                 </a>
-            @endguest
+                <a href="{{ route('api-keys.index') }}"
+                   class="block text-center text-white text-lg py-3 px-4 rounded bg-[#0a3246]/80 hover:bg-[#0a3246]">
+                    API Keys
+                </a>
+                <a href="{{ route('suggestions.board') }}"
+                   class="block text-center text-white text-lg py-3 px-4 rounded bg-[#0a3246]/80 hover:bg-[#0a3246]">
+                    Community Ideas
+                </a>
+            </div>
+
+            <!-- Border Separator -->
+            <div class="w-full max-w-md border-t border-[#0a3246] my-6"></div>
+
+            <!-- Authentication Links -->
+            <div class="w-full max-w-md">
+                @auth
+                    <div class="text-center mb-6">
+                        <span class="text-gray-400 text-sm block mb-1">Signed in as</span>
+                        <span class="text-white text-lg font-medium">{{ Auth::user()->name }}</span>
+                    </div>
+                    <form method="POST" action="{{ url('/logout') }}" class="flex justify-center">
+                        @csrf
+                        <button type="submit"
+                                class="w-full bg-white text-[#05192e] hover:bg-gray-100 py-3 px-8 rounded-md text-lg font-medium">
+                            Log Out
+                        </button>
+                    </form>
+                @else
+                    <div class="flex flex-col space-y-4">
+                        <a href="{{ url('/login') }}"
+                           class="block text-center text-white border border-white hover:bg-[#0a3246] py-3 px-8 rounded-md text-lg">
+                            Log In
+                        </a>
+                        <a href="{{ url('/register') }}"
+                           class="block text-center bg-white text-[#05192e] hover:bg-gray-100 py-3 px-8 rounded-md text-lg font-medium">
+                            Sign Up
+                        </a>
+                    </div>
+                @endguest
+            </div>
         </div>
     </div>
-</header>
-
-<!-- Mobile menu toggle -->
-<div class="md:hidden bg-gray-100 border-b border-gray-200 py-2 px-4">
-    <button id="mobile-menu-toggle" class="flex text-left items-center text-gray-600">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none"
-             viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 6h16M4 12h16m-7 6h7"/>
-        </svg>
-        Menu
-    </button>
 </div>
 
-<!-- Mobile Nav ---------------------------------------------------------->
-<div id="mobile-menu" class="hidden md:hidden bg-white shadow-md">
-    <div class="px-4 py-2 space-y-2">
-        <a href="{{ route('docs.index') }}"        class="block py-2 text-gray-800 hover:bg-gray-100 rounded">API Docs</a>
-        <a href="{{ route('api-keys.index') }}"    class="block py-2 text-gray-800 hover:bg-gray-100 rounded">API Keys</a>
+<!-- Spacer to prevent content from being hidden under the fixed header -->
+<div class="h-12"></div>
 
-        <a href="{{ route('suggestions.board') }}" class="block py-2 text-gray-800 hover:bg-gray-100 rounded">Community Ideas</a>
-
-        @auth
-            <div class="py-2 px-3 text-gray-600">{{ Auth::user()->name }}</div>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit"
-                        class="block w-full text-left py-2 px-3 text-red-600 hover:bg-gray-100 rounded">
-                    Log Out
-                </button>
-            </form>
-        @else
-            <a href="{{ route('login') }}"    class="block py-2 text-gray-800 hover:bg-gray-100 rounded">Log In</a>
-            <a href="{{ route('register') }}" class="block py-2 text-blue-600 hover:bg-gray-100 rounded">Sign Up</a>
-        @endauth
-    </div>
-</div>
-
-<main class="flex-1 container mx-auto px-4 py-8">
+<!-- Main Content -->
+<main class="flex-1 container mx-auto px-4 py-6">
     @yield('content')
 </main>
 
-<footer class="text-center text-sm text-gray-500 py-4">
-    <div class="mb-1">{{ config('app.tagline') }}</div>
-    &copy; {{ date('Y') }} Apixies. All rights reserved.
-</footer>
+<!-- Footer -->
+<footer class="bg-gray-50 border-t border-gray-200 mt-auto">
+    <div class="container mx-auto py-3">
+        <div class="flex flex-col md:flex-row justify-between items-center px-4">
+            <!-- Logo and Tagline -->
+            <div class="flex items-center mb-3 md:mb-0">
+                <div class="bg-[#05192e] rounded px-2 py-0.5 mr-3">
+                    <span class="text-white font-bold text-xs">Apixies</span>
+                </div>
+                <div class="flex flex-col md:flex-row items-start md:items-center">
+                    <span class="text-[#05192e] text-xs font-medium mr-2">Developer API Suite</span>
+                    <span class="text-gray-500 text-xs">{{ config('app.tagline', 'Tiny APIs, Mighty Results') }}</span>
+                </div>
+            </div>
 
-<!-- Mobile menu script -->
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const toggle = document.getElementById('mobile-menu-toggle');
-        const menu   = document.getElementById('mobile-menu');
-        if (toggle && menu) {
-            toggle.addEventListener('click', () => menu.classList.toggle('hidden'));
-        }
-    });
-</script>
+            <!-- Links with improved spacing -->
+            <div class="flex mb-3 md:mb-0">
+                <a href="{{ route('docs.index') }}"
+                   class="text-gray-600 hover:text-[#05192e] text-xs transition-colors duration-200 px-3 py-1">API
+                    Docs</a>
+                <a href="{{ route('api-keys.index') }}"
+                   class="text-gray-600 hover:text-[#05192e] text-xs transition-colors duration-200 px-3 py-1">API
+                    Keys</a>
+                <a href="{{ route('suggestions.board') }}"
+                   class="text-gray-600 hover:text-[#05192e] text-xs transition-colors duration-200 px-3 py-1">Community
+                    Ideas</a>
+            </div>
+
+            <!-- Copyright -->
+            <div class="text-gray-500 text-xs">
+                &copy; {{ date('Y') }} Apixies. All rights reserved.
+            </div>
+        </div>
+    </div>
+</footer>
 
 </body>
 </html>
