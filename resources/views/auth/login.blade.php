@@ -3,7 +3,7 @@
 @section('title','Log In – Apixies')
 
 @section('content')
-    <div class="auth-card">
+    <div class="auth-card mt-8 sm:mt-12">
         <h2 class="text-3xl font-bold text-center text-navy mb-2">
             Welcome Back
         </h2>
@@ -27,7 +27,7 @@
             </div>
         @endif
 
-        <div id="login-error" class="text-red-600 text-sm mb-4"></div>
+        <div id="login-error" class="text-danger-600 text-sm mb-4"></div>
 
         <form id="login-form" method="POST" action="{{ route('login.submit') }}" class="space-y-5">
             @csrf
@@ -45,7 +45,7 @@
                     <input type="checkbox" name="remember" class="form-checkbox"/>
                     <span class="ml-2 text-sm text-gray-600">Remember me</span>
                 </label>
-                <a href="#" class="text-sm text-blue-600 hover:underline">
+                <a href="#" class="text-sm text-teal hover:text-teal-700">
                     Forgot password?
                 </a>
             </div>
@@ -56,7 +56,7 @@
 
             <p class="mt-4 text-center text-gray-600 text-sm">
                 Don't have an account?
-                <a href="{{ route('register') }}" class="text-blue-600 hover:underline">Sign Up</a>
+                <a href="{{ route('register') }}" class="text-teal hover:text-teal-700">Sign Up</a>
             </p>
         </form>
     </div>

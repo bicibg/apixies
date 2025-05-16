@@ -7,7 +7,7 @@
     <div class="max-w-4xl mx-auto px-4 py-10" x-data="votesBoard()">
 
         {{-- █ Hero -------------------------------------------------------- --}}
-        <div class="api-hero p-8 mb-6 rounded-lg shadow-md text-white flex items-start justify-between">
+        <div class="suggestions-hero p-8 mb-6 rounded-lg shadow-md text-white flex items-start justify-between">
             <div>
                 <h1 class="text-3xl font-bold mb-3">Community Ideas</h1>
                 <p class="text-xl opacity-90">Up‑vote micro‑APIs you'd like us to build next.</p>

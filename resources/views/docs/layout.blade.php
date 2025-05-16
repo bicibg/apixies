@@ -3,7 +3,7 @@
 @section('title', config('app.name') . ' - ' . ($pageTitle ?? config('app.tagline')))
 
 @section('content')
-    <div class="container mx-auto px-4 py-4 md:py-8">
+    <div class="container mx-auto px-4 py-4 md:py-6">
         <div class="flex flex-col md:flex-row gap-6 md:gap-8">
             <!-- Sidebar Navigation -->
             <div class="w-full md:w-1/4 mb-4 md:mb-0">
@@ -31,7 +31,7 @@
                                     @endif
 
                                     @if(isset($breadcrumb['url']))
-                                        <a href="{{ $breadcrumb['url'] }}" class="text-blue-600 hover:text-blue-800 truncate max-w-xs">
+                                        <a href="{{ $breadcrumb['url'] }}" class="text-teal hover:text-teal-700 truncate max-w-xs">
                                             {{ $breadcrumb['label'] }}
                                         </a>
                                     @else
@@ -43,8 +43,28 @@
                     </nav>
                 @endif
 
-                <div class="bg-white rounded-lg shadow-sm p-4 md:p-6">
-                    @yield('docs-content')
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="p-4 md:p-6 border-b border-blue-100">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                            <h1 class="text-2xl font-bold text-navy">
+                                @if(isset($pageTitle))
+                                    {{ $pageTitle }}
+                                @else
+                                    {{ $activeSection === 'overview' ? 'API Documentation' : ucfirst($activeSection ?? 'Documentation') }}
+                                @endif
+                            </h1>
+                        </div>
+
+                        @if($activeSection === 'overview')
+                            <p class="text-gray-600">
+                                Welcome to the Apixies API documentation. Here you'll find comprehensive guides and reference to help you start working with our API as quickly as possible.
+                            </p>
+                        @endif
+                    </div>
+
+                    <div class="p-4 md:p-6">
+                        @yield('docs-content')
+                    </div>
                 </div>
             </div>
         </div>

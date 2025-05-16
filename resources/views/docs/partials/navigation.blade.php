@@ -16,7 +16,7 @@
     {{-- Mobile Navigation Toggle Button (only visible on small screens) --}}
     <div class="block md:hidden sticky top-14 z-20 mb-4">
         <button @click="sidebarOpen = !sidebarOpen"
-                class="w-full flex items-center justify-between bg-white p-3 rounded-lg shadow-sm border border-gray-200 text-gray-700">
+                class="w-full flex items-center justify-between bg-white p-3 rounded-lg shadow-sm border border-blue-200 text-gray-700">
             <span class="font-medium">Navigation Menu</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform transition-transform"
                  :class="{'rotate-180': sidebarOpen}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -30,26 +30,38 @@
          class="docs-nav md:block md:max-h-[calc(100vh-5rem)] md:overflow-y-auto sticky top-14 md:top-16 z-10">
         <div class="nav-section rounded-lg overflow-hidden shadow-sm bg-white">
             <div class="p-3 md:p-4 bg-gradient-to-r from-navy to-teal text-white">
-                <h3 class="font-bold text-lg">Documentation</h3>
+                @php
+                    $sectionTitles = [
+                        'overview' => 'API Overview',
+                        'features' => 'API Features',
+                        'authentication' => 'Authentication',
+                        'endpoints' => 'API Endpoints',
+                        'responses' => 'Response Format',
+                        'code-examples' => 'Code Examples'
+                    ];
+                    $currentTitle = $sectionTitles[$activeSection] ?? 'API Documentation';
+                @endphp
+                <h3 class="font-bold text-lg">{{ $currentTitle }}</h3>
+                <p class="text-sm text-blue-100 mt-1">Developer guides & examples</p>
             </div>
 
             <div class="p-3 md:p-4">
                 <ul class="space-y-1 md:space-y-2">
                     <li>
                         <a href="{{ route('docs.index') }}" @click="endpointsOpen = false"
-                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'overview' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'overview' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-blue-50' }}">
                             Overview
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('docs.features') }}" @click="endpointsOpen = false"
-                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'features' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'features' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-blue-50' }}">
                             Features
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('docs.authentication') }}" @click="endpointsOpen = false"
-                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'authentication' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'authentication' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-blue-50' }}">
                             Authentication
                         </a>
                     </li>
@@ -67,17 +79,17 @@
 
                         <!-- Desktop only navigation link -->
                         <a href="{{ route('docs.endpoints.index') }}"
-                           class="hidden md:block px-3 py-2 rounded transition-colors {{ $activeSection === 'endpoints' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                           class="hidden md:block px-3 py-2 rounded transition-colors {{ $activeSection === 'endpoints' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-blue-50' }}">
                             API Endpoints
                         </a>
 
                         <!-- Submenu content -->
                         <div x-show="endpointsOpen || (window.innerWidth >= 768 && {{ $activeSection === 'endpoints' ? 'true' : 'false' }})"
-                             class="pl-3 mt-1 md:mt-2 space-y-1 border-l-2 border-gray-200">
+                             class="pl-3 mt-1 md:mt-2 space-y-1 border-l-2 border-blue-200">
                             <!-- Mobile "View All Endpoints" link - only visible on mobile -->
                             <div class="md:hidden mb-2 pl-1">
                                 <a href="{{ route('docs.endpoints.index') }}"
-                                   class="flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium">
+                                   class="flex items-center text-sm text-teal hover:text-teal-700 font-medium">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                     </svg>
@@ -95,7 +107,7 @@
                                             @foreach($routes as $routeKey => $route)
                                                 <li>
                                                     <a href="{{ route('docs.show', ['key' => $routeKey]) }}"
-                                                       class="block pl-2 py-1 text-sm border-l-2 {{ isset($activeEndpoint) && $activeEndpoint === $routeKey ? 'border-blue-500 text-blue-600 font-medium' : 'border-transparent text-gray-600 hover:border-gray-300' }}">
+                                                       class="block pl-2 py-1 text-sm border-l-2 {{ isset($activeEndpoint) && $activeEndpoint === $routeKey ? 'border-teal text-teal font-medium' : 'border-transparent text-gray-600 hover:border-gray-300' }}">
                                                         {{ $route['title'] ?? $routeKey }}
                                                     </a>
                                                 </li>
@@ -108,13 +120,13 @@
                     </li>
                     <li>
                         <a href="{{ route('docs.responses') }}" @click="endpointsOpen = false"
-                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'responses' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'responses' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-blue-50' }}">
                             Response Format
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('docs.code-examples') }}" @click="endpointsOpen = false"
-                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'code-examples' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+                           class="block px-3 py-2 rounded transition-colors {{ $activeSection === 'code-examples' ? 'bg-navy text-white font-medium' : 'text-gray-700 hover:bg-blue-50' }}">
                             Code Examples
                         </a>
                     </li>
@@ -126,7 +138,7 @@
         @auth
             <div class="nav-section bg-white rounded-lg shadow-sm p-3 md:p-4 mt-3 md:mt-4">
                 <h3 class="font-medium mb-2 text-sm md:text-base">Your API</h3>
-                <a href="{{ route('api-keys.index') }}" class="text-blue-600 hover:text-blue-800 flex items-center text-sm">
+                <a href="{{ route('api-keys.index') }}" class="text-teal hover:text-teal-700 flex items-center text-sm">
                     <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
                     </svg>
@@ -137,7 +149,7 @@
 
         {{-- Suggest New Endpoint Button --}}
         <div class="nav-section bg-white rounded-lg shadow-sm p-3 md:p-4 mt-3 md:mt-4">
-            <a href="{{ route('suggestions.board') }}" class="text-blue-600 hover:text-blue-800 flex items-center text-sm">
+            <a href="{{ route('suggestions.board') }}" class="text-teal hover:text-teal-700 flex items-center text-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
@@ -151,12 +163,12 @@
 <div id="quickFeedbackModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-modal="true">
     <div class="flex items-center justify-center min-h-screen p-4">
         {{-- Backdrop --}}
-        <div id="quickFeedbackBackdrop" class="fixed inset-0 bg-black/70"></div>
+        <div id="quickFeedbackBackdrop" class="fixed inset-0 bg-navy/70"></div>
 
         {{-- Modal content --}}
         <div class="relative max-w-md w-full bg-white rounded-lg shadow-lg overflow-hidden z-10">
-            <div class="bg-gray-50 px-6 py-3 flex justify-between items-center border-b">
-                <h3 class="text-lg font-medium text-gray-900">Share Your Feedback</h3>
+            <div class="bg-blue-50 px-6 py-3 flex justify-between items-center border-b border-blue-100">
+                <h3 class="text-lg font-medium text-navy">Share Your Feedback</h3>
                 <button id="quickFeedbackCloseButton" class="text-gray-500 hover:text-gray-700">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
