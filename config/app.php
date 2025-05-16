@@ -14,6 +14,7 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
+    'tagline' => 'Tiny APIs, Mighty Results',
     'sitemap_secret' => env('SITEMAP_SECRET', null),
     /*
     |--------------------------------------------------------------------------

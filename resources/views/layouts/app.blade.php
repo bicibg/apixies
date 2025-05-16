@@ -15,6 +15,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="description" content="{{ config('app.name') }} - {{ config('app.tagline') }}">
 
     <title>@yield('title', 'Apixies')</title>
 
@@ -35,11 +36,6 @@
 </head>
 <body class="flex flex-col min-h-screen bg-gray-50 text-gray-800">
 
-<!-- Sandbox status bar -->
-<div id="sandbox-bar" class="hidden bg-yellow-100 text-yellow-800 p-2 text-center">
-    Demo mode • calls left: <span id="sandbox-quota">—</span> • expires in: <span id="sandbox-expiry">—</span>s
-</div>
-
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MXM728HH"
                   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -48,13 +44,14 @@
 <!-- Header -->
 <header class="bg-gradient-to-r from-[#0A2240] to-[#007C91] py-3">
     <div class="container mx-auto flex flex-col md:flex-row items-center justify-between px-4">
-        <div class="flex items-center mb-3 md:mb-0">
+        <div class="flex flex-col items-start mb-3 md:mb-0">
             <a href="/" class="flex items-center hover:opacity-95 transition-opacity">
                 <div class="bg-white p-2 rounded flex items-center justify-center mr-3">
                     <span class="text-[#0A2240] font-bold text-sm">Apixies</span>
                 </div>
                 <span class="text-white text-xl font-medium">Developer API Suite</span>
             </a>
+            <span class="text-white text-sm mt-1 ml-1 opacity-90">{{ config('app.tagline') }}</span>
         </div>
 
         <!-- Navigation links -->
@@ -111,7 +108,6 @@
         <a href="{{ route('docs.index') }}"        class="block py-2 text-gray-800 hover:bg-gray-100 rounded">API Docs</a>
         <a href="{{ route('api-keys.index') }}"    class="block py-2 text-gray-800 hover:bg-gray-100 rounded">API Keys</a>
 
-        {{-- NEW link --}}
         <a href="{{ route('suggestions.board') }}" class="block py-2 text-gray-800 hover:bg-gray-100 rounded">Community Ideas</a>
 
         @auth
@@ -130,14 +126,12 @@
     </div>
 </div>
 
-
-<!-- Main Content -->
 <main class="flex-1 container mx-auto px-4 py-8">
     @yield('content')
 </main>
 
-<!-- Footer -->
 <footer class="text-center text-sm text-gray-500 py-4">
+    <div class="mb-1">{{ config('app.tagline') }}</div>
     &copy; {{ date('Y') }} Apixies. All rights reserved.
 </footer>
 

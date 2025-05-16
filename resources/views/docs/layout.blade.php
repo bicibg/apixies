@@ -24,7 +24,9 @@
                                 <li class="flex items-center">
                                     @if(!$loop->first)
                                         <svg class="h-4 w-4 text-gray-400 mx-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                            <path fill-rule="evenodd"
+                                                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                                  clip-rule="evenodd"></path>
                                         </svg>
                                     @endif
 
@@ -54,7 +56,7 @@
 @push('scripts')
     <!-- Fix for numeric URLs -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Find all links in the navigation that have numeric IDs
             const numericLinks = document.querySelectorAll('a[href^="/docs/"]');
             numericLinks.forEach(link => {
