@@ -54,23 +54,24 @@
     <script>
         function suggestModal () {
             return {
-                open   : false,
-                title  : '',
-                details: '',
-                email  : '',
-                message: '',
-                submit() {
+                "title": "Suggest an API",
+                "open": false,
+                "title": "",
+                "details": "",
+                "email": "",
+                "message": "",
+                "submit": function() {
                     fetch('{{ url('/suggestions') }}', {
-                        method : 'POST',
+                        method: 'POST',
                         headers: {
-                            'Content-Type'  : 'application/json',
-                            'X-CSRF-TOKEN'  : document.querySelector('meta[name="csrf-token"]').content,
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                             'X-Requested-With': 'XMLHttpRequest'
                         },
                         body: JSON.stringify({
-                            title  : this.title,
+                            title: this.title,
                             details: this.details,
-                            email  : this.email
+                            email: this.email
                         })
                     })
                         .then(r => r.json())
@@ -78,8 +79,15 @@
                             this.message = d.message ?? 'Thank you! Your suggestion was received.';
                             if (d.status === 'success') {
                                 this.title = this.details = this.email = '';
+
+                                // Dispatch a custom event for the parent component
+                                window.dispatchEvent(new CustomEvent('suggestion-submitted'));
+
                                 // Keep the modal open to show success message for 1.5 seconds
-                                setTimeout(() => { this.open = false; }, 1500);
+                                setTimeout(() => {
+                                    this.open = false;
+                                    this.message = '';
+                                }, 1500);
                             }
                         })
                         .catch(() => this.message = 'Something went wrong.');

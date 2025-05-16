@@ -52,6 +52,7 @@ class SuggestionController extends Controller
 
         return ApiResponse::success($suggestion, 'Suggestion submitted');
     }
+
     public function vote(Request $request, Suggestion $suggestion)
     {
         $hash = auth()->id()
@@ -78,12 +79,29 @@ class SuggestionController extends Controller
         return ApiResponse::success($suggestion->only('id', 'votes'), 'Vote recorded');
     }
 
-    public function board()
+    public function board(Request $request)
     {
-        $ideas = Suggestion::whereIn('status', ['pending', 'planned'])
-            ->orderByDesc('votes')
-            ->paginate(15);
+        $filter = $request->get('filter', 'all');
 
-        return view('suggestions.board', compact('ideas'));
+        $query = Suggestion::query();
+
+        // Apply filtering based on status
+        if ($filter === 'planned') {
+            $query->where('status', 'planned');
+        } elseif ($filter === 'implemented' || $filter === 'done') {
+            $query->where('status', 'done');
+        } elseif ($filter === 'pending') {
+            $query->where('status', 'pending');
+        } else {
+            // 'all' filter - show everything
+            $query->whereIn('status', ['pending', 'planned', 'done']);
+        }
+
+        // Sort by votes (highest first)
+        $ideas = $query->orderByDesc('votes')
+            ->paginate(15)
+            ->withQueryString(); // Keep filter parameter in pagination links
+
+        return view('suggestions.board', compact('ideas', 'filter'));
     }
 }
