@@ -1,6 +1,21 @@
 @extends('docs.layout')
 
 @section('docs-content')
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="p-4 md:p-6 border-b border-blue-100">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                <h1 class="text-2xl font-bold text-navy">
+                    API Documentation
+                </h1>
+            </div>
+
+            @if($activeSection === 'overview')
+                <p class="text-gray-600">
+                    Welcome to the Apixies API documentation. Here you'll find comprehensive guides and reference to help you start working with our API as quickly as possible.
+                </p>
+            @endif
+        </div>
+    </div>
     <!-- Promotional Banner -->
     <div class="bg-gradient-to-r from-navy/10 to-teal/10 border border-teal/20 rounded-lg p-4 mb-8 flex items-center justify-between">
         <div class="flex items-center">

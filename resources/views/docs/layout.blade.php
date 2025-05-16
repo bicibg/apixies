@@ -44,24 +44,6 @@
                 @endif
 
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <div class="p-4 md:p-6 border-b border-blue-100">
-                        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                            <h1 class="text-2xl font-bold text-navy">
-                                @if(isset($pageTitle))
-                                    {{ $pageTitle }}
-                                @else
-                                    {{ $activeSection === 'overview' ? 'API Documentation' : ucfirst($activeSection ?? 'Documentation') }}
-                                @endif
-                            </h1>
-                        </div>
-
-                        @if($activeSection === 'overview')
-                            <p class="text-gray-600">
-                                Welcome to the Apixies API documentation. Here you'll find comprehensive guides and reference to help you start working with our API as quickly as possible.
-                            </p>
-                        @endif
-                    </div>
-
                     <div class="p-4 md:p-6">
                         @yield('docs-content')
                     </div>

@@ -8,7 +8,7 @@
         ];
     @endphp
 
-    <h1 class="text-3xl font-bold mb-6">Authentication</h1>
+    <h2 class="card-heading">Authentication</h2>
 
     @include('docs.partials.authentication')
 @endsection

@@ -1,6 +1,4 @@
 <div class="p-6 bg-white rounded-lg shadow-md">
-    <h2 class="text-xl font-semibold text-navy mb-4">Response Format</h2>
-
     <p class="mb-4">All responses share the same envelope:</p>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

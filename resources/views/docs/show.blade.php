@@ -1,5 +1,15 @@
 @extends('docs.layout')
 
+@section('title', config('app.name') . ' - ' . ($apiRoute['title'] ?? $key))
+
+@php
+    $breadcrumbs = [
+        ['label' => 'Documentation', 'url' => route('docs.index')],
+        ['label' => 'API Endpoints', 'url' => url('docs/endpoints')],
+        ['label' => $apiRoute['title'] ?? $key]
+    ];
+@endphp
+
 @section('docs-content')
     <div class="mb-8">
         <h1 class="text-3xl font-bold mb-3">{{ $apiRoute['title'] ?? $key }}</h1>

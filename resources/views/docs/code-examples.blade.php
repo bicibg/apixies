@@ -8,7 +8,7 @@
         ];
     @endphp
 
-    <h1 class="text-3xl font-bold mb-6">Code Examples</h1>
+    <h2 class="card-heading">Code Examples</h2>
 
     @include('docs.partials.examples')
 @endsection

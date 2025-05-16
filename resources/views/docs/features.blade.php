@@ -8,7 +8,7 @@
         ];
     @endphp
 
-    <h1 class="text-3xl font-bold mb-6">API Features</h1>
+    <h2 class="card-heading">API Features</h2>
 
     @include('docs.partials.features')
 @endsection

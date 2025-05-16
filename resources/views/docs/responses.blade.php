@@ -8,7 +8,7 @@
         ];
     @endphp
 
-    <h1 class="text-3xl font-bold mb-6">Response Format</h1>
+    <h2 class="card-heading">Response Format</h2>
 
     @include('docs.partials.responses')
 @endsection

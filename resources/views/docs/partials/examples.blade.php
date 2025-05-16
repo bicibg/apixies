@@ -1,6 +1,4 @@
 <div class="card">
-    <h2 class="card-heading">Example Requests</h2>
-
     <h3 class="font-medium text-gray-800 mb-2">cURL</h3>
     <pre class="code-block"><code>curl -X GET \
   https://{{ request()->getHost() }}/api/v1/inspect-email?email=someone@example.com \

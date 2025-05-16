@@ -1,6 +1,4 @@
 <div class="mt-6" id="api-endpoints-container">
-    <h2 class="text-2xl font-bold mb-6">API Endpoints</h2>
-
     <!-- Search box -->
     <div class="relative mb-6">
         <input

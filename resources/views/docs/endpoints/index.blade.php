@@ -8,7 +8,7 @@
         ];
     @endphp
 
-    <h1 class="text-3xl font-bold mb-6">API Endpoints</h1>
+    <h2 class="card-heading">API Endpoints</h2>
 
     <div id="api-intro-section" class="text-lg mb-8">
         <p class="mb-4">
