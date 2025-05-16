@@ -30,10 +30,20 @@ class SecureHeaders
         $response->headers->set('Permissions-Policy', 'geolocation=(), camera=(), microphone=(), payment=()');
 
         // Add Content-Security-Policy
-        $response->headers->set(
-            'Content-Security-Policy',
-            "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'"
+        $response->headers->set('Content-Security-Policy',
+            "default-src 'self'; ".
+            "img-src 'self' https://www.google-analytics.com data:; ".
+            "script-src 'self' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com; ".
+            "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com; ".
+            "style-src 'self' https://fonts.bunny.net; ".
+            "font-src 'self' data: https://fonts.bunny.net; ".
+            "object-src 'none'; ".
+            "base-uri 'self'; ".
+            "form-action 'self'; ".
+            "frame-ancestors 'none'; ".
+            "upgrade-insecure-requests;"
         );
+        $response->headers->remove('X-Powered-By');
 
         return $response;
     }

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', isset($pageTitle) ? $pageTitle : 'API Documentation')
+@section('title', config('app.name') . ' - ' . ($pageTitle ?? config('app.tagline')))
 
 @section('content')
     <div class="container mx-auto px-4 py-8">
