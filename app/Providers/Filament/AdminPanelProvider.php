@@ -37,17 +37,19 @@ class AdminPanelProvider extends PanelProvider
             ])
             /* ── Branding & auto‑discovery ───────────────────────────── */
             ->colors([
-                'primary' => 'var(--color-navy)',     // Deep navy blue from our palette
-                'secondary' => 'var(--color-gray-500)',   // Muted blue-gray
-                'gray' => Color::Slate,     // Neutral slate gray
-                'danger' => 'var(--color-danger-800)',      // From our palette
-                'success' => 'var(--color-success-800)',     // From our palette
-                'warning' => 'var(--color-warning-800)',     // From our palette
-                'info' => 'var(--color-info-800)',        // From our palette
+                // Use direct color values here instead of CSS variables
+                'primary' => Color::hex('#0A2240'),    // Deep navy blue
+                'secondary' => Color::hex('#718096'),  // Muted blue-gray
+                'gray' => Color::Slate,               // Neutral slate gray
+                'danger' => Color::hex('#9B2C2C'),     // Muted red
+                'success' => Color::hex('#2F855A'),    // Forest green
+                'warning' => Color::hex('#C05621'),    // Burnt orange
+                'info' => Color::hex('#2B6CB0'),       // Medium blue
             ])
             ->brandName('Apixies')
             ->assets([
-                Css::make('colors', asset('css/colors.css')), // Load our colors.css first
+                // Use resource_path for both CSS files
+                Css::make('colors', resource_path('css/colors.css')),
                 Css::make('custom', resource_path('css/filament/admin/custom-styles.css'))
             ])
             // Larger logo configuration
