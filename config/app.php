@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'Apixies'),
     'tagline' => 'Tiny APIs, Mighty Results',
     'sitemap_secret' => env('SITEMAP_SECRET', null),
     /*
