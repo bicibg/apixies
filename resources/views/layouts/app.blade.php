@@ -21,7 +21,7 @@
     <meta name="description"
           content="Apixies - {{ config('app.tagline', 'Tiny APIs, Mighty Results') }}">
 
-    <title>@yield('title', 'Apixies')</title>
+    <title>Apixies</title>
 
     <!-- Favicons -->
     <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96"/>
