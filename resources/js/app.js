@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleHeaderShadow();
     window.addEventListener('scroll', toggleHeaderShadow);
 
+    // Initialize endpoint search functionality
+    initializeEndpointSearch();
+
     // Register the mobile menu component
     Alpine.data('mobileMenu', function() {
         return {
@@ -598,4 +601,50 @@ function toggleHeaderShadow() {
     } else {
         header.classList.remove('header-shadow');
     }
+}
+
+// API Endpoint search functionality
+function initializeEndpointSearch() {
+    const searchInput = document.getElementById('endpoint-search');
+    if (!searchInput) return; // Exit if search input doesn't exist on this page
+
+    const endpoints = document.querySelectorAll('.endpoint-row');
+    const noResults = document.getElementById('no-search-results');
+    const categories = document.querySelectorAll('.mb-8');
+
+    // Add the event listener
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        let foundAny = false;
+
+        // Loop through each category
+        categories.forEach(category => {
+            let categoryHasVisible = false;
+
+            // Find endpoints in this category
+            const categoryEndpoints = category.querySelectorAll('.endpoint-row');
+
+            categoryEndpoints.forEach(endpoint => {
+                const title = endpoint.querySelector('h4')?.textContent.toLowerCase() || '';
+                const description = endpoint.querySelector('p')?.textContent.toLowerCase() || '';
+                const uri = endpoint.querySelector('code')?.textContent.toLowerCase() || '';
+
+                if (title.includes(searchTerm) || description.includes(searchTerm) || uri.includes(searchTerm)) {
+                    endpoint.style.display = '';
+                    categoryHasVisible = true;
+                    foundAny = true;
+                } else {
+                    endpoint.style.display = 'none';
+                }
+            });
+
+            // Hide/show category based on whether it has visible endpoints
+            category.style.display = categoryHasVisible ? '' : 'none';
+        });
+
+        // Show/hide no results message
+        if (noResults) {
+            noResults.style.display = foundAny ? 'none' : 'block';
+        }
+    });
 }
