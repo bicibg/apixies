@@ -163,14 +163,14 @@
                                         </svg>
                                     </a>
                                 </div>
-                                <div x-show="tokenInfo" class="text-xs mt-1">
-                                    <span x-text="`${tokenInfo.remaining_calls || 0} calls remaining`"
-                                          :class="isExpired(tokenInfo.expires_at) ? 'text-red-500' : 'font-medium'"></span>
-                                    <template x-if="tokenInfo.expires_at">
+                                <div x-show="tokenInfo !== null" class="text-xs mt-1">
+                                    <span x-text="`${tokenInfo?.remaining_calls || 0} calls remaining`"
+                                          :class="tokenInfo && isExpired(tokenInfo.expires_at) ? 'text-red-500' : 'font-medium'"></span>
+                                    <template x-if="tokenInfo && tokenInfo.expires_at">
                                         <span>
                                             <span x-text="` • Expires ${formatExpiryTime(tokenInfo.expires_at)}`"
-                                                  :class="isExpired(tokenInfo.expires_at) ? 'text-red-500' : 'text-gray-500'"></span>
-                                            <template x-if="isExpired(tokenInfo.expires_at)">
+                                                  :class="tokenInfo && isExpired(tokenInfo.expires_at) ? 'text-red-500' : 'text-gray-500'"></span>
+                                            <template x-if="tokenInfo && isExpired(tokenInfo.expires_at)">
                                                 <span class="text-red-500 font-medium"> (expired)</span>
                                             </template>
                                         </span>
@@ -199,12 +199,12 @@
                         </button>
 
                         <div x-show="!hasValidToken && tokenInfo && !isHealthOrReadinessEndpoint" class="mt-2 text-center">
-                            <div x-show="tokenInfo.expired" class="text-xs text-red-500">Your session has expired. A new token will be created automatically.</div>
-                            <div x-show="tokenInfo.quota_exceeded" class="space-y-2">
+                            <div x-show="tokenInfo && tokenInfo.expired" class="text-xs text-red-500">Your session has expired. A new token will be created automatically.</div>
+                            <div x-show="tokenInfo && tokenInfo.quota_exceeded" class="space-y-2">
                                 <p class="text-xs text-red-500">Your daily Sandbox API quota has been exhausted. Please try again tomorrow.</p>
                                 <p class="text-xs text-gray-600">Need unlimited access? <a href="{{ route('register') }}" class="text-blue-600 hover:text-blue-800 font-medium">Register for free</a> and get your own API key with higher limits.</p>
                             </div>
-                            <div x-show="!tokenInfo.expired && !tokenInfo.quota_exceeded" class="text-xs text-red-500">Unable to validate your API token.</div>
+                            <div x-show="tokenInfo && !tokenInfo.expired && !tokenInfo.quota_exceeded" class="text-xs text-red-500">Unable to validate your API token.</div>
                         </div>
                     </div>
                 </div>

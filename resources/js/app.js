@@ -67,7 +67,13 @@ document.addEventListener('DOMContentLoaded', () => {
             loading: false,
             response: null,
             params: {},
-            tokenInfo: null,
+            tokenInfo: {
+                // Initialize with default values to prevent null errors
+                remaining_calls: 0,
+                expires_at: null,
+                expired: false,
+                quota_exceeded: false
+            },
             hasPdfResponse: false,
             pdfUrl: null,
 
@@ -121,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.remaining_calls !== undefined) {
                         this.tokenInfo = {
                             remaining_calls: data.remaining_calls,
-                            expires_at: data.expires_at,
+                            expires_at: data.expires_at || null,
                             expired: data.expired || false,
                             quota_exceeded: data.quota_exceeded || false
                         };
@@ -167,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Update token info
                         this.tokenInfo = {
                             remaining_calls: data.remaining_calls || data.quota || 25,
-                            expires_at: data.expires_at,
+                            expires_at: data.expires_at || null,
                             expired: false,
                             quota_exceeded: false
                         };
@@ -175,12 +181,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Handle rate limiting
                         this.tokenInfo = {
                             remaining_calls: 0,
+                            expires_at: null,
                             expired: false,
                             quota_exceeded: true
                         };
                     }
                 } catch (error) {
                     console.error('Error getting token:', error);
+                    // Ensure tokenInfo has valid defaults even after errors
+                    this.tokenInfo = this.tokenInfo || {
+                        remaining_calls: 0,
+                        expires_at: null,
+                        expired: false,
+                        quota_exceeded: false
+                    };
                 }
             },
 
