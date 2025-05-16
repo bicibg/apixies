@@ -1,6 +1,6 @@
 @extends('docs.layout')
 
-@section('title', config('app.name') . ' - ' . ($apiRoute['title'] ?? $key))
+@section('title', 'Apixies - ' . ($apiRoute['title'] ?? $key))
 
 @php
     $breadcrumbs = [
