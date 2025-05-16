@@ -27,14 +27,14 @@ class ApiStatsOverview extends BaseWidget
         $sandboxRequests = $sandboxLogs->count();
 
         // More robust latency metrics
-        $avgLatency = $this->formatLatency($logs->avg('latency'));
+        $avgLatency = $this->formatLatency($logs->avg('latency_ms'));
         $medianLatency = $this->formatLatency($this->getMedianLatency($logs));
         $p95Latency = $this->formatLatency($this->getPercentileLatency($logs, 95));
         $trimmedLatency = $this->formatLatency($this->getTrimmedMeanLatency($logs, 10));
 
         // Production vs Sandbox latencies
-        $prodAvgLatency = $prodLogs->count() > 0 ? $this->formatLatency($prodLogs->avg('latency')) : 'N/A';
-        $sandboxAvgLatency = $sandboxLogs->count() > 0 ? $this->formatLatency($sandboxLogs->avg('latency')) : 'N/A';
+        $prodAvgLatency = $prodLogs->count() > 0 ? $this->formatLatency($prodLogs->avg('latency_ms')) : 'N/A';
+        $sandboxAvgLatency = $sandboxLogs->count() > 0 ? $this->formatLatency($sandboxLogs->avg('latency_ms')) : 'N/A';
         $prodMedianLatency = $prodLogs->count() > 0 ? $this->formatLatency($this->getMedianLatency($prodLogs)) : 'N/A';
         $sandboxMedianLatency = $sandboxLogs->count() > 0 ? $this->formatLatency($this->getMedianLatency($sandboxLogs)) : 'N/A';
 
@@ -52,8 +52,8 @@ class ApiStatsOverview extends BaseWidget
             Stat::make('Avg Latency (ms)', $avgLatency)
                 ->description("10% Trimmed Avg: $trimmedLatency")
                 ->descriptionIcon('heroicon-m-chart-bar')
-                ->color($this->getLatencyColor($logs->avg('latency')))
-                ->tooltip("95th Percentile: $p95Latency ms"),
+                ->color($this->getLatencyColor($logs->avg('latency_ms')))
+                ->extraAttributes(['title' => "95th Percentile: $p95Latency ms"]),
 
             Stat::make('Users & Tokens', User::count())
                 ->description(SandboxToken::count() . ' sandbox tokens')
@@ -71,7 +71,7 @@ class ApiStatsOverview extends BaseWidget
             return 0.0; // Return 0 as float when no logs exist
         }
 
-        $latencies = $logs->pluck('latency')->filter()->sort()->values();
+        $latencies = $logs->pluck('latency_ms')->filter()->sort()->values();
         $count = $latencies->count();
 
         if ($count === 0) {
@@ -96,7 +96,7 @@ class ApiStatsOverview extends BaseWidget
             return 0.0;
         }
 
-        $latencies = $logs->pluck('latency')->filter()->sort()->values();
+        $latencies = $logs->pluck('latency_ms')->filter()->sort()->values();
         $count = $latencies->count();
 
         if ($count === 0) {
@@ -118,9 +118,8 @@ class ApiStatsOverview extends BaseWidget
             return 0.0;
         }
 
-        $latencies = $logs->pluck('latency')->filter()->sort()->values();
+        $latencies = $logs->pluck('latency_ms')->filter()->sort()->values();
         $count = $latencies->count();
-
         if ($count === 0) {
             return 0.0;
         }
@@ -146,7 +145,15 @@ class ApiStatsOverview extends BaseWidget
      */
     protected function formatLatency($latency): string
     {
-        return number_format(round((float)$latency, 2));
+        // Use more decimal places to avoid small values appearing as 0
+        $value = (float)$latency;
+
+        if ($value < 0.01 && $value > 0) {
+            // For very small values, show at least 3 decimal places
+            return number_format($value, 3);
+        }
+
+        return number_format(round($value, 2));
     }
 
     /**
