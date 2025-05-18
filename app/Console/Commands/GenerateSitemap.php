@@ -61,34 +61,28 @@ class GenerateSitemap extends Command
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             ->setPriority(0.8));
 
-        // API endpoints documentation
-        $sitemap->add(Url::create('/docs/endpoints')
-            ->setLastModificationDate(now())
-            ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
-            ->setPriority(0.8));
-
-        // API-specific pages - these will help with SEO for each specific API
-        $sitemap->add(Url::create('/docs/endpoints/email-inspector')
+        // API-specific pages with correct URLs
+        $sitemap->add(Url::create('/docs/email')
             ->setLastModificationDate(now())
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             ->setPriority(0.7));
 
-        $sitemap->add(Url::create('/docs/endpoints/ssl-health-inspector')
+        $sitemap->add(Url::create('/docs/ssl')
             ->setLastModificationDate(now())
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             ->setPriority(0.7));
 
-        $sitemap->add(Url::create('/docs/endpoints/security-headers-inspector')
+        $sitemap->add(Url::create('/docs/security-headers')
             ->setLastModificationDate(now())
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             ->setPriority(0.7));
 
-        $sitemap->add(Url::create('/docs/endpoints/user-agent-inspector')
+        $sitemap->add(Url::create('/docs/user-agent')
             ->setLastModificationDate(now())
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             ->setPriority(0.7));
 
-        $sitemap->add(Url::create('/docs/endpoints/html-to-pdf')
+        $sitemap->add(Url::create('/docs/html-to-pdf')
             ->setLastModificationDate(now())
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             ->setPriority(0.7));
@@ -113,13 +107,13 @@ class GenerateSitemap extends Command
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             ->setPriority(0.5));
 
-        // Health and status endpoints (lower priority as they're mostly for monitoring)
-        $sitemap->add(Url::create('/docs/endpoints/health')
+        // Health and status endpoints
+        $sitemap->add(Url::create('/docs/health')
             ->setLastModificationDate(now())
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             ->setPriority(0.4));
 
-        $sitemap->add(Url::create('/docs/endpoints/readiness')
+        $sitemap->add(Url::create('/docs/readiness')
             ->setLastModificationDate(now())
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             ->setPriority(0.4));
