@@ -17,6 +17,7 @@ Apixies.io is a hobby project built using Laravel 12 with the goal of providing 
 - **Sandbox Mode**: Test API functionality with limited usage before registering
 - **API Keys**: Registered users get their own API keys for unlimited access
 - **Detailed Documentation**: Interactive documentation with code examples
+- **OpenAPI/Swagger Docs**: Standardized API documentation for developers
 
 ## Requirements
 
@@ -55,7 +56,12 @@ Apixies.io is a hobby project built using Laravel 12 with the goal of providing 
    php artisan migrate
    ```
 
-7. Start the development server:
+7. Generate OpenAPI documentation:
+   ```
+   php artisan openapi:generate
+   ```
+
+8. Start the development server:
    ```
    php artisan serve
    ```
@@ -79,6 +85,28 @@ use App\Services\YourNewService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * @OA\Get(
+ *     path="/api/v1/your-new-endpoint",
+ *     summary="Your New Endpoint",
+ *     description="Description of what your endpoint does",
+ *     operationId="yourNewEndpoint",
+ *     tags={"category"},
+ *     security={{"X-API-KEY": {}}},
+ *     @OA\Parameter(
+ *         name="param1",
+ *         in="query",
+ *         description="Parameter description",
+ *         required=true,
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation",
+ *         @OA\JsonContent(ref="#/components/schemas/ApiResponse")
+ *     )
+ * )
+ */
 class YourNewEndpointController extends Controller
 {
     /**
@@ -173,31 +201,61 @@ Add your endpoint to `config/api_endpoints.php`:
 ],
 ```
 
-That's it! Your new endpoint will automatically appear in the API documentation with a fully functional demo.
+### 5. Generate OpenAPI Documentation
 
-### Notes
+After adding your endpoint, regenerate the OpenAPI documentation:
 
-- The demo UI will automatically generate input fields for all parameters in the `query_params` array
-- The system will intelligently provide sample data based on parameter names (e.g., email, URL, IP, etc.)
-- If your endpoint needs route parameters (e.g., `api/v1/users/{id}`), add them to the `route_params` array
-- You can add your endpoint to an existing category or create a new one
-- No HTML or JavaScript changes are needed - the demo UI is generated automatically from your configuration
+```bash
+php artisan openapi:generate
+```
 
-### Configuration Details
+## OpenAPI Documentation
 
-The API example configuration accepts these fields:
+Apixies.io includes OpenAPI (Swagger) documentation for all API endpoints.
 
-| Field | Description |
-|-------|-------------|
-| `title` | Human-readable title of the endpoint |
-| `description` | Brief description of what the endpoint does |
-| `uri` | URL path without leading slash (e.g., `api/v1/endpoint`) |
-| `method` | HTTP method (GET, POST, PUT, DELETE) |
-| `category` | Category for grouping (system, inspector, converter, etc.) |
-| `route_params` | Array of route parameters (e.g., `['id', 'slug']`) |
-| `query_params` | Array of query parameters (e.g., `['email', 'domain']`) |
-| `demo` | Boolean indicating whether to show the "Try" button |
-| `response_example` | Example response structure to show in documentation |
+### Viewing the Documentation
+
+After installation, you can access the OpenAPI documentation at:
+```
+http://localhost:8000/api/documentation
+```
+
+### Generating Documentation
+
+The project includes a command to generate OpenAPI documentation:
+
+```bash
+php artisan openapi:generate
+```
+
+### OpenAPI Annotations
+
+When adding new endpoints, use the `@OA` annotations in your controller to document them properly. All controllers in the `App\Http\Controllers\Api` namespace with OpenAPI annotations will be automatically included in the documentation.
+
+Example annotation:
+
+```php
+/**
+ * @OA\Get(
+ *     path="/api/v1/endpoint",
+ *     summary="Endpoint title",
+ *     description="Description of what the endpoint does",
+ *     tags={"category"},
+ *     @OA\Parameter(
+ *         name="param",
+ *         in="query",
+ *         description="Parameter description",
+ *         required=true,
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful response",
+ *         @OA\JsonContent(ref="#/components/schemas/ApiResponse")
+ *     )
+ * )
+ */
+```
 
 ## Project Structure
 
@@ -208,6 +266,7 @@ The API example configuration accepts these fields:
 - `config/api_endpoints.php` - API documentation configuration
 - `resources/views/docs/` - Documentation templates
 - `routes/api.php` - API route definitions
+- `storage/api-docs/` - Generated OpenAPI documentation
 
 ## License
 

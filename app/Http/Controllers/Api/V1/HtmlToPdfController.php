@@ -1,11 +1,50 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Spatie\Browsershot\Browsershot;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * @OA\Post(
+ *     path="/api/v1/html-to-pdf",
+ *     summary="HTML to PDF Converter",
+ *     description="Convert HTML content to a PDF document with proper formatting and styling",
+ *     operationId="htmlToPdf",
+ *     tags={"converter"},
+ *     security={{"X-API-KEY": {}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"html"},
+ *             @OA\Property(
+ *                 property="html",
+ *                 type="string",
+ *                 example="<h1>Hello World</h1><p>Sample content</p>"
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="PDF document generated successfully",
+ *         @OA\MediaType(
+ *             mediaType="application/pdf"
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation error",
+ *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error",
+ *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *     )
+ * )
+ */
 class HtmlToPdfController extends Controller
 {
     public function __invoke(Request $request)

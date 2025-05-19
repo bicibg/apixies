@@ -1,16 +1,16 @@
 <?php
 
+use App\Helpers\ApiResponse;
 use App\Http\Controllers\Api\V1\EmailInspectorController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\HtmlToPdfController;
 use App\Http\Controllers\Api\V1\IpGeolocationController;
 use App\Http\Controllers\Api\V1\ReadinessController;
 use App\Http\Controllers\Api\V1\SecurityHeadersInspectorController;
 use App\Http\Controllers\Api\V1\SslHealthInspectorController;
 use App\Http\Controllers\Api\V1\UserAgentInspectorController;
-use App\Http\Controllers\HtmlToPdfController;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-use App\Helpers\ApiResponse;
+use Illuminate\Support\Facades\Route;
 
 Route::apiV1(function () {
     // ==========================================

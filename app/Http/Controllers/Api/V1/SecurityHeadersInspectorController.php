@@ -6,26 +6,51 @@ use App\Http\Controllers\Controller;
 use App\Services\SecurityHeadersInspectorService;
 use Illuminate\Http\Request;
 use App\Helpers\ApiResponse;
+use OpenApi\Annotations as OA;
 
+/**
+ * @OA\Get(
+ *     path="/api/v1/inspect-headers",
+ *     summary="Security Headers Inspector",
+ *     description="Inspect security headers for a URL to check for adherence to current best practices",
+ *     operationId="inspectSecurityHeaders",
+ *     tags={"inspector"},
+ *     security={{"X-API-KEY": {}}},
+ *     @OA\Parameter(
+ *         name="url",
+ *         in="query",
+ *         description="URL to inspect",
+ *         required=true,
+ *         @OA\Schema(
+ *             type="string",
+ *             example="https://example.com"
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Security headers inspected successfully",
+ *         @OA\JsonContent(ref="#/components/schemas/ApiResponse")
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation error",
+ *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *     )
+ * )
+ */
 class SecurityHeadersInspectorController extends Controller
 {
-    /**
-     * Handle GET /inspect‑headers
-     */
     public function __invoke(Request $request, SecurityHeadersInspectorService $inspector)
     {
-        // Step 1: basic presence validation
         $validated = $request->validate([
             'url' => ['required', 'string', 'max:255'],
         ]);
 
-        // Step 2: ensure scheme; default to HTTPS
         $raw = trim($validated['url']);
         if (!preg_match('#^https?://#i', $raw)) {
             $raw = 'https://' . ltrim($raw, '/');
         }
 
-        // Step 3: final URL sanity check
         if (!filter_var($raw, FILTER_VALIDATE_URL)) {
             return ApiResponse::error(
                 'The url field must be a valid URL.',
@@ -33,7 +58,7 @@ class SecurityHeadersInspectorController extends Controller
                 ['INVALID_URL']
             );
         }
-        
+
         $selfDomains = [
             'apixies.io',
             parse_url(config('app.url'), PHP_URL_HOST),
@@ -41,10 +66,8 @@ class SecurityHeadersInspectorController extends Controller
             $_SERVER['SERVER_NAME'] ?? '',
         ];
 
-        // Parse the domain from the URL
         $urlHost = parse_url($raw, PHP_URL_HOST);
 
-        // Check if trying to scan own domain
         if ($urlHost && in_array($urlHost, array_filter($selfDomains))) {
             return ApiResponse::error(
                 'Cannot scan own domain for security reasons',
@@ -53,16 +76,9 @@ class SecurityHeadersInspectorController extends Controller
             );
         }
 
-        // Step 4: inspect
         $result = $inspector->inspect($raw);
 
         if (($result['error'] ?? false) === true) {
-            \Log::debug('Error condition met', [
-                'has_message' => isset($result['message']),
-                'message_type' => isset($result['message']) ? gettype($result['message']) : 'not_set',
-                'message_value' => $result['message'] ?? 'default_not_applied'
-            ]);
-
             // Use the error message from the service if available
             $errorMessage = $result['message'] ?? 'Unable to fetch headers for the given URL.';
 

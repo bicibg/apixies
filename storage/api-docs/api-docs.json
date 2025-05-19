@@ -1,0 +1,495 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Apixies.io API Documentation",
+        "description": "API documentation for Apixies.io - A collection of utility APIs for developers",
+        "contact": {
+            "name": "Apixies.io Support",
+            "email": "support@apixies.io"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "https://apixies.io",
+            "description": "Production API Server"
+        },
+        {
+            "url": "http://localhost:8000",
+            "description": "Development API Server"
+        }
+    ],
+    "paths": {
+        "/api/v1/inspect-email": {
+            "get": {
+                "tags": [
+                    "inspector"
+                ],
+                "summary": "Email Inspector",
+                "description": "Inspect email address details including format validation, MX record checks, and disposable email detection",
+                "operationId": "inspectEmail",
+                "parameters": [
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "Email address to inspect",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "email",
+                            "example": "user@example.com"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Email inspection successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "X-API-KEY": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/health": {
+            "get": {
+                "tags": [
+                    "system"
+                ],
+                "summary": "Health Check",
+                "description": "Check the health status of the API",
+                "operationId": "healthCheck",
+                "responses": {
+                    "200": {
+                        "description": "API is healthy",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/html-to-pdf": {
+            "post": {
+                "tags": [
+                    "converter"
+                ],
+                "summary": "HTML to PDF Converter",
+                "description": "Convert HTML content to a PDF document with proper formatting and styling",
+                "operationId": "htmlToPdf",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "html"
+                                ],
+                                "properties": {
+                                    "html": {
+                                        "type": "string",
+                                        "example": "<h1>Hello World</h1><p>Sample content</p>"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "PDF document generated successfully",
+                        "content": {
+                            "application/pdf": {}
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "X-API-KEY": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/ip-geolocation": {
+            "get": {
+                "tags": [
+                    "inspector"
+                ],
+                "summary": "IP Geolocation",
+                "description": "Convert IP addresses to location data including country, city, coordinates, timezone, and ISP information",
+                "operationId": "ipGeolocation",
+                "parameters": [
+                    {
+                        "name": "ip",
+                        "in": "query",
+                        "description": "IP address to geolocate",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "8.8.8.8"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "IP geolocation retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid IP address",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "X-API-KEY": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/ready": {
+            "get": {
+                "tags": [
+                    "system"
+                ],
+                "summary": "Readiness Check",
+                "description": "Check if the API is ready to accept requests by verifying database and cache connections",
+                "operationId": "readinessCheck",
+                "responses": {
+                    "200": {
+                        "description": "API is ready",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponse"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "API is not ready",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/inspect-headers": {
+            "get": {
+                "tags": [
+                    "inspector"
+                ],
+                "summary": "Security Headers Inspector",
+                "description": "Inspect security headers for a URL to check for adherence to current best practices",
+                "operationId": "inspectSecurityHeaders",
+                "parameters": [
+                    {
+                        "name": "url",
+                        "in": "query",
+                        "description": "URL to inspect",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "https://example.com"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Security headers inspected successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "X-API-KEY": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/inspect-ssl": {
+            "get": {
+                "tags": [
+                    "inspector"
+                ],
+                "summary": "SSL Health Inspector",
+                "description": "Inspect SSL certificate details for a domain, including validity, expiry and chain health",
+                "operationId": "inspectSsl",
+                "parameters": [
+                    {
+                        "name": "domain",
+                        "in": "query",
+                        "description": "Domain to inspect",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "example.com"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "SSL certificate inspected successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Inspection failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "X-API-KEY": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/inspect-user-agent": {
+            "get": {
+                "tags": [
+                    "inspector"
+                ],
+                "summary": "User Agent Inspector",
+                "description": "Parse a User-Agent string to detect browser, operating system, device type and bot status",
+                "operationId": "inspectUserAgent",
+                "parameters": [
+                    {
+                        "name": "user_agent",
+                        "in": "query",
+                        "description": "User-Agent string to parse",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User agent inspected successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "X-API-KEY": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ApiResponse": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "example": "success"
+                    },
+                    "http_code": {
+                        "type": "integer",
+                        "example": 200
+                    },
+                    "code": {
+                        "type": "string",
+                        "example": "SUCCESS"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Operation completed successfully"
+                    },
+                    "data": {
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "ErrorResponse": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "example": "error"
+                    },
+                    "http_code": {
+                        "type": "integer",
+                        "example": 400
+                    },
+                    "code": {
+                        "type": "string",
+                        "example": "VALIDATION_ERROR"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "The request data is invalid"
+                    },
+                    "errors": {
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "X-API-KEY": {
+                "type": "apiKey",
+                "description": "API Key for authentication",
+                "name": "X-API-KEY",
+                "in": "header"
+            },
+            "apiKey": {
+                "type": "apiKey",
+                "description": "API key for authentication",
+                "name": "X-API-KEY",
+                "in": "header"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "system",
+            "description": "System endpoints for health and readiness checks"
+        },
+        {
+            "name": "inspector",
+            "description": "Inspector endpoints for analyzing various resources"
+        },
+        {
+            "name": "converter",
+            "description": "Converter endpoints for transforming data formats"
+        }
+    ],
+    "security": [
+        {
+            "apiKey": []
+        }
+    ]
+}
