@@ -98,8 +98,14 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Domain to inspect
                             </label>
-                            <input type="text" x-model="params.domain" placeholder="example.com"
-                                   class="w-full p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal">
+                            <div class="flex space-x-2">
+                                <input type="text" x-model="params.domain" placeholder="example.com"
+                                       class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal">
+                                <button @click="insertSampleDomain"
+                                        class="px-3 py-2 text-xs text-teal hover:text-teal-700 rounded border border-teal-200 hover:bg-blue-50 whitespace-nowrap">
+                                    Insert Sample
+                                </button>
+                            </div>
                         </div>
                     </template>
 
@@ -109,8 +115,14 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 URL to inspect
                             </label>
-                            <input type="text" x-model="params.url_to_check" placeholder="https://example.com"
-                                   class="w-full p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal">
+                            <div class="flex space-x-2">
+                                <input type="text" x-model="params.url_to_check" placeholder="https://example.com"
+                                       class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal">
+                                <button @click="insertSampleUrl"
+                                        class="px-3 py-2 text-xs text-teal hover:text-teal-700 rounded border border-teal-200 hover:bg-blue-50 whitespace-nowrap">
+                                    Insert Sample
+                                </button>
+                            </div>
                         </div>
                     </template>
 
@@ -120,8 +132,14 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Email to inspect
                             </label>
-                            <input type="email" x-model="params.email" placeholder="example@domain.com"
-                                   class="w-full p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal">
+                            <div class="flex space-x-2">
+                                <input type="email" x-model="params.email" placeholder="example@domain.com"
+                                       class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal">
+                                <button @click="insertSampleEmail"
+                                        class="px-3 py-2 text-xs text-teal hover:text-teal-700 rounded border border-teal-200 hover:bg-blue-50 whitespace-nowrap">
+                                    Insert Sample
+                                </button>
+                            </div>
                         </div>
                     </template>
 
@@ -131,8 +149,14 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 User Agent String
                             </label>
-                            <input type="text" x-model="params.user_agent" placeholder="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36..."
-                                   class="w-full p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal">
+                            <div class="flex space-x-2">
+                                <input type="text" x-model="params.user_agent" placeholder="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36..."
+                                       class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal">
+                                <button @click="insertSampleUserAgent"
+                                        class="px-3 py-2 text-xs text-teal hover:text-teal-700 rounded border border-teal-200 hover:bg-blue-50 whitespace-nowrap">
+                                    Insert Sample
+                                </button>
+                            </div>
                         </div>
                     </template>
 
@@ -213,7 +237,7 @@
 
                         <div x-show="!hasValidToken && tokenInfo && !isHealthOrReadinessEndpoint" class="mt-2 text-center">
                             <div x-show="tokenInfo && tokenInfo.expired" class="text-xs text-danger-500">Your session has expired. A new token will be created automatically.</div>
-                            <div x-show="tokenInfo && tokenInfo.quota_exceeded" class="space-y-2">
+                            <div x-show="tokenInfo && tokenInfo.quota_exceeded" class="text-xs space-y-2">
                                 <p class="text-xs text-danger-500">Your daily Sandbox API quota has been exhausted. Please try again tomorrow.</p>
                                 <p class="text-xs text-gray-600">Need unlimited access? <a href="{{ route('register') }}" class="text-teal hover:text-teal-700 font-medium">Register for free</a> and get your own API key with higher limits.</p>
                             </div>

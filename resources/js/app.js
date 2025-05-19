@@ -102,6 +102,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
 
+            // Sample data insertion functions
+            insertSampleEmail() {
+                this.params.email = 'john.doe@example.com';
+            },
+
+            insertSampleUserAgent() {
+                this.params.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+            },
+
+            insertSampleDomain() {
+                this.params.domain = 'example.com';
+            },
+
+            insertSampleUrl() {
+                this.params.url_to_check = 'https://example.com';
+            },
+
             // Token management
             async checkTokenStatus() {
                 try {
@@ -465,6 +482,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             body.email = this.params.email || '';
                         }
 
+                        if (this.uri.includes('inspect-user-agent')) {
+                            body.user_agent = this.params.user_agent || '';
+                        }
+
                         // Add the body to the request if not empty
                         if (Object.keys(body).length > 0) {
                             requestOptions.body = JSON.stringify(body);
@@ -483,6 +504,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         if (this.uri.includes('inspect-email') && this.params.email) {
                             queryParams.push(`email=${encodeURIComponent(this.params.email)}`);
+                        }
+
+                        if (this.uri.includes('inspect-user-agent') && this.params.user_agent) {
+                            queryParams.push(`user_agent=${encodeURIComponent(this.params.user_agent)}`);
                         }
 
                         if (queryParams.length > 0) {
