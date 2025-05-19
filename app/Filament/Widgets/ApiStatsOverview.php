@@ -18,8 +18,13 @@ class ApiStatsOverview extends BaseWidget
         $logs = ApiEndpointLog::where('created_at', '>=', now()->subDays(30))->get();
 
         // Split logs by environment
-        $prodLogs = $logs->where('sandbox', false);
-        $sandboxLogs = $logs->where('sandbox', true);
+        $prodLogs = $logs->filter(function($log) {
+            return is_null($log->sandbox_token_id);
+        });
+
+        $sandboxLogs = $logs->filter(function($log) {
+            return !is_null($log->sandbox_token_id);
+        });
 
         // Get stats
         $totalRequests = $logs->count();
@@ -38,6 +43,65 @@ class ApiStatsOverview extends BaseWidget
         $prodMedianLatency = $prodLogs->count() > 0 ? $this->formatLatency($this->getMedianLatency($prodLogs)) : 'N/A';
         $sandboxMedianLatency = $sandboxLogs->count() > 0 ? $this->formatLatency($this->getMedianLatency($sandboxLogs)) : 'N/A';
 
+        // Error Rate Analysis
+        $errorLogs = $logs->filter(function($log) {
+            return $log->response_code >= 400;
+        });
+        $errorCount = $errorLogs->count();
+        $errorRate = $totalRequests > 0 ? round(($errorCount / $totalRequests) * 100, 2) : 0;
+
+        $clientErrors = $logs->filter(function($log) {
+            return $log->response_code >= 400 && $log->response_code < 500;
+        })->count();
+
+        $serverErrors = $logs->filter(function($log) {
+            return $log->response_code >= 500;
+        })->count();
+
+        // Trend Analysis - Current Week vs Previous Week
+        $currentWeekLogs = $logs->filter(function($log) {
+            return Carbon::parse($log->created_at)->isAfter(now()->subDays(7));
+        });
+
+        $previousWeekLogs = $logs->filter(function($log) {
+            $date = Carbon::parse($log->created_at);
+            return $date->isAfter(now()->subDays(14)) && $date->isBefore(now()->subDays(7));
+        });
+
+        $currentWeekLatency = $currentWeekLogs->avg('latency_ms');
+        $previousWeekLatency = $previousWeekLogs->avg('latency_ms');
+
+        $latencyTrend = 0;
+        if ($previousWeekLatency > 0) {
+            $latencyTrend = round((($currentWeekLatency - $previousWeekLatency) / $previousWeekLatency) * 100, 1);
+        }
+
+        $latencyTrendIndicator = 'heroicon-m-minus';
+        $latencyTrendColor = 'primary';
+
+        if (abs($latencyTrend) >= 1) {
+            $latencyTrendIndicator = $latencyTrend > 0
+                ? 'heroicon-m-arrow-trending-up'
+                : 'heroicon-m-arrow-trending-down';
+
+            $latencyTrendColor = $latencyTrend > 0 ? 'danger' : 'success';
+        }
+
+        // Top used endpoints
+        $topEndpoints = ApiEndpointLog::select('endpoint')
+            ->selectRaw('COUNT(*) as count, AVG(latency_ms) as avg_latency')
+            ->whereDate('created_at', '>=', now()->subDays(30))
+            ->groupBy('endpoint')
+            ->orderByDesc('count')
+            ->limit(3)
+            ->get();
+
+        $topEndpointsText = $topEndpoints->map(function($endpoint) {
+            $parts = explode('/', $endpoint->endpoint);
+            $name = end($parts);
+            return "$name: {$endpoint->count}";
+        })->join(' | ');
+
         return [
             Stat::make('Total Requests', $totalRequests)
                 ->description("Prod: $prodRequests | Sandbox: $sandboxRequests")
@@ -50,15 +114,31 @@ class ApiStatsOverview extends BaseWidget
                 ->color('primary'),
 
             Stat::make('Avg Latency (ms)', $avgLatency)
-                ->description("10% Trimmed Avg: $trimmedLatency")
-                ->descriptionIcon('heroicon-m-chart-bar')
-                ->color($this->getLatencyColor($logs->avg('latency_ms')))
+                ->description($latencyTrend === 0
+                    ? "10% Trimmed Avg: $trimmedLatency"
+                    : ($latencyTrend > 0
+                        ? "+$latencyTrend% vs last week"
+                        : "$latencyTrend% vs last week"))
+                ->descriptionIcon($latencyTrend === 0 ? 'heroicon-m-chart-bar' : $latencyTrendIndicator)
+                ->color($latencyTrend === 0
+                    ? $this->getLatencyColor($logs->avg('latency_ms'))
+                    : $latencyTrendColor)
                 ->extraAttributes(['title' => "95th Percentile: $p95Latency ms"]),
+
+            Stat::make('Error Rate', "$errorRate%")
+                ->description("$clientErrors client | $serverErrors server")
+                ->descriptionIcon('heroicon-m-exclamation-triangle')
+                ->color($errorRate > 5 ? 'danger' : ($errorRate > 1 ? 'warning' : 'success')),
 
             Stat::make('Users & Tokens', User::count())
                 ->description(SandboxToken::count() . ' sandbox tokens')
                 ->descriptionIcon('heroicon-m-user')
                 ->color('secondary'),
+
+            Stat::make('Top Endpoints', $topEndpoints->count() > 0 ? $topEndpoints->first()->endpoint : 'N/A')
+                ->description($topEndpointsText)
+                ->descriptionIcon('heroicon-m-star')
+                ->color('warning'),
         ];
     }
 
@@ -165,5 +245,15 @@ class ApiStatsOverview extends BaseWidget
         if ($latency < 500) return 'primary';
         if ($latency < 1000) return 'warning';
         return 'danger';
+    }
+
+    /**
+     * Get time of day distribution
+     */
+    protected function getTimeOfDayDistribution(Collection $logs): array
+    {
+        return $logs->groupBy(function ($log) {
+            return Carbon::parse($log->created_at)->format('H');
+        })->map->count()->toArray();
     }
 }

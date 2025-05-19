@@ -2,10 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\ApiEndpointCount;
+use App\Models\ApiEndpointLog;
+use App\Models\SandboxToken;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -15,11 +17,11 @@ class ApiEndpointCounter
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): mixed
     {
         // Store start time to calculate request latency
         $startTime = microtime(true);
@@ -70,11 +72,8 @@ class ApiEndpointCounter
         if ($sandboxToken) {
             $isSandboxRequest = true;
             try {
-                $token = DB::table('sandbox_tokens')
-                    ->where('token', $sandboxToken)
-                    ->first();
-
-                if ($token && isset($token->id)) {
+                $token = SandboxToken::where('token', $sandboxToken)->first();
+                if ($token) {
                     $sandboxTokenId = $token->id;
                 }
             } catch (\Exception $e) {
@@ -82,54 +81,25 @@ class ApiEndpointCounter
             }
         }
 
-        // Log the API call to the api_endpoint_counts table
+        // Increment API endpoint count
         try {
-            // Check if table exists and has required columns
+            // Check if table exists
             if (!Schema::hasTable('api_endpoint_counts')) {
                 Log::error("api_endpoint_counts table doesn't exist");
                 return $response;
             }
 
-            // Use upsert to handle inserts and updates gracefully (Laravel 8+)
-            $now = now();
-            DB::table('api_endpoint_counts')->upsert(
-                [
-                    'endpoint' => $path,
-                    'is_sandbox' => $isSandboxRequest,
-                    'count' => 1,
-                    'created_at' => $now,
-                    'updated_at' => $now
-                ],
-                ['endpoint', 'is_sandbox'], // Keys that define uniqueness
-                ['count' => DB::raw('count + 1'), 'updated_at' => $now] // Columns to update if record exists
-            );
-
+            $this->updateApiEndpointCount($path, $isSandboxRequest);
         } catch (\Exception $e) {
-            // Try a fallback approach if upsert fails
-            try {
-                // First try to increment
-                $affected = DB::table('api_endpoint_counts')
-                    ->where('endpoint', $path)
-                    ->where('is_sandbox', $isSandboxRequest)
-                    ->increment('count');
-
-                // If no record was updated, try to insert
-                if ($affected === 0) {
-                    DB::table('api_endpoint_counts')->insert([
-                        'endpoint' => $path,
-                        'count' => 1,
-                        'is_sandbox' => $isSandboxRequest,
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-                }
-            } catch (\Exception $fallbackError) {
-                // Log the error but don't disrupt the response
-                Log::error("Error incrementing API endpoint count (both methods failed): " . $fallbackError->getMessage());
-            }
+            // Log the error but don't disrupt the response
+            Log::error("Error incrementing API endpoint count: " . $e->getMessage(), [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
         }
 
-        // Also log to the api_endpoint_logs table with more details
+        // Also log to the ApiEndpointLog model with more details
         try {
             // Check if table exists
             if (!Schema::hasTable('api_endpoint_logs')) {
@@ -165,7 +135,7 @@ class ApiEndpointCounter
             }
 
             // Only record IP address for non-sandbox, non-health/ready calls
-            if (!$isSandboxRequest && !$isHealthOrReadinessEndpoint && in_array('ip_address', $columns)) {
+            if (!$isHealthOrReadinessEndpoint && in_array('ip_address', $columns)) {
                 $logEntry['ip_address'] = $request->ip();
             }
 
@@ -209,22 +179,8 @@ class ApiEndpointCounter
                 }
             }
 
-            // Filter entry to include only existing columns
-            $filteredEntry = array_intersect_key($logEntry, array_flip($columns));
-
-            // Only insert if we have data to insert
-            if (!empty($filteredEntry)) {
-                $logId = DB::table('api_endpoint_logs')->insertGetId($filteredEntry);
-
-                // Debug log detailed info about what was stored
-                Log::debug("API log entry created", [
-                    'id' => $logId,
-                    'endpoint' => $path,
-                    'user_id' => $filteredEntry['user_id'] ?? null,
-                    'api_key_id' => $filteredEntry['api_key_id'] ?? null,
-                    'sandbox_token_id' => $filteredEntry['sandbox_token_id'] ?? null,
-                ]);
-            }
+            // Create log entry
+            $this->createApiEndpointLog($logEntry, $columns);
         } catch (\Exception $e) {
             // Log the error but don't disrupt the response
             Log::error("Error logging API endpoint: " . $e->getMessage(), [
@@ -235,5 +191,73 @@ class ApiEndpointCounter
         }
 
         return $response;
+    }
+
+    /**
+     * Update or create API endpoint count.
+     *
+     * @param  string  $path
+     * @param  bool  $isSandboxRequest
+     * @return void
+     * @throws \Exception
+     */
+    private function updateApiEndpointCount(string $path, bool $isSandboxRequest): void
+    {
+        try {
+            // Try to find and update the existing record
+            $endpointCount = ApiEndpointCount::where('endpoint', $path)
+                ->where('is_sandbox', $isSandboxRequest)
+                ->first();
+
+            if ($endpointCount) {
+                // Increment the count for existing record
+                $endpointCount->increment('count');
+                $endpointCount->updated_at = now();
+                $endpointCount->save();
+            } else {
+                // Create a new record
+                ApiEndpointCount::create([
+                    'endpoint' => $path,
+                    'is_sandbox' => $isSandboxRequest,
+                    'count' => 1,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error("Error in updateApiEndpointCount: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Create API endpoint log entry.
+     *
+     * @param  array  $logEntry
+     * @param  array  $columns
+     * @return void
+     * @throws \Exception
+     */
+    private function createApiEndpointLog(array $logEntry, array $columns): void
+    {
+        try {
+            // Filter entry to include only existing columns
+            $filteredEntry = array_intersect_key($logEntry, array_flip($columns));
+
+            // Only insert if we have data to insert
+            if (!empty($filteredEntry)) {
+                $log = ApiEndpointLog::create($filteredEntry);
+
+                // Debug log detailed info about what was stored
+                Log::debug("API log entry created", [
+                    'id' => $log->id,
+                    'endpoint' => $log->endpoint,
+                    'user_id' => $log->user_id ?? null,
+                    'api_key_id' => $log->api_key_id ?? null,
+                    'sandbox_token_id' => $log->sandbox_token_id ?? null,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error("Error in createApiEndpointLog: " . $e->getMessage());
+            throw $e;
+        }
     }
 }
