@@ -193,10 +193,45 @@
         </div>
     </div>
 
-    <!-- Delete Account Modal -->
-    <div id="delete-modal" class="fixed inset-0 flex items-center justify-center hidden z-50">
+    <!-- Delete Account Modal (Step 1) -->
+    <div id="delete-modal-step1" class="fixed inset-0 flex items-center justify-center hidden z-50">
         <!-- Backdrop with blur effect -->
-        <div class="absolute inset-0 bg-navy-dark bg-opacity-80 backdrop-blur-md" id="modal-backdrop"></div>
+        <div class="absolute inset-0 bg-navy-dark bg-opacity-90" id="modal-backdrop-step1"></div>
+
+        <!-- Modal content -->
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 z-10">
+            <div class="p-6">
+                <h3 class="text-xl font-bold text-red-600 mb-4">Delete Account</h3>
+
+                <p class="text-gray-600 mb-6">
+                    This action is permanent and cannot be undone. All your data, API keys, and account information will be permanently removed.
+                </p>
+
+                <div class="flex justify-between mt-6">
+                    <button
+                        type="button"
+                        id="cancel-delete-step1"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-6 rounded-md transition-colors"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="button"
+                        id="confirm-delete-step1"
+                        class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+                    >
+                        I understand, delete my account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Account Modal (Step 2) -->
+    <div id="delete-modal-step2" class="fixed inset-0 flex items-center justify-center hidden z-50">
+        <!-- Backdrop with blur effect -->
+        <div class="absolute inset-0 bg-navy-dark bg-opacity-90" id="modal-backdrop-step2"></div>
 
         <!-- Modal content -->
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 z-10">
@@ -217,7 +252,7 @@
                             type="text"
                             name="delete_confirmation"
                             id="delete_confirmation"
-                            class="form-input w-full rounded-md border-gray-300 @error('delete_confirmation') border-red-500 @enderror"
+                            class="form-input w-full p-2 rounded border border-gray-300 @error('delete_confirmation') border-red-500 @enderror"
                             placeholder="DELETE"
                             required
                         >
@@ -233,11 +268,10 @@
                             type="password"
                             name="password"
                             id="delete_password"
-                            class="form-input w-full rounded-md border-gray-300 @error('password') border-red-500 @enderror"
+                            class="form-input w-full p-2 rounded border border-gray-300 @error('password') border-red-500 @enderror"
                             placeholder="Enter your current password to confirm"
                             required
-                            autocomplete="new-password" <!-- This prevents autofill -->
-                        >
+                            autocomplete="new-password"> <!-- This prevents autofill -->
 
                         @error('password')
                         <p class="mt-1 text-sm text-red-600">The password is incorrect.</p>
@@ -247,7 +281,7 @@
                     <div class="flex justify-between mt-6">
                         <button
                             type="button"
-                            id="cancel-delete"
+                            id="cancel-delete-step2"
                             class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-6 rounded-md transition-colors"
                         >
                             Cancel
@@ -255,7 +289,7 @@
 
                         <button
                             type="submit"
-                            id="confirm-delete"
+                            id="confirm-delete-step2"
                             class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
                             disabled
                         >
@@ -268,49 +302,85 @@
     </div>
 
     <script>
-        // JavaScript for modal and navigation
+        // JavaScript for modals and navigation
         document.addEventListener('DOMContentLoaded', function() {
-            // Modal functionality
-            const modal = document.getElementById('delete-modal');
-            const modalBackdrop = document.getElementById('modal-backdrop');
+            // Step 1 Modal elements
+            const modalStep1 = document.getElementById('delete-modal-step1');
+            const modalBackdropStep1 = document.getElementById('modal-backdrop-step1');
             const openModalButton = document.getElementById('open-delete-modal');
-            const cancelButton = document.getElementById('cancel-delete');
-            const confirmButton = document.getElementById('confirm-delete');
+            const cancelButtonStep1 = document.getElementById('cancel-delete-step1');
+            const confirmButtonStep1 = document.getElementById('confirm-delete-step1');
+
+            // Step 2 Modal elements
+            const modalStep2 = document.getElementById('delete-modal-step2');
+            const modalBackdropStep2 = document.getElementById('modal-backdrop-step2');
+            const cancelButtonStep2 = document.getElementById('cancel-delete-step2');
+            const confirmButtonStep2 = document.getElementById('confirm-delete-step2');
             const deleteConfirmField = document.getElementById('delete_confirmation');
 
-            // Function to open modal
-            function openModal() {
-                modal.classList.remove('hidden');
+            // Function to open step 1 modal
+            function openStep1Modal() {
+                modalStep1.classList.remove('hidden');
                 document.body.classList.add('overflow-hidden');
             }
 
-            // Function to close modal
-            function closeModal() {
-                modal.classList.add('hidden');
+            // Function to close step 1 modal
+            function closeStep1Modal() {
+                modalStep1.classList.add('hidden');
                 document.body.classList.remove('overflow-hidden');
-                deleteConfirmField.value = ''; // Clear the confirmation field
-                confirmButton.disabled = true; // Reset button state
             }
 
-            // Open modal when delete button is clicked
+            // Function to open step 2 modal
+            function openStep2Modal() {
+                closeStep1Modal();
+                modalStep2.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+
+            // Function to close step 2 modal
+            function closeStep2Modal() {
+                modalStep2.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+                if (deleteConfirmField) {
+                    deleteConfirmField.value = ''; // Clear the confirmation field
+                }
+                confirmButtonStep2.disabled = true; // Reset button state
+            }
+
+            // Open step 1 modal when delete button is clicked
             if (openModalButton) {
-                openModalButton.addEventListener('click', openModal);
+                openModalButton.addEventListener('click', openStep1Modal);
             }
 
-            // Close modal when cancel button is clicked
-            if (cancelButton) {
-                cancelButton.addEventListener('click', closeModal);
+            // Close step 1 modal when cancel button is clicked
+            if (cancelButtonStep1) {
+                cancelButtonStep1.addEventListener('click', closeStep1Modal);
             }
 
-            // Close modal when clicking outside of it
-            if (modalBackdrop) {
-                modalBackdrop.addEventListener('click', closeModal);
+            // Open step 2 modal when confirm button in step 1 is clicked
+            if (confirmButtonStep1) {
+                confirmButtonStep1.addEventListener('click', openStep2Modal);
+            }
+
+            // Close step 2 modal when cancel button is clicked
+            if (cancelButtonStep2) {
+                cancelButtonStep2.addEventListener('click', closeStep2Modal);
+            }
+
+            // Close step 1 modal when clicking outside of it
+            if (modalBackdropStep1) {
+                modalBackdropStep1.addEventListener('click', closeStep1Modal);
+            }
+
+            // Close step 2 modal when clicking outside of it
+            if (modalBackdropStep2) {
+                modalBackdropStep2.addEventListener('click', closeStep2Modal);
             }
 
             // Enable/disable delete button based on confirmation text
             if (deleteConfirmField) {
                 deleteConfirmField.addEventListener('input', function() {
-                    confirmButton.disabled = this.value !== 'DELETE';
+                    confirmButtonStep2.disabled = this.value !== 'DELETE';
                 });
             }
 
