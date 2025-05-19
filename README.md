@@ -1,154 +1,214 @@
 # Apixies.io
 
-Apixies is a robust API toolkit designed to simplify development and improve security through inspection tools and utilities for developers.
+Apixies.io is a Laravel 12 project that provides a collection of utility API endpoints for developers. This project includes functionality for SSL inspection, security headers inspection, email validation, user agent parsing, IP geolocation, and more.
 
-![Apixies Logo](https://apixies.io/logo.png)
+## Project Overview
 
-## 🚀 Features
+Apixies.io is a hobby project built using Laravel 12 with the goal of providing useful API utilities for developers. The project includes a user-friendly documentation interface with interactive demos for testing the API endpoints.
 
-- **API Inspectors**:
-    - Email Inspector - Validate and inspect email addresses
-    - Security Headers Inspector - Check website security headers
-    - SSL Health Inspector - Analyze SSL certificate health and configuration
-    - User Agent Inspector - Parse and analyze user agent strings
+## Features
 
-- **Developer Tools**:
-    - API Dashboard with usage analytics
-    - Sandbox environment for testing
-    - Comprehensive documentation
-    - API key management system
+- **SSL Health Inspector**: Check SSL certificate details for a domain
+- **Security Headers Inspector**: Analyze security headers for a website
+- **Email Inspector**: Validate email addresses and check for disposable services
+- **User Agent Inspector**: Parse user agent strings to detect browser, OS, and device
+- **IP Geolocation**: Get location information from IP addresses
+- **HTML to PDF Converter**: Convert HTML content to PDF documents
+- **Sandbox Mode**: Test API functionality with limited usage before registering
+- **API Keys**: Registered users get their own API keys for unlimited access
+- **Detailed Documentation**: Interactive documentation with code examples
 
-- **Security Features**:
-    - Correlation ID tracking
-    - Request logging
-    - Input sanitization
-    - Secure headers
+## Requirements
 
-## 💻 Technology Stack
-
-- **Framework**: Laravel 12
-- **PHP**: 8.3+
-- **Database**: MySQL/PostgreSQL
-- **Frontend**: Tailwind CSS, Alpine.js
-- **Admin Panel**: Filament
-- **Deployment**: Docker-ready
-
-## 📋 Requirements
-
-- PHP 8.3 or higher
+- PHP 8.2+
+- Laravel 12
 - Composer
-- Node.js & NPM
-- Database (MySQL, PostgreSQL)
+- MySQL or PostgreSQL
 
-## ⚙️ Installation
+## Installation
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/bicibg/apixies.git
    ```
-
-2. Navigate to the project directory:
-   ```bash
+   git clone https://github.com/bicibg/apixies.git
    cd apixies
    ```
 
-3. Install PHP dependencies:
-   ```bash
+2. Install dependencies:
+   ```
    composer install
    ```
 
-4. Install JavaScript dependencies:
-   ```bash
-   npm install
+3. Copy the environment file:
    ```
-
-5. Copy the environment file:
-   ```bash
    cp .env.example .env
    ```
 
-6. Generate application key:
-   ```bash
+4. Configure your database in the `.env` file
+
+5. Generate application key:
+   ```
    php artisan key:generate
    ```
 
-7. Configure your database in the `.env` file.
-
-8. Run migrations:
-   ```bash
+6. Run migrations:
+   ```
    php artisan migrate
    ```
 
-9. Build assets:
-   ```bash
-   npm run build
+7. Start the development server:
+   ```
+   php artisan serve
    ```
 
-10. Start the development server:
-    ```bash
-    php artisan serve
-    ```
+## Adding a New API Endpoint
 
-## 🧪 API Usage
+Follow these steps to add a new API endpoint to the project:
 
-### Authentication
+### 1. Create the Controller
 
-Apixies API uses API key authentication. You can generate an API key from the web interface after registering an account.
+Create a new controller in `app/Http/Controllers/Api/V1/`:
 
-```bash
-curl -X GET "https://api.apixies.io/v1/health" \
-  -H "X-API-Key: your-api-key-here"
+```php
+<?php
+
+namespace App\Http\Controllers\Api\V1;
+
+use App\Http\Controllers\Controller;
+use App\Helpers\ApiResponse;
+use App\Services\YourNewService;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+
+class YourNewEndpointController extends Controller
+{
+    /**
+     * Handle the incoming request
+     */
+    public function __invoke(Request $request): JsonResponse
+    {
+        // Validate request
+        $validatedData = $request->validate([
+            'param1' => 'required|string',
+            'param2' => 'nullable|string',
+        ]);
+
+        // Create service instance
+        $service = new YourNewService();
+        $result = $service->process($validatedData['param1'], $validatedData['param2'] ?? null);
+        
+        // Return API response
+        return ApiResponse::success("Operation completed successfully", $result);
+    }
+}
 ```
 
-### Available Endpoints
+### 2. Create the Service (if needed)
 
-- `/api/v1/health` - Check API health
-- `/api/v1/readiness` - Check API readiness
-- `/api/v1/email-inspector` - Email validation and inspection
-- `/api/v1/ssl-health-inspector` - SSL certificate validation
-- `/api/v1/security-headers-inspector` - Security headers inspection
-- `/api/v1/user-agent-inspector` - User agent parsing
-- `/api/v1/html-to-pdf` - Convert HTML to PDF
+Create a new service in `app/Services/`:
 
-## 📚 Documentation
+```php
+<?php
 
-Comprehensive documentation is available at [https://apixies.io/docs](https://apixies.io/docs).
+namespace App\Services;
 
-The documentation includes:
-- Getting started guide
-- Authentication information
-- Endpoint details
-- Code examples
-- Best practices
+class YourNewService
+{
+    /**
+     * Process the request and return the result
+     */
+    public function process(string $param1, ?string $param2 = null): array
+    {
+        // Process the request and return the result
+        $data = [
+            'param1' => $param1,
+            'timestamp' => now()->toIso8601String(),
+        ];
+        
+        if ($param2) {
+            $data['param2'] = $param2;
+        }
+        
+        return $data;
+    }
+}
+```
 
-## 🛠️ Administration
+### 3. Register the Route
 
-The admin panel can be accessed at `/admin` after setup. It provides:
-- API usage analytics
-- User management
-- Suggestion management
-- System configuration
+Add the route in `routes/api.php`:
 
-## 🤝 Contributing
+```php
+// Your new endpoint
+Route::get('api/v1/your-new-endpoint', App\Http\Controllers\Api\V1\YourNewEndpointController::class)
+    ->middleware(['api.key'])
+    ->name('api.your_new_endpoint');
+```
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+### 4. Add to API Examples Configuration
 
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Add your endpoint to `config/api_examples.php`:
 
-## 📝 License
+```php
+'your-new-endpoint' => [
+    'title' => 'Your New Endpoint',
+    'description' => 'Description of what your endpoint does',
+    'uri' => 'api/v1/your-new-endpoint',
+    'method' => 'GET', // or POST, PUT, DELETE
+    'category' => 'inspector', // Choose an appropriate category
+    'route_params' => [], // Add any route parameters if using route parameters
+    'query_params' => ['param1', 'param2'], // List all your parameters here
+    'demo' => true, // Set to true to show the "Try" button
+    'response_example' => [
+        'status' => 'success',
+        'http_code' => 200,
+        'code' => 'SUCCESS',
+        'message' => 'Operation completed successfully',
+        'data' => [
+            // Add an example of your response structure
+            'param1' => 'value1',
+            'param2' => 'value2',
+            'timestamp' => '2025-05-19T12:00:00Z',
+        ],
+    ],
+],
+```
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+That's it! Your new endpoint will automatically appear in the API documentation with a fully functional demo.
 
-## 🙏 Acknowledgements
+### Notes
 
-- [Laravel](https://laravel.com)
-- [Filament](https://filamentphp.com)
-- [Tailwind CSS](https://tailwindcss.com)
+- The demo UI will automatically generate input fields for all parameters in the `query_params` array
+- The system will intelligently provide sample data based on parameter names (e.g., email, URL, IP, etc.)
+- If your endpoint needs route parameters (e.g., `api/v1/users/{id}`), add them to the `route_params` array
+- You can add your endpoint to an existing category or create a new one
+- No HTML or JavaScript changes are needed - the demo UI is generated automatically from your configuration
 
----
+### Configuration Details
 
-Made with ❤️ by Bugra Ergin © 2025
+The API example configuration accepts these fields:
+
+| Field | Description |
+|-------|-------------|
+| `title` | Human-readable title of the endpoint |
+| `description` | Brief description of what the endpoint does |
+| `uri` | URL path without leading slash (e.g., `api/v1/endpoint`) |
+| `method` | HTTP method (GET, POST, PUT, DELETE) |
+| `category` | Category for grouping (system, inspector, converter, etc.) |
+| `route_params` | Array of route parameters (e.g., `['id', 'slug']`) |
+| `query_params` | Array of query parameters (e.g., `['email', 'domain']`) |
+| `demo` | Boolean indicating whether to show the "Try" button |
+| `response_example` | Example response structure to show in documentation |
+
+## Project Structure
+
+- `app/Http/Controllers/Api/V1/` - API controllers
+- `app/Services/` - Service classes for business logic
+- `app/Helpers/` - Helper functions and classes
+- `app/Models/` - Database models
+- `config/api_examples.php` - API documentation configuration
+- `resources/views/docs/` - Documentation templates
+- `routes/api.php` - API route definitions
+
+## License
+
+This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

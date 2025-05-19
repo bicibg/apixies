@@ -1,6 +1,30 @@
 <?php
 
 return [
+    // TEMPLATE FOR NEW ENDPOINTS
+    // Copy this template and customize it for your new endpoint
+    // 'my-new-endpoint' => [
+    //     'title' => 'My New Endpoint', // Human-readable title
+    //     'description' => 'Description of what it does', // Short description
+    //     'uri' => 'api/v1/my-new-endpoint', // URL path (without leading slash)
+    //     'method' => 'GET', // HTTP method (GET, POST, PUT, DELETE)
+    //     'category' => 'inspector', // Category for grouping (system, inspector, converter, etc.)
+    //     'route_params' => [], // Route parameters (e.g. ['id', 'slug'])
+    //     'query_params' => ['param1', 'param2', 'param3'], // Query parameters
+    //     'demo' => true, // Whether to show the "Try" button
+    //     'response_example' => [
+    //         'status' => 'success',
+    //         'http_code' => 200,
+    //         'code' => 'SUCCESS',
+    //         'message' => 'Operation completed successfully',
+    //         'data' => [
+    //             // Example response data structure
+    //             'param1' => 'value1',
+    //             'timestamp' => '2025-05-19T12:00:00Z',
+    //         ],
+    //     ],
+    // ],
+
     'health' => [
         'title' => 'Health Check',
         'description' => 'Check the health status of the API',

@@ -70,6 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
             loading: false,
             response: null,
             params: {},
+            routeParams: [],
+            queryParams: [],
             tokenInfo: {
                 // Initialize with default values to prevent null errors
                 remaining_calls: 0,
@@ -80,12 +82,71 @@ document.addEventListener('DOMContentLoaded', () => {
             hasPdfResponse: false,
             pdfUrl: null,
 
+            // Sample data for different parameter types
+            sampleData: {
+                // Email-related
+                email: 'john.doe@example.com',
+                mail: 'john.doe@example.com',
+
+                // User-Agent related
+                user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                useragent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+
+                // Domain-related
+                domain: 'example.com',
+                hostname: 'example.com',
+
+                // URL-related
+                url: 'https://example.com',
+                url_to_check: 'https://example.com',
+                website: 'https://example.com',
+                link: 'https://example.com',
+
+                // IP-related
+                ip: '8.8.8.8',
+                ipv4: '8.8.8.8',
+                ipv6: '2001:4860:4860::8888',
+
+                // HTML-related is handled separately via the sampleHtml variable
+                html: null, // Uses the sampleHtml variable with full formatting
+
+                // Others
+                text: 'Sample text for testing',
+                number: '42',
+                phone: '+1234567890',
+                date: '2025-05-19'
+            },
+
             // Lifecycle methods
             init() {
                 const el = this.$el;
                 this.uri = el.dataset.uri || '';
                 this.method = el.dataset.method || 'get';
-                // Don't check token status on page load - wait for modal open
+
+                // Parse route and query parameters from data attributes
+                try {
+                    this.routeParams = JSON.parse(el.dataset.routeParams || '[]');
+                    this.queryParams = JSON.parse(el.dataset.params || '[]');
+                } catch (e) {
+                    console.error('Error parsing parameters:', e);
+                    this.routeParams = [];
+                    this.queryParams = [];
+                }
+
+                // Initialize params object with empty values for all parameters
+                this.routeParams.forEach(param => {
+                    this.params[param] = '';
+                });
+
+                this.queryParams.forEach(param => {
+                    this.params[param] = '';
+                });
+
+                // Special handling for HTML to PDF endpoint
+                if (this.uri.includes('html-to-pdf')) {
+                    this.params.html = '';
+                }
             },
 
             async openModal() {
@@ -102,25 +163,109 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
 
-            // Sample data insertion functions
+            // Insert sample data for a parameter based on its name
+            insertSample(paramName) {
+                // First check if we have an exact match
+                if (this.sampleData[paramName]) {
+                    this.params[paramName] = this.sampleData[paramName];
+                    return;
+                }
+
+                // If no exact match, try to intelligently determine the type
+                const paramLower = paramName.toLowerCase();
+
+                // Email-related parameters
+                if (paramLower.includes('email') || paramLower.includes('mail')) {
+                    this.params[paramName] = this.sampleData.email;
+                }
+                // URL or website related parameters
+                else if (paramLower.includes('url') ||
+                    paramLower.includes('website') ||
+                    paramLower.includes('site') ||
+                    paramLower.includes('link')) {
+                    this.params[paramName] = this.sampleData.url;
+                }
+                // IP address related parameters
+                else if (paramLower.includes('ip')) {
+                    if (paramLower.includes('ipv6')) {
+                        this.params[paramName] = this.sampleData.ipv6;
+                    } else {
+                        this.params[paramName] = this.sampleData.ip;
+                    }
+                }
+                // Domain related parameters
+                else if (paramLower.includes('domain') ||
+                    paramLower.includes('host') ||
+                    paramLower.includes('hostname')) {
+                    this.params[paramName] = this.sampleData.domain;
+                }
+                // User agent related parameters
+                else if (paramLower.includes('agent') ||
+                    paramLower.includes('browser') ||
+                    paramLower.includes('ua')) {
+                    this.params[paramName] = this.sampleData.user_agent;
+                }
+                // HTML related parameters
+                else if (paramLower.includes('html') ||
+                    paramLower.includes('markup') ||
+                    paramLower.includes('content')) {
+                    this.params[paramName] = this.sampleHtml;
+                }
+                // Phone number related parameters
+                else if (paramLower.includes('phone') ||
+                    paramLower.includes('tel') ||
+                    paramLower.includes('mobile')) {
+                    this.params[paramName] = this.sampleData.phone;
+                }
+                // Text related parameters
+                else if (paramLower.includes('text') ||
+                    paramLower.includes('message') ||
+                    paramLower.includes('content')) {
+                    this.params[paramName] = this.sampleData.text;
+                }
+                // Numeric parameters
+                else if (paramLower.includes('number') ||
+                    paramLower.includes('value') ||
+                    paramLower.includes('id') ||
+                    paramLower.includes('count')) {
+                    this.params[paramName] = this.sampleData.number;
+                }
+                // Date related parameters
+                else if (paramLower.includes('date') ||
+                    paramLower.includes('time') ||
+                    paramLower.includes('day')) {
+                    this.params[paramName] = this.sampleData.date;
+                }
+                // Default fallback for unknown parameter types
+                else {
+                    // For unknown parameters, provide a generic sample
+                    this.params[paramName] = `sample_${paramName}`;
+                }
+            },
+
+            // Legacy insertion methods (for backward compatibility)
             insertSampleEmail() {
-                this.params.email = 'john.doe@example.com';
+                this.params.email = this.sampleData.email;
             },
 
             insertSampleUserAgent() {
-                this.params.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+                this.params.user_agent = this.sampleData.user_agent;
             },
 
             insertSampleDomain() {
-                this.params.domain = 'example.com';
+                this.params.domain = this.sampleData.domain;
             },
 
             insertSampleUrl() {
-                this.params.url_to_check = 'https://example.com';
+                this.params.url_to_check = this.sampleData.url;
             },
 
             insertSampleIp() {
-                this.params.ip = '8.8.8.8';
+                this.params.ip = this.sampleData.ip;
+            },
+
+            insertSampleHtml() {
+                this.params.html = this.sampleHtml;
             },
 
             // Token management
@@ -235,10 +380,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             },
 
-            insertSampleHtml() {
-                this.params.html = this.sampleHtml;
-            },
-
             // PDF handling
             cleanupPdfViewer() {
                 // Clean up PDF viewer and blob URL when no longer needed
@@ -285,23 +426,36 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.tokenInfo.remaining_calls > 0;
             },
 
-            get needsUrlParam() {
-                return this.uri.includes(':') || (this.uri.includes('{') && this.uri.includes('}'));
-            },
-
-            get paramLabel() {
-                // Extract parameter name from URI
-                const match = this.uri.match(/\:([a-zA-Z0-9_]+)/) || this.uri.match(/\{([a-zA-Z0-9_]+)\}/);
-                return match ? `${match[1]} parameter` : 'Parameter';
-            },
-
-            get paramPlaceholder() {
-                const match = this.uri.match(/\:([a-zA-Z0-9_]+)/) || this.uri.match(/\{([a-zA-Z0-9_]+)\}/);
-                return match ? `Enter ${match[1]} value` : 'Enter parameter value';
+            get hasRouteParams() {
+                return this.routeParams && this.routeParams.length > 0;
             },
 
             get hasRequiredParams() {
-                return this.params.url && this.params.url.trim() !== '';
+                return (this.routeParams && this.routeParams.length > 0) ||
+                    (this.queryParams && this.queryParams.length > 0);
+            },
+
+            get allRequiredParamsFilled() {
+                // Check if all required parameters have values
+                let allFilled = true;
+
+                // Check route parameters - these are always required
+                this.routeParams.forEach(param => {
+                    if (!this.params[param] || this.params[param].trim() === '') {
+                        allFilled = false;
+                    }
+                });
+
+                // For query parameters, check if they're required
+                // For now, let's assume all query parameters are required
+                // In the future, you could enhance this to mark some as optional in your API config
+                this.queryParams.forEach(param => {
+                    if (!this.params[param] || this.params[param].trim() === '') {
+                        allFilled = false;
+                    }
+                });
+
+                return allFilled;
             },
 
             // Sample HTML for PDF testing
@@ -439,10 +593,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 let url = `${this.baseUrl}/${this.uri}`;
 
-                // Replace URL parameters if needed
-                if (this.needsUrlParam && this.params.url) {
-                    url = url.replace(/\:([a-zA-Z0-9_]+)|\{([a-zA-Z0-9_]+)\}/, this.params.url);
-                }
+                // Replace route parameters if needed
+                this.routeParams.forEach(param => {
+                    if (this.params[param]) {
+                        // Replace both :param and {param} formats
+                        url = url.replace(`:${param}`, this.params[param])
+                            .replace(`{${param}}`, this.params[param]);
+                    }
+                });
 
                 const headers = {
                     'Accept': 'application/json',
@@ -465,33 +623,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         headers: headers
                     };
 
-                    // Add body for POST/PUT/PATCH requests
+                    // Handle different HTTP methods
                     if (['post', 'put', 'patch'].includes(this.method)) {
+                        // For request body methods
                         let body = {};
 
-                        // Add appropriate parameters based on endpoint
-                        if (this.uri.includes('html-to-pdf')) {
-                            body.html = this.params.html || '';
+                        // Add all parameters from the params object
+                        for (const [key, value] of Object.entries(this.params)) {
+                            if (value !== null && value !== undefined && value.toString().trim() !== '') {
+                                body[key] = value;
+                            }
                         }
 
-                        if (this.uri.includes('inspect-ssl')) {
-                            body.domain = this.params.domain || '';
-                        }
-
-                        if (this.uri.includes('inspect-headers') || this.uri.includes('security-headers')) {
-                            body.url = this.params.url_to_check || '';
-                        }
-
-                        if (this.uri.includes('inspect-email')) {
-                            body.email = this.params.email || '';
-                        }
-
-                        if (this.uri.includes('inspect-user-agent')) {
-                            body.user_agent = this.params.user_agent || '';
-                        }
-
-                        if (this.uri.includes('ip-geolocation')) {
-                            body.ip = this.params.ip || '';
+                        // Special handling for HTML to PDF
+                        if (this.uri.includes('html-to-pdf') && this.params.html) {
+                            body.html = this.params.html;
                         }
 
                         // Add the body to the request if not empty
@@ -499,28 +645,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             requestOptions.body = JSON.stringify(body);
                         }
                     } else if (this.method === 'get') {
-                        // Handle GET parameters
+                        // For GET requests, add query parameters to URL
                         const queryParams = [];
 
-                        if (this.uri.includes('inspect-ssl') && this.params.domain) {
-                            queryParams.push(`domain=${encodeURIComponent(this.params.domain)}`);
-                        }
-
-                        if ((this.uri.includes('inspect-headers') || this.uri.includes('security-headers')) && this.params.url_to_check) {
-                            queryParams.push(`url=${encodeURIComponent(this.params.url_to_check)}`);
-                        }
-
-                        if (this.uri.includes('inspect-email') && this.params.email) {
-                            queryParams.push(`email=${encodeURIComponent(this.params.email)}`);
-                        }
-
-                        if (this.uri.includes('inspect-user-agent') && this.params.user_agent) {
-                            queryParams.push(`user_agent=${encodeURIComponent(this.params.user_agent)}`);
-                        }
-
-                        if (this.uri.includes('ip-geolocation') && this.params.ip) {
-                            queryParams.push(`ip=${encodeURIComponent(this.params.ip)}`);
-                        }
+                        // Add all query parameters that have values
+                        this.queryParams.forEach(param => {
+                            if (this.params[param] && this.params[param].toString().trim() !== '') {
+                                queryParams.push(`${param}=${encodeURIComponent(this.params[param])}`);
+                            }
+                        });
 
                         if (queryParams.length > 0) {
                             url = `${url}?${queryParams.join('&')}`;
@@ -640,8 +773,6 @@ function toggleHeaderShadow() {
     }
 }
 
-// resources/js/app.js - Replace the initializeEndpointSearch function with this version
-
 function initializeEndpointSearch() {
     const searchInput = document.getElementById('endpoint-search');
     if (!searchInput) return; // Exit if search input doesn't exist on this page
@@ -650,8 +781,6 @@ function initializeEndpointSearch() {
     const noResults = document.getElementById('no-search-results');
     const categorySections = document.querySelectorAll('.category-section');
     const resetSearch = document.getElementById('reset-search');
-
-    // Intro section should always remain visible - it's now outside of the search area in the HTML structure
 
     // Add the clear search functionality
     if (resetSearch) {
