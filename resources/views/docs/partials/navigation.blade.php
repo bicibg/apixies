@@ -99,15 +99,24 @@
 
                             @if(isset($categories))
                                 @foreach($categories as $categoryName => $routes)
-                                    <div class="mb-2">
-                                        <div class="font-medium text-xs md:text-sm text-gray-500 uppercase tracking-wider mb-1 pl-1">
-                                            {{ ucfirst($categoryName) }}
+                                    <div class="mb-4">
+                                        <!-- Category Header with Background -->
+                                        <div class="bg-gray-100 rounded-md px-3 py-2 mb-2">
+                                            <div class="font-semibold text-xs md:text-sm text-navy uppercase tracking-wide">
+                                                {{ ucfirst($categoryName) }}
+                                            </div>
                                         </div>
-                                        <ul class="space-y-1">
+                                        <ul class="space-y-1 pl-2">
                                             @foreach($routes as $routeKey => $route)
                                                 <li>
                                                     <a href="{{ route('docs.show', ['key' => $routeKey]) }}"
-                                                       class="block pl-2 py-1 text-sm border-l-2 {{ isset($activeEndpoint) && $activeEndpoint === $routeKey ? 'border-teal text-teal font-medium' : 'border-transparent text-gray-600 hover:border-gray-300' }}">
+                                                       class="flex items-center text-sm py-1.5 px-2 rounded-md
+                                                              {{ isset($activeEndpoint) && $activeEndpoint === $routeKey
+                                                                 ? 'bg-teal/10 text-teal font-medium border-l-2 border-teal pl-1.5'
+                                                                 : 'text-gray-600 hover:bg-gray-50' }}">
+                                                        <span class="mr-2 text-xs inline-block px-1.5 py-0.5 rounded-sm method-badge {{ strtolower($route['method'] ?? 'GET') }}">
+                                                            {{ $route['method'] ?? 'GET' }}
+                                                        </span>
                                                         {{ $route['title'] ?? $routeKey }}
                                                     </a>
                                                 </li>
@@ -153,7 +162,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Suggest New Endpoint$
+                Suggest New Endpoint
             </a>
         </div>
     </div>
@@ -182,3 +191,26 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* These styles should be added to your CSS file, but are included here for demonstration */
+    .method-badge.get {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: rgb(37, 99, 235);
+    }
+
+    .method-badge.post {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: rgb(5, 150, 105);
+    }
+
+    .method-badge.put, .method-badge.patch {
+        background-color: rgba(249, 115, 22, 0.1);
+        color: rgb(234, 88, 12);
+    }
+
+    .method-badge.delete {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: rgb(220, 38, 38);
+    }
+</style>
