@@ -119,6 +119,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.params.url_to_check = 'https://example.com';
             },
 
+            insertSampleIp() {
+                this.params.ip = '8.8.8.8';
+            },
+
             // Token management
             async checkTokenStatus() {
                 try {
@@ -486,6 +490,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             body.user_agent = this.params.user_agent || '';
                         }
 
+                        if (this.uri.includes('ip-geolocation')) {
+                            body.ip = this.params.ip || '';
+                        }
+
                         // Add the body to the request if not empty
                         if (Object.keys(body).length > 0) {
                             requestOptions.body = JSON.stringify(body);
@@ -508,6 +516,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         if (this.uri.includes('inspect-user-agent') && this.params.user_agent) {
                             queryParams.push(`user_agent=${encodeURIComponent(this.params.user_agent)}`);
+                        }
+
+                        if (this.uri.includes('ip-geolocation') && this.params.ip) {
+                            queryParams.push(`ip=${encodeURIComponent(this.params.ip)}`);
                         }
 
                         if (queryParams.length > 0) {

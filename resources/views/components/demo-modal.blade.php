@@ -143,6 +143,23 @@
                         </div>
                     </template>
 
+                    {{-- IP input for IP Geolocation --}}
+                    <template x-if="uri.includes('ip-geolocation')">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                IP Address to locate
+                            </label>
+                            <div class="flex space-x-2">
+                                <input type="text" x-model="params.ip" placeholder="8.8.8.8"
+                                       class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal">
+                                <button @click="insertSampleIp"
+                                        class="px-3 py-2 text-xs text-teal hover:text-teal-700 rounded border border-teal-200 hover:bg-blue-50 whitespace-nowrap">
+                                    Insert Sample
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+
                     {{-- Special handling for user-agent inspector --}}
                     <template x-if="uri.includes('inspect-user-agent')">
                         <div class="mb-4">

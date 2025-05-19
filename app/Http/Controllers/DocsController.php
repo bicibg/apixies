@@ -25,6 +25,7 @@ class DocsController extends Controller
             if (!isset($categorizedRoutes[$category])) {
                 $categorizedRoutes[$category] = [];
             }
+            // Store with the original config key
             $categorizedRoutes[$category][$key] = $route;
         }
 
@@ -94,12 +95,13 @@ class DocsController extends Controller
         Log::debug('Endpoint request for key: ' . $key);
         Log::debug('Available keys: ' . implode(', ', array_keys($apiRoutes)));
 
-        // Handle numeric keys if they still exist in URLs
+        // If numeric key is passed, redirect to the named key
         if (is_numeric($key)) {
             $routeKeys = array_keys($apiRoutes);
             if (isset($routeKeys[(int)$key])) {
-                Log::debug('Redirecting numeric key to: ' . $routeKeys[(int)$key]);
-                return redirect()->route('docs.show', ['key' => $routeKeys[(int)$key]]);
+                $namedKey = $routeKeys[(int)$key];
+                Log::debug('Redirecting numeric key to named key: ' . $namedKey);
+                return redirect()->route('docs.show', ['key' => $namedKey]);
             }
         }
 
@@ -117,6 +119,7 @@ class DocsController extends Controller
             if (!isset($categorizedRoutes[$routeCategory])) {
                 $categorizedRoutes[$routeCategory] = [];
             }
+            // Store with the original config key
             $categorizedRoutes[$routeCategory][$routeKey] = $route;
         }
 
@@ -174,6 +177,7 @@ class DocsController extends Controller
             if (!isset($categorizedRoutes[$category])) {
                 $categorizedRoutes[$category] = [];
             }
+            // Store with the original config key
             $categorizedRoutes[$category][$key] = $route;
         }
         return $categorizedRoutes;

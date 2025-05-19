@@ -58,7 +58,7 @@
 
                 <h3 class="text-lg font-medium mb-2">Authentication</h3>
                 <p>
-                    This endpoint can be accessed in sandbox mode without authentication, or via a valid API key in production.
+                    This endpoint requires authentication via API key. You can use the sandbox mode for testing without registering.
                 </p>
             </div>
 
@@ -193,7 +193,7 @@
                         <div class="bg-gray-100 p-4 rounded-md overflow-x-auto">
                             <pre><code>curl -X {{ $apiRoute['method'] ?? 'GET' }} \
     "{{ config('app.url') }}/{{ $apiRoute['uri'] ?? '' }}" \
-    -H "X-Sandbox-Token: YOUR_SANDBOX_TOKEN"</code></pre>
+    -H "X-API-Key: YOUR_API_KEY"</code></pre>
                         </div>
                     </div>
 
@@ -204,7 +204,7 @@
     method: "{{ $apiRoute['method'] ?? 'GET' }}",
     headers: {
         "Content-Type": "application/json",
-        "X-Sandbox-Token": "YOUR_SANDBOX_TOKEN"
+        "X-API-Key": "YOUR_API_KEY"
     }
 })
 .then(response => response.json())
@@ -222,7 +222,7 @@ curl_setopt($ch, CURLOPT_URL, "{{ config('app.url') }}/{{ $apiRoute['uri'] ?? ''
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
     "Content-Type: application/json",
-    "X-Sandbox-Token: "YOUR_SANDBOX_TOKEN"
+    "X-API-Key: YOUR_API_KEY"
 ]);
 
 $response = curl_exec($ch);

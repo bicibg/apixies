@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\EmailInspectorController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\IpGeolocationController;
 use App\Http\Controllers\Api\V1\ReadinessController;
 use App\Http\Controllers\Api\V1\SecurityHeadersInspectorController;
 use App\Http\Controllers\Api\V1\SslHealthInspectorController;
@@ -70,6 +71,11 @@ Route::apiV1(function () {
             ->description('Inspect a domain\'s SSL certificate for validity, expiry and chain health.')
             ->requiredParams(['domain']);
 
+        Route::get('ip-geolocation', [IpGeolocationController::class, 'getGeolocation'])
+            ->name('ip-geolocation')
+            ->description('Convert IP addresses to location data including country, city, coordinates, timezone, and ISP information.')
+            ->requiredParams(['ip']);
+
         Route::post('html-to-pdf', HtmlToPdfController::class)
             ->name('html-to-pdf')
             ->withoutMiddleware([
@@ -79,26 +85,4 @@ Route::apiV1(function () {
             ->description('Convert an HTML payload into a PDF file')
             ->requiredParams(['html']);
     });
-
-    Route::get('sandbox-test', function (Request $request) {
-        // Get the sandbox mode status
-        $isSandbox = $request->attributes->get('sandbox_mode', false);
-
-        // Get the sandbox token if provided
-        $sandboxToken = $request->header('X-Sandbox-Token');
-        $tokenExcerpt = $sandboxToken ? substr($sandboxToken, 0, 8).'...' : 'none';
-
-        // Get current time
-        $now = now()->toIso8601String();
-
-        // Return a response with debug info
-        return ApiResponse::success([
-            'sandbox_mode' => $isSandbox,
-            'token' => $tokenExcerpt,
-            'timestamp' => $now,
-            'request_attributes' => $request->attributes->all(),
-        ], 'Sandbox tracking test');
-    })
-        ->name('sandbox-test')
-        ->description('Test endpoint for sandbox tracking.');
 });

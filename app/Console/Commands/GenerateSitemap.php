@@ -72,7 +72,7 @@ class GenerateSitemap extends Command
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             ->setPriority(0.7));
 
-        $sitemap->add(Url::create('/docs/security-headers')
+        $sitemap->add(Url::create('/docs/headers')
             ->setLastModificationDate(now())
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             ->setPriority(0.7));

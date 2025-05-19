@@ -22,7 +22,15 @@
     <!-- Endpoint categories -->
     @php
         $apiRoutes = config('api_examples');
-        $categories = collect($apiRoutes)->groupBy('category');
+        // Manually group by category while preserving original keys
+        $categories = [];
+        foreach ($apiRoutes as $key => $route) {
+            $category = $route['category'] ?? 'general';
+            if (!isset($categories[$category])) {
+                $categories[$category] = [];
+            }
+            $categories[$category][$key] = $route;
+        }
     @endphp
 
     <div id="searchable-endpoints-container">
