@@ -68,6 +68,16 @@ Route::middleware('web')->group(function () {
         ->middleware(['auth', 'throttle:6,1'])
         ->name('verification.send');
 
+    // Account deactivation confirmation page
+    Route::get('/account/deactivated', function () {
+        return view('account.deactivated');
+    })->name('account.deactivated');
+
+    // Account restoration
+    Route::get('/account/restore/{id}', [ProfileController::class, 'restore'])
+        ->name('profile.restore')
+        ->middleware('signed');
+
     // API Key Management
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/account/settings', [ProfileController::class, 'show'])->name('profile.show');

@@ -204,7 +204,7 @@
                 <h3 class="text-xl font-bold text-red-600 mb-4">Delete Account</h3>
 
                 <p class="text-gray-600 mb-6">
-                    This action is permanent and cannot be undone. All your data, API keys, and account information will be permanently removed.
+                    Your account will be deactivated immediately and can be restored within 30 days. After 30 days, your data may be permanently removed. During deactivation, your data will not be accessible.
                 </p>
 
                 <div class="flex justify-between mt-6">
@@ -239,7 +239,7 @@
                 <h3 class="text-xl font-bold text-red-600 mb-4">Delete Account</h3>
 
                 <p class="text-gray-600 mb-6">
-                    This action is permanent and cannot be undone. All your data, API keys, and account information will be permanently removed.
+                    Your account will be deactivated immediately and can be restored within 30 days. After 30 days, your data may be permanently removed. During deactivation, your data will not be accessible.
                 </p>
 
                 <form method="POST" action="{{ route('profile.destroy') }}" id="delete-account-form">
@@ -293,7 +293,7 @@
                             class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
                             disabled
                         >
-                            Permanently Delete Account
+                            Deactivate Account
                         </button>
                     </div>
                 </form>

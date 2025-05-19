@@ -32,9 +32,8 @@ class EnsureApiKey
 
         $isHealthOrReadinessEndpoint =
             $path === 'api/v1/health' ||
-            $path === 'api/v1/ready' ||
-            $path === 'health' ||
-            $path === 'ready';
+            $path === 'api/v1/ready';
+
 
         $sandboxToken = $request->header('X-Sandbox-Token');
         if ($sandboxToken) {

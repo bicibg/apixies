@@ -6,13 +6,14 @@ use App\Notifications\ResetPassword;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail, FilamentUser
 {
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
 
     /**
      * Mass-assignable attributes.
@@ -45,6 +46,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
         'email_verified_at' => 'datetime',
         'password'          => 'hashed',
         'is_admin' => 'boolean',
+        'deleted_at' => 'datetime',
     ];
 
     /**
