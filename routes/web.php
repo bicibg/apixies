@@ -3,10 +3,13 @@
 use App\Http\Controllers\DocsController;
 use App\Http\Controllers\SandboxTokenController;
 use App\Http\Controllers\SuggestionController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
-use App\Http\Controllers\WebAuthController;
 use App\Http\Controllers\WebApiKeyController;
 
 Route::middleware('web')->group(function () {
@@ -26,24 +29,26 @@ Route::middleware('web')->group(function () {
     Route::get('/', [DocsController::class, 'index'])->name('docs.index');
 
     // Authentication Routes
-    Route::get('/register', [WebAuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [WebAuthController::class, 'register'])->name('register.submit');
-    Route::get('/login', [WebAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [WebAuthController::class, 'login'])->name('login.submit');
-    Route::post('/logout', [WebAuthController::class, 'logout'])->name('logout');
-    Route::get('/forgot-password', function () {
-        return view('auth.forgot-password');
-    })->middleware('guest')->name('password.request');
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::post('/forgot-password', [App\Http\Controllers\Auth\PasswordResetLinkController::class, 'store'])
+    // Password Reset Routes
+    Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])
+        ->middleware('guest')
+        ->name('password.request');
+
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])
         ->middleware('guest')
         ->name('password.email');
 
-    Route::get('/reset-password/{token}', function ($token) {
-        return view('auth.reset-password', ['token' => $token]);
-    })->middleware('guest')->name('password.reset');
+    Route::get('/reset-password/{token}', [NewPasswordController::class, 'showResetForm'])
+        ->middleware('guest')
+        ->name('password.reset');
 
-    Route::post('/reset-password', [App\Http\Controllers\Auth\NewPasswordController::class, 'store'])
+    Route::post('/reset-password', [NewPasswordController::class, 'reset'])
         ->middleware('guest')
         ->name('password.update');
 
@@ -67,7 +72,7 @@ Route::middleware('web')->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/account/settings', [ProfileController::class, 'show'])->name('profile.show');
         Route::put('/account/profile', [ProfileController::class, 'update'])->name('profile.update');
-        Route::put('/account/password', [ProfileController::class, 'updatePassword'])->name('password.update');
+        Route::put('/account/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
         Route::delete('/account', [ProfileController::class, 'destroy'])->name('profile.destroy');
         Route::get('/api-keys', [WebApiKeyController::class, 'index'])->name('api-keys.index');
         Route::post('/api-keys', [WebApiKeyController::class, 'store'])->name('api-keys.store');

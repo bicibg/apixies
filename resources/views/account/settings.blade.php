@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container max-w-4xl mx-auto px-4 py-8">
-        <h1 class="text-2xl font-bold text-navy mb-6">Account Settings</h1>
+        <h1 class="text-2xl font-bold text-navy mb-6 text-center">Account Settings</h1>
 
         @if(session('status'))
             <div class="alert-success mb-6">
@@ -12,63 +12,59 @@
             </div>
         @endif
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Sidebar -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+            <!-- Left Column - User Info and Navigation (Fixed) -->
             <div class="col-span-1">
-                <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <div class="p-6 bg-gradient-to-r from-navy to-teal text-white">
-                        <div class="flex items-center space-x-3">
-                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-white/30 flex items-center justify-center text-white font-bold">
-                                {{ substr(auth()->user()->name, 0, 1) }}
+                <div class="md:sticky" style="top: 80px;">
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <!-- User Profile Header -->
+                        <div class="p-6 bg-gradient-to-r from-navy to-teal text-white">
+                            <div class="flex items-center space-x-3">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-white/30 flex items-center justify-center text-white font-bold">
+                                    {{ substr(auth()->user()->name, 0, 1) }}
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-medium">{{ auth()->user()->name }}</h2>
+                                    <p class="text-sm text-blue-100">{{ auth()->user()->email }}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h2 class="text-lg font-medium">{{ auth()->user()->name }}</h2>
-                                <p class="text-sm text-blue-100">{{ auth()->user()->email }}</p>
-                            </div>
+                        </div>
+
+                        <!-- Navigation Menu -->
+                        <div class="p-4">
+                            <nav class="space-y-1">
+                                <a href="#profile" class="block px-3 py-2 rounded-md bg-blue-50 text-teal font-medium">
+                                    Profile Information
+                                </a>
+                                <a href="#password" class="block px-3 py-2 rounded-md text-gray-700 hover:bg-blue-50 hover:text-teal">
+                                    Update Password
+                                </a>
+                                <a href="#delete" class="block px-3 py-2 rounded-md text-red-600 hover:bg-red-50">
+                                    Delete Account
+                                </a>
+                            </nav>
                         </div>
                     </div>
 
-                    <div class="p-4">
-                        <nav class="space-y-1">
-                            <a href="#profile" class="block px-3 py-2 rounded-md bg-blue-50 text-teal font-medium">
-                                Profile Information
-                            </a>
-                            <a href="#password" class="block px-3 py-2 rounded-md text-gray-700 hover:bg-blue-50 hover:text-teal">
-                                Update Password
-                            </a>
-                            <a href="#tokens" class="block px-3 py-2 rounded-md text-gray-700 hover:bg-blue-50 hover:text-teal">
-                                API Keys
-                            </a>
-                            <a href="#delete" class="block px-3 py-2 rounded-md text-red-600 hover:bg-red-50">
-                                Delete Account
-                            </a>
-                        </nav>
-                    </div>
-                </div>
+                    <!-- Account Status Card -->
+                    <div class="mt-6 bg-white rounded-lg shadow p-6">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">Account Status</h3>
 
-                <div class="mt-6 bg-white rounded-lg shadow p-6">
-                    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">Account Status</h3>
-
-                    <div class="space-y-3">
-                        <div class="flex justify-between">
-                            <span class="text-sm text-gray-600">Account created</span>
-                            <span class="text-sm font-medium">{{ auth()->user()->created_at->format('M d, Y') }}</span>
-                        </div>
-
-                        <div class="flex justify-between">
-                            <span class="text-sm text-gray-600">API Requests</span>
-                            <span class="text-sm font-medium">{{ auth()->user()->api_requests_count ?? 0 }}</span>
-                        </div>
-
-                        <div class="flex justify-between">
-                            <span class="text-sm text-gray-600">API Keys</span>
-                            <span class="text-sm font-medium">{{ auth()->user()->apiKeys()->count() }}</span>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Account created</span>
+                                <span class="text-sm font-medium">{{ auth()->user()->created_at->format('M d, Y') }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">API Requests</span>
+                                <span class="text-sm font-medium">{{ $apiRequestCount }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Main Content -->
+            <!-- Right Column - Main Content -->
             <div class="col-span-2 space-y-6">
                 <!-- Profile Information -->
                 <div id="profile" class="bg-white rounded-lg shadow p-6">
@@ -112,7 +108,7 @@
                         </div>
 
                         <div class="flex justify-end">
-                            <button type="submit" class="btn-primary">
+                            <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 px-4 rounded-md transition-colors">
                                 Save Changes
                             </button>
                         </div>
@@ -124,7 +120,7 @@
                     <h2 class="text-lg font-medium text-navy mb-4">Update Password</h2>
                     <p class="text-sm text-gray-600 mb-4">Ensure your account is using a secure password.</p>
 
-                    <form method="POST" action="{{ route('password.update') }}">
+                    <form method="POST" action="{{ route('profile.password.update') }}">
                         @csrf
                         @method('PUT')
 
@@ -139,7 +135,7 @@
                             >
 
                             @error('current_password')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-sm text-red-600">The password is incorrect.</p>
                             @enderror
                         </div>
 
@@ -154,7 +150,7 @@
                             >
 
                             @error('password')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-sm text-red-600">The password is incorrect.</p>
                             @enderror
                         </div>
 
@@ -170,62 +166,14 @@
                         </div>
 
                         <div class="flex justify-end">
-                            <button type="submit" class="btn-primary">
+                            <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 px-4 rounded-md transition-colors">
                                 Update Password
                             </button>
                         </div>
                     </form>
                 </div>
 
-                <!-- API Tokens -->
-                <div id="tokens" class="bg-white rounded-lg shadow p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-medium text-navy">API Keys</h2>
-                        <a href="{{ route('api-keys.index') }}" class="text-sm text-teal hover:text-teal-700">Manage API Keys →</a>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-4">Manage your API keys for accessing Apixies services.</p>
-
-                    @if(auth()->user()->apiKeys()->exists())
-                        <div class="border border-gray-200 rounded-md overflow-hidden mb-4">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                @foreach(auth()->user()->apiKeys()->latest()->take(3)->get() as $key)
-                                    <tr>
-                                        <td class="px-4 py-3 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-navy">{{ $key->name }}</div>
-                                        </td>
-                                        <td class="px-4 py-3 whitespace-nowrap">
-                                            <div class="text-sm text-gray-500">{{ $key->created_at->format('M d, Y') }}</div>
-                                        </td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-right text-sm">
-                                            <a href="{{ route('api-keys.show', $key) }}" class="text-teal hover:text-teal-700">View</a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @else
-                        <div class="bg-blue-50 p-4 rounded-md">
-                            <p class="text-sm text-blue-700">You don't have any API keys yet. Create one to start using Apixies APIs.</p>
-                        </div>
-                    @endif
-
-                    <div class="mt-4">
-                        <a href="{{ route('api-keys.create') }}" class="btn-primary inline-block">
-                            Create New API Key
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Delete Account -->
+                <!-- Delete Account Card -->
                 <div id="delete" class="bg-white rounded-lg shadow p-6 border-t-4 border-red-500">
                     <h2 class="text-lg font-medium text-red-600 mb-4">Delete Account</h2>
                     <p class="text-sm text-gray-600 mb-4">
@@ -233,35 +181,198 @@
                         Before deleting your account, please download any data or information that you wish to retain.
                     </p>
 
-                    <form method="POST" action="{{ route('profile.destroy') }}" class="mt-5"
-                          onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
-                        @csrf
-                        @method('DELETE')
-
-                        <div class="mb-4">
-                            <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                            <input
-                                type="password"
-                                name="password"
-                                id="password_confirmation"
-                                class="form-input w-full rounded-md @error('password') border-red-500 @enderror"
-                                placeholder="Enter your current password to confirm"
-                                required
-                            >
-
-                            @error('password')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors">
-                                Delete Account
-                            </button>
-                        </div>
-                    </form>
+                    <button
+                        type="button"
+                        id="open-delete-modal"
+                        class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+                    >
+                        Delete Account
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Delete Account Modal -->
+    <div id="delete-modal" class="fixed inset-0 flex items-center justify-center hidden z-50">
+        <!-- Backdrop with blur effect -->
+        <div class="absolute inset-0 bg-navy-dark bg-opacity-80 backdrop-blur-md" id="modal-backdrop"></div>
+
+        <!-- Modal content -->
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 z-10">
+            <div class="p-6">
+                <h3 class="text-xl font-bold text-red-600 mb-4">Delete Account</h3>
+
+                <p class="text-gray-600 mb-6">
+                    This action is permanent and cannot be undone. All your data, API keys, and account information will be permanently removed.
+                </p>
+
+                <form method="POST" action="{{ route('profile.destroy') }}" id="delete-account-form">
+                    @csrf
+                    @method('DELETE')
+
+                    <div class="mb-5">
+                        <label for="delete_confirmation" class="block text-sm font-medium text-gray-700 mb-2">Type "DELETE" to confirm</label>
+                        <input
+                            type="text"
+                            name="delete_confirmation"
+                            id="delete_confirmation"
+                            class="form-input w-full rounded-md border-gray-300 @error('delete_confirmation') border-red-500 @enderror"
+                            placeholder="DELETE"
+                            required
+                        >
+
+                        @error('delete_confirmation')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="delete_password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input
+                            type="password"
+                            name="password"
+                            id="delete_password"
+                            class="form-input w-full rounded-md border-gray-300 @error('password') border-red-500 @enderror"
+                            placeholder="Enter your current password to confirm"
+                            required
+                            autocomplete="new-password" <!-- This prevents autofill -->
+                        >
+
+                        @error('password')
+                        <p class="mt-1 text-sm text-red-600">The password is incorrect.</p>
+                        @enderror
+                    </div>
+
+                    <div class="flex justify-between mt-6">
+                        <button
+                            type="button"
+                            id="cancel-delete"
+                            class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-6 rounded-md transition-colors"
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            type="submit"
+                            id="confirm-delete"
+                            class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+                            disabled
+                        >
+                            Permanently Delete Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript for modal and navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Modal functionality
+            const modal = document.getElementById('delete-modal');
+            const modalBackdrop = document.getElementById('modal-backdrop');
+            const openModalButton = document.getElementById('open-delete-modal');
+            const cancelButton = document.getElementById('cancel-delete');
+            const confirmButton = document.getElementById('confirm-delete');
+            const deleteConfirmField = document.getElementById('delete_confirmation');
+
+            // Function to open modal
+            function openModal() {
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+
+            // Function to close modal
+            function closeModal() {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+                deleteConfirmField.value = ''; // Clear the confirmation field
+                confirmButton.disabled = true; // Reset button state
+            }
+
+            // Open modal when delete button is clicked
+            if (openModalButton) {
+                openModalButton.addEventListener('click', openModal);
+            }
+
+            // Close modal when cancel button is clicked
+            if (cancelButton) {
+                cancelButton.addEventListener('click', closeModal);
+            }
+
+            // Close modal when clicking outside of it
+            if (modalBackdrop) {
+                modalBackdrop.addEventListener('click', closeModal);
+            }
+
+            // Enable/disable delete button based on confirmation text
+            if (deleteConfirmField) {
+                deleteConfirmField.addEventListener('input', function() {
+                    confirmButton.disabled = this.value !== 'DELETE';
+                });
+            }
+
+            // Navigation highlighting based on scroll
+            const sections = document.querySelectorAll('#profile, #password, #delete');
+            const navLinks = document.querySelectorAll('.p-4 nav a');
+
+            function setActiveLink() {
+                let currentSection = 'profile';
+
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.offsetHeight;
+
+                    if (window.scrollY >= sectionTop - 100) {
+                        currentSection = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('bg-blue-50', 'text-teal', 'font-medium');
+                    link.classList.add('text-gray-700', 'hover:bg-blue-50', 'hover:text-teal');
+
+                    if (link.getAttribute('href') === '#' + currentSection) {
+                        link.classList.remove('text-gray-700');
+                        link.classList.add('bg-blue-50', 'text-teal', 'font-medium');
+
+                        // Special case for delete link
+                        if (currentSection === 'delete') {
+                            link.classList.remove('text-gray-700');
+                            link.classList.add('text-red-600');
+                        }
+                    }
+                });
+            }
+
+            // Add smooth scrolling to nav links
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+
+                    // Update URL hash without scrolling
+                    history.pushState(null, null, targetId);
+
+                    // Update active state
+                    setActiveLink();
+                });
+            });
+
+            // Set active link on scroll
+            window.addEventListener('scroll', setActiveLink);
+
+            // Set initial active link
+            setActiveLink();
+        });
+    </script>
 @endsection

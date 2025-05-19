@@ -11,7 +11,7 @@
                 @csrf
 
                 <!-- Password Reset Token -->
-                <input type="hidden" name="token" value="{{ $request->route('token') }}">
+                <input type="hidden" name="token" value="{{ $token ?? $request->route('token') }}">
 
                 <!-- Email Address -->
                 <div class="mb-4">
@@ -21,7 +21,7 @@
                         name="email"
                         id="email"
                         class="form-input w-full rounded-md @error('email') border-red-500 @enderror"
-                        value="{{ old('email', $request->email) }}"
+                        value="{{ old('email', $request->email ?? '') }}"
                         required
                         autocomplete="email"
                     >

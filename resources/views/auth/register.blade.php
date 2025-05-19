@@ -59,7 +59,7 @@
             <div>
                 <label class="block text-gray-700 mb-1">Password</label>
                 <input name="password" type="password" required class="form-input"/>
-                <p class="text-gray-500 text-xs mt-1">Minimum 8 characters</p>
+                <p class="text-gray-500 text-xs mt-1">Minimum 10 characters</p>
             </div>
             <div>
                 <label class="block text-gray-700 mb-1">Confirm Password</label>

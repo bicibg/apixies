@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetPassword;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -46,6 +47,23 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
         'is_admin' => 'boolean',
     ];
 
+    /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPassword($token));
+    }
+
+    /**
+     * Check if the user can access the Filament admin panel.
+     *
+     * @param  \Filament\Panel  $panel
+     * @return bool
+     */
     public function canAccessPanel(\Filament\Panel $panel): bool
     {
         return $this->is_admin;

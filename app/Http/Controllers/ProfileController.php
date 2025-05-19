@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ApiEndpointLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -12,7 +13,11 @@ class ProfileController extends Controller
 {
     public function show()
     {
-        return view('account.settings');
+        $apiRequestCount = ApiEndpointLog::where('user_id', Auth::id())->count();
+
+        return view('account.settings', [
+            'apiRequestCount' => $apiRequestCount
+        ]);
     }
 
     public function update(Request $request)
@@ -46,6 +51,7 @@ class ProfileController extends Controller
     public function destroy(Request $request)
     {
         $request->validate([
+            'delete_confirmation' => ['required', 'string', 'in:DELETE'],
             'password' => ['required', 'current_password'],
         ]);
 

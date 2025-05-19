@@ -9,25 +9,7 @@ use App\Models\SuggestionVote;
 use App\Helpers\ApiResponse;
 
 class SuggestionController extends Controller
-{
-    public function index(Request $request)
-    {
-        $query = Suggestion::query()
-            ->where('status', 'pending');
-
-        if ($request->boolean('top')) {
-            $query->orderByDesc('votes');
-        } else {
-            $query->latest();
-        }
-
-        return ApiResponse::success(
-            $query->take(50)->get(),
-            'Suggestions fetched'
-        );
-    }
-
-    public function store(Request $request)
+{    public function store(Request $request)
     {
         /* simple abuse throttle */
         RateLimiter::attempt(

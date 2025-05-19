@@ -73,10 +73,6 @@
                        class="text-white text-sm {{ request()->routeIs('docs.*') ? 'font-medium' : '' }} hover:text-blue-100 transition-colors duration-200">
                         API Docs
                     </a>
-                    <a href="{{ route('api-keys.index') }}"
-                       class="text-white text-sm {{ request()->routeIs('api-keys.*') ? 'font-medium' : '' }} hover:text-blue-100 transition-colors duration-200">
-                        API Keys
-                    </a>
                     <a href="{{ route('suggestions.board') }}"
                        class="text-white text-sm {{ request()->routeIs('suggestions.board') ? 'font-medium' : '' }} hover:text-blue-100 transition-colors duration-200">
                         Community Ideas
@@ -86,14 +82,38 @@
                 <!-- Auth Links -->
                 <div class="flex items-center">
                     @auth
-                        <span class="text-white text-sm mr-2">{{ Auth::user()->name }}</span>
-                        <form method="POST" action="{{ url('/logout') }}">
-                            @csrf
-                            <button type="submit"
-                                    class="bg-white text-teal hover:bg-blue-50 px-2 py-0.5 rounded text-sm transition-colors duration-200">
-                                Log Out
+                        <a href="{{ route('api-keys.index') }}"
+                           class="text-white text-sm {{ request()->routeIs('api-keys.*') ? 'font-medium' : '' }} hover:text-blue-100 transition-colors duration-200 mr-4">
+                            API Keys
+                        </a>
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" class="text-white text-sm hover:text-blue-100 flex items-center">
+                                <span class="mr-1">{{ Auth::user()->name }}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
                             </button>
-                        </form>
+                            <div x-show="open"
+                                 @click.away="open = false"
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                 class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                                <a href="{{ route('profile.show') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
+                                    Account Settings
+                                </a>
+                                <div class="border-t border-gray-100 my-1"></div>
+                                <form method="POST" action="{{ url('/logout') }}">
+                                    @csrf
+                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
+                                        Log Out
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     @else
                         <a href="{{ url('/login') }}"
                            class="text-white hover:text-blue-100 text-sm mr-3 transition-colors duration-200">
@@ -170,6 +190,11 @@
                         <span class="text-blue-300 text-sm block mb-1">Signed in as</span>
                         <span class="text-white text-lg font-medium">{{ Auth::user()->name }}</span>
                     </div>
+                    <!-- Add Account Settings Link -->
+                    <a href="{{ route('profile.show') }}"
+                       class="block w-full text-center text-white border border-white hover:bg-teal-700 py-3 px-8 rounded-md text-lg mb-4">
+                        Account Settings
+                    </a>
                     <form method="POST" action="{{ url('/logout') }}" class="flex justify-center">
                         @csrf
                         <button type="submit"

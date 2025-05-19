@@ -1,0 +1,26 @@
+/* Custom styles for the Filament dashboard - api-stats page */
+
+/* Make the Top Endpoints text readable by forcing line breaks and mono font */
+.filament-stats-overview-widget-card-value {
+    white-space: pre-wrap !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+}
+
+/* Make the card taller to accommodate multiple lines */
+.filament-stats-overview-widget-card:has(.filament-stats-overview-widget-card-value:contains("api/v1")) {
+    min-height: 10rem !important;
+}
+
+/* Improve the layout of the Top Endpoints cards for better readability */
+.filament-stats-overview-widget-card-value .flex {
+    margin-bottom: 0.25rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Make the endpoint text more readable */
+.filament-stats-overview-widget-card-value {
+    font-weight: normal !important;
+}
