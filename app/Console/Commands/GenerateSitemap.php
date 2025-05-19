@@ -117,6 +117,6 @@ class GenerateSitemap extends Command
 
         $this->info('Sitemap generated successfully at public/sitemap.xml');
 
-        return yCommandAlias::SUCCESS;
+        return CommandAlias::SUCCESS;
     }
 }
