@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Spatie\Sitemap\Sitemap;
 use Spatie\Sitemap\Tags\Url;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 
 class GenerateSitemap extends Command
 {
@@ -61,31 +63,14 @@ class GenerateSitemap extends Command
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             ->setPriority(0.8));
 
-        // API-specific pages with correct URLs
-        $sitemap->add(Url::create('/docs/email')
-            ->setLastModificationDate(now())
-            ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
-            ->setPriority(0.7));
-
-        $sitemap->add(Url::create('/docs/ssl')
-            ->setLastModificationDate(now())
-            ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
-            ->setPriority(0.7));
-
-        $sitemap->add(Url::create('/docs/headers')
-            ->setLastModificationDate(now())
-            ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
-            ->setPriority(0.7));
-
-        $sitemap->add(Url::create('/docs/user-agent')
-            ->setLastModificationDate(now())
-            ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
-            ->setPriority(0.7));
-
-        $sitemap->add(Url::create('/docs/html-to-pdf')
-            ->setLastModificationDate(now())
-            ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
-            ->setPriority(0.7));
+        // API-specific endpoint pages from configuration
+        $apiExamples = config('api_endpoints', []);
+        foreach ($apiExamples as $key => $endpoint) {
+            $sitemap->add(Url::create("/docs/{$key}")
+                ->setLastModificationDate(now())
+                ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
+                ->setPriority(0.7));
+        }
 
         // User and Community pages
         $sitemap->add(Url::create('/api-keys')
@@ -93,10 +78,21 @@ class GenerateSitemap extends Command
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             ->setPriority(0.6));
 
-        $sitemap->add(Url::create('/community-ideas')
+        $sitemap->add(Url::create('/suggestions/board')
             ->setLastModificationDate(now())
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
             ->setPriority(0.9));
+
+        // User settings
+        $sitemap->add(Url::create('/profile')
+            ->setLastModificationDate(now())
+            ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
+            ->setPriority(0.6));
+
+        $sitemap->add(Url::create('/account/settings')
+            ->setLastModificationDate(now())
+            ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
+            ->setPriority(0.6));
 
         // Auth pages
         $sitemap->add(Url::create('/login')
@@ -107,17 +103,11 @@ class GenerateSitemap extends Command
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             ->setPriority(0.5));
 
-        // Health and status endpoints
-        $sitemap->add(Url::create('/docs/health')
-            ->setLastModificationDate(now())
+        $sitemap->add(Url::create('/forgot-password')
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
-            ->setPriority(0.4));
+            ->setPriority(0.3));
 
-        $sitemap->add(Url::create('/docs/readiness')
-            ->setLastModificationDate(now())
-            ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
-            ->setPriority(0.4));
-
+        // Write sitemap file
         $sitemap->writeToFile(public_path('sitemap.xml'));
 
         $this->info('Sitemap generated successfully at public/sitemap.xml');
