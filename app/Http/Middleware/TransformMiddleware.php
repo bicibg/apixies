@@ -27,7 +27,8 @@ class TransformMiddleware
         }
 
         // 3) If the payload is already wrapped with our specific structure, pass it through
-        if (isset($payload['status'], $payload['code'], $payload['data'])) {
+        // Check for both success and error response formats
+        if (isset($payload['status'], $payload['http_code'], $payload['code'], $payload['message'])) {
             return $response;
         }
 
