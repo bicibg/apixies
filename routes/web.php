@@ -31,6 +31,21 @@ Route::middleware('web')->group(function () {
     Route::get('/login', [WebAuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [WebAuthController::class, 'login'])->name('login.submit');
     Route::post('/logout', [WebAuthController::class, 'logout'])->name('logout');
+    Route::get('/forgot-password', function () {
+        return view('auth.forgot-password');
+    })->middleware('guest')->name('password.request');
+
+    Route::post('/forgot-password', [App\Http\Controllers\Auth\PasswordResetLinkController::class, 'store'])
+        ->middleware('guest')
+        ->name('password.email');
+
+    Route::get('/reset-password/{token}', function ($token) {
+        return view('auth.reset-password', ['token' => $token]);
+    })->middleware('guest')->name('password.reset');
+
+    Route::post('/reset-password', [App\Http\Controllers\Auth\NewPasswordController::class, 'store'])
+        ->middleware('guest')
+        ->name('password.update');
 
     // Email Verification Routes
     Route::get('/email/verify', fn() => view('auth.verify-email'))
@@ -50,6 +65,10 @@ Route::middleware('web')->group(function () {
 
     // API Key Management
     Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('/account/settings', [ProfileController::class, 'show'])->name('profile.show');
+        Route::put('/account/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/account/password', [ProfileController::class, 'updatePassword'])->name('password.update');
+        Route::delete('/account', [ProfileController::class, 'destroy'])->name('profile.destroy');
         Route::get('/api-keys', [WebApiKeyController::class, 'index'])->name('api-keys.index');
         Route::post('/api-keys', [WebApiKeyController::class, 'store'])->name('api-keys.store');
         Route::delete('/api-keys/{uuid}', [WebApiKeyController::class, 'destroy'])
