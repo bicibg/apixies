@@ -15,7 +15,7 @@ class DocsController extends Controller
      */
     public function index(): View
     {
-        $apiRoutes = config('api_examples');
+        $apiRoutes = config('api_endpoints');
 
         Log::debug('API Routes Keys: ' . implode(', ', array_keys($apiRoutes)));
 
@@ -90,7 +90,7 @@ class DocsController extends Controller
      */
     public function endpoint(string $key)
     {
-        $apiRoutes = config('api_examples');
+        $apiRoutes = config('api_endpoints');
 
         Log::debug('Endpoint request for key: ' . $key);
         Log::debug('Available keys: ' . implode(', ', array_keys($apiRoutes)));
@@ -169,7 +169,7 @@ class DocsController extends Controller
      */
     public function getCategorizedRoutes(): array
     {
-        $apiRoutes = config('api_examples');
+        $apiRoutes = config('api_endpoints');
 
         $categorizedRoutes = [];
         foreach ($apiRoutes as $key => $route) {

@@ -146,7 +146,7 @@ Route::get('api/v1/your-new-endpoint', App\Http\Controllers\Api\V1\YourNewEndpoi
 
 ### 4. Add to API Examples Configuration
 
-Add your endpoint to `config/api_examples.php`:
+Add your endpoint to `config/api_endpoints.php`:
 
 ```php
 'your-new-endpoint' => [
@@ -205,7 +205,7 @@ The API example configuration accepts these fields:
 - `app/Services/` - Service classes for business logic
 - `app/Helpers/` - Helper functions and classes
 - `app/Models/` - Database models
-- `config/api_examples.php` - API documentation configuration
+- `config/api_endpoints.php` - API documentation configuration
 - `resources/views/docs/` - Documentation templates
 - `routes/api.php` - API route definitions
 

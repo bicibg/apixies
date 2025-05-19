@@ -21,7 +21,7 @@
 
     <!-- Endpoint categories -->
     @php
-        $apiRoutes = config('api_examples');
+        $apiRoutes = config('api_endpoints');
         // Manually group by category while preserving original keys
         $categories = [];
         foreach ($apiRoutes as $key => $route) {
