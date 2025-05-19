@@ -11,6 +11,7 @@
      x-init="init"
      data-uri="{{ $route['uri'] ?? '' }}"
      data-method="{{ strtolower(explode('|', $route['method'] ?? 'GET')[0]) }}"
+     data-query-params="{{ json_encode($route['query_params'] ?? []) }}"
      x-cloak>
 
     {{-- Trigger button --}}
@@ -92,107 +93,25 @@
                         </div>
                     </template>
 
-                    {{-- Domain input for SSL inspection --}}
-                    <template x-if="uri.includes('inspect-ssl')">
+                    {{-- Dynamic parameter inputs based on query_params --}}
+                    <template x-for="paramName in queryParams" :key="paramName">
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Domain to inspect
+                                <span x-text="paramName.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())"></span>
                             </label>
                             <div class="flex space-x-2">
-                                <input type="text" x-model="params.domain" placeholder="example.com"
-                                       class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal">
-                                <button @click="insertSampleDomain"
+                                <template x-if="paramName === 'html'">
+                                    <textarea x-model="params[paramName]" :placeholder="`Enter ${paramName}`"
+                                              class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal"
+                                              rows="5"></textarea>
+                                </template>
+                                <template x-if="paramName !== 'html'">
+                                    <input type="text" x-model="params[paramName]" :placeholder="`Enter ${paramName}`"
+                                           class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal">
+                                </template>
+                                <button @click="insertSample(paramName)"
                                         class="px-3 py-2 text-xs text-teal hover:text-teal-700 rounded border border-teal-200 hover:bg-blue-50 whitespace-nowrap">
                                     Insert Sample
-                                </button>
-                            </div>
-                        </div>
-                    </template>
-
-                    {{-- URL input for Security Headers inspection --}}
-                    <template x-if="uri.includes('inspect-headers') || uri.includes('security-headers')">
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                URL to inspect
-                            </label>
-                            <div class="flex space-x-2">
-                                <input type="text" x-model="params.url_to_check" placeholder="https://example.com"
-                                       class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal">
-                                <button @click="insertSampleUrl"
-                                        class="px-3 py-2 text-xs text-teal hover:text-teal-700 rounded border border-teal-200 hover:bg-blue-50 whitespace-nowrap">
-                                    Insert Sample
-                                </button>
-                            </div>
-                        </div>
-                    </template>
-
-                    {{-- Email input for Email inspection --}}
-                    <template x-if="uri.includes('inspect-email')">
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Email to inspect
-                            </label>
-                            <div class="flex space-x-2">
-                                <input type="email" x-model="params.email" placeholder="example@domain.com"
-                                       class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal">
-                                <button @click="insertSampleEmail"
-                                        class="px-3 py-2 text-xs text-teal hover:text-teal-700 rounded border border-teal-200 hover:bg-blue-50 whitespace-nowrap">
-                                    Insert Sample
-                                </button>
-                            </div>
-                        </div>
-                    </template>
-
-                    {{-- IP input for IP Geolocation --}}
-                    <template x-if="uri.includes('ip-geolocation')">
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                IP Address to locate
-                            </label>
-                            <div class="flex space-x-2">
-                                <input type="text" x-model="params.ip" placeholder="8.8.8.8"
-                                       class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal">
-                                <button @click="insertSampleIp"
-                                        class="px-3 py-2 text-xs text-teal hover:text-teal-700 rounded border border-teal-200 hover:bg-blue-50 whitespace-nowrap">
-                                    Insert Sample
-                                </button>
-                            </div>
-                        </div>
-                    </template>
-
-                    {{-- Special handling for user-agent inspector --}}
-                    <template x-if="uri.includes('inspect-user-agent')">
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                User Agent String
-                            </label>
-                            <div class="flex space-x-2">
-                                <input type="text" x-model="params.user_agent" placeholder="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36..."
-                                       class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal">
-                                <button @click="insertSampleUserAgent"
-                                        class="px-3 py-2 text-xs text-teal hover:text-teal-700 rounded border border-teal-200 hover:bg-blue-50 whitespace-nowrap">
-                                    Insert Sample
-                                </button>
-                            </div>
-                        </div>
-                    </template>
-
-                    {{-- Special handling for HTML to PDF converter --}}
-                    <template x-if="uri.includes('html-to-pdf')">
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                HTML Content
-                            </label>
-                            <textarea x-model="params.html" placeholder="<div>Your HTML content here</div>"
-                                      class="w-full p-2 border border-gray-300 rounded-md focus:ring-teal focus:border-teal"
-                                      rows="5"></textarea>
-                            <div class="flex justify-between items-center mt-1">
-                                <div class="text-xs text-gray-500">
-                                    Note: Do not use file:// or file:/ URLs in your HTML
-                                </div>
-                                <button @click="insertSampleHtml"
-                                        class="text-xs text-teal hover:text-teal-700 px-2 py-1 rounded border border-teal-200 hover:bg-blue-50">
-                                    Insert Sample HTML
                                 </button>
                             </div>
                         </div>
