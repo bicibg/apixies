@@ -13,15 +13,29 @@
                             type: 'line',
                             height: 320,
                             toolbar: {
-                                show: true
+                                show: true,
+                                tools: {
+                                    download: true,
+                                    selection: true,
+                                    zoom: true,
+                                    zoomin: true,
+                                    zoomout: true,
+                                    pan: true,
+                                    reset: true
+                                }
                             },
                             zoom: {
                                 enabled: true
+                            },
+                            animations: {
+                                enabled: true,
+                                easing: 'easeinout',
+                                speed: 800
                             }
                         },
                         stroke: {
                             curve: 'smooth',
-                            width: [3, 3, 3]
+                            width: [4, 3, 3]
                         },
                         series: [{
                             name: 'Requests',
@@ -36,13 +50,37 @@
                             type: 'line',
                             data: performanceData.error_rate || []
                         }],
-                        colors: ['#818CF8', '#F87171', '#EF4444'],
+                        colors: ['#3B82F6', '#F59E0B', '#EF4444'],
+                        dataLabels: {
+                            enabled: false
+                        },
+                        markers: {
+                            size: 5,
+                            hover: {
+                                size: 7
+                            }
+                        },
                         xaxis: {
                             categories: performanceData.dates || [],
                             labels: {
                                 rotate: -45,
                                 style: {
                                     fontSize: '12px'
+                                },
+                                formatter: function(value) {
+                                    if (!value) return '';
+                                    // Only show every 3rd label to reduce clutter
+                                    const dates = performanceData.dates || [];
+                                    const index = dates.indexOf(value);
+                                    if (index % 3 === 0 || index === dates.length - 1) {
+                                        // Format as MM-DD
+                                        const parts = value.split('-');
+                                        if (parts.length === 3) {
+                                            return parts[1] + '-' + parts[2];
+                                        }
+                                        return value;
+                                    }
+                                    return '';
                                 }
                             }
                         },
@@ -51,14 +89,18 @@
                                 title: {
                                     text: 'Number of Requests'
                                 },
-                                seriesName: 'Requests'
+                                seriesName: 'Requests',
+                                min: 0,
+                                forceNiceScale: true
                             },
                             {
                                 title: {
                                     text: 'Avg Latency (ms)'
                                 },
                                 seriesName: 'Avg Latency (ms)',
-                                opposite: true
+                                opposite: true,
+                                min: 0,
+                                forceNiceScale: true
                             },
                             {
                                 title: {
@@ -67,16 +109,67 @@
                                 seriesName: 'Error Rate (%)',
                                 opposite: true,
                                 min: 0,
-                                max: 100
+                                max: 100,
+                                forceNiceScale: true
                             }
                         ],
                         tooltip: {
                             shared: true,
-                            intersect: false
+                            intersect: false,
+                            y: {
+                                formatter: function(value, { seriesIndex }) {
+                                    if (seriesIndex === 0) return value.toFixed(0) + " requests";
+                                    if (seriesIndex === 1) return value.toFixed(2) + " ms";
+                                    if (seriesIndex === 2) return value.toFixed(1) + "%";
+                                    return value;
+                                }
+                            },
+                            x: {
+                                formatter: function(value) {
+                                    // Format date as YYYY-MM-DD if it's a valid date
+                                    if (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                                        const date = new Date(value);
+                                        if (!isNaN(date.getTime())) {
+                                            return date.toLocaleDateString(undefined, {
+                                                year: 'numeric',
+                                                month: 'short',
+                                                day: 'numeric'
+                                            });
+                                        }
+                                    }
+                                    return value;
+                                }
+                            }
                         },
                         legend: {
-                            position: 'top'
-                        }
+                            position: 'top',
+                            horizontalAlign: 'center',
+                            fontSize: '14px'
+                        },
+                        grid: {
+                            borderColor: '#e0e0e0',
+                            row: {
+                                colors: ['transparent', 'transparent'],
+                                opacity: 0.5
+                            }
+                        },
+                        responsive: [{
+                            breakpoint: 768,
+                            options: {
+                                chart: {
+                                    height: 400
+                                },
+                                legend: {
+                                    position: 'bottom',
+                                    offsetY: 0
+                                },
+                                xaxis: {
+                                    labels: {
+                                        rotate: -90
+                                    }
+                                }
+                            }
+                        }]
                     });
                     performanceChart.render();
                 }
@@ -237,7 +330,7 @@
                                 name: 'Success Rate (%)',
                                 data: endpointData.map(e => e.success_rate)
                             }],
-                            colors: ['#60A5FA', '#F87171', '#34D399'],
+                            colors: ['#3B82F6', '#F59E0B', '#34D399'],
                             plotOptions: {
                                 bar: {
                                     horizontal: true,
@@ -321,8 +414,25 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <!-- Performance Over Time Chart -->
             <div class="bg-white rounded-lg shadow p-4 col-span-full">
-                <h3 class="text-lg font-medium mb-3">Performance Over Time</h3>
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-lg font-medium">Performance Over Time</h3>
+                    <div class="text-sm text-gray-500">
+                        <span class="inline-flex items-center mr-3">
+                            <span class="w-3 h-3 rounded-full bg-blue-400 mr-1"></span>
+                            Requests
+                        </span>
+                        <span class="inline-flex items-center mr-3">
+                            <span class="w-3 h-3 rounded-full bg-red-300 mr-1"></span>
+                            Latency
+                        </span>
+                        <span class="inline-flex items-center">
+                            <span class="w-3 h-3 rounded-full bg-red-500 mr-1"></span>
+                            Error Rate
+                        </span>
+                    </div>
+                </div>
                 <div id="performance-chart" class="h-80"></div>
+                <div class="text-xs text-gray-500 mt-2">Tip: Click and drag to zoom, double-click to reset view</div>
             </div>
 
             <!-- Status Distribution Chart -->
