@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
@@ -77,6 +78,15 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+
+            $user = Auth::user();
+
+            // Check if user needs verification
+            if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail &&
+                !$user->hasVerifiedEmail()) {
+                return redirect()->route('verification.notice');
+            }
+
             return redirect()->intended(route('docs.index'));
         }
 
@@ -84,7 +94,6 @@ class AuthController extends Controller
             'email' => 'These credentials do not match our records.',
         ]);
     }
-
 
     /**
      * Logout the user.
@@ -97,5 +106,36 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    /**
+     * Manually verify a user's email (for admins/debugging).
+     */
+    public function manualVerify(Request $request)
+    {
+        // Add security checks here
+        if (!$request->user() || !$request->user()->is_admin) {
+            abort(403);
+        }
+
+        $email = $request->input('email');
+
+        if (empty($email)) {
+            return back()->with('error', 'Email is required');
+        }
+
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            return back()->with('error', 'User not found');
+        }
+
+        // Set the email_verified_at timestamp if it's not already set
+        if (!$user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+            return back()->with('status', 'User email has been manually verified');
+        }
+
+        return back()->with('status', 'User email was already verified');
     }
 }

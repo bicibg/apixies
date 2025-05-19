@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Carbon\Carbon;
 
 class ProfileController extends Controller
 {
@@ -92,26 +93,41 @@ class ProfileController extends Controller
      */
     public function restore(Request $request, $id)
     {
-        // Only administrators can restore other accounts
-        if (Auth::user()->is_admin || Auth::id() == $id) {
-            $user = User::withTrashed()->findOrFail($id);
+        // Find the soft-deleted user
+        $user = User::withTrashed()->findOrFail($id);
 
-            // Check if within 30-day grace period
-            $deleteDate = $user->deleted_at;
-            $thirtyDaysAfterDelete = $deleteDate->copy()->addDays(30);
+        // Check if authenticated user is admin or is restoring their own account
+        $isAdmin = Auth::check() && Auth::user()->is_admin;
+        $isOwnAccount = Auth::check() && Auth::id() == $id;
+
+        // This is a signed URL, so we allow restoration even if not authenticated
+        // as long as the URL is valid (which is checked by the 'signed' middleware)
+        if (!$isAdmin && !$isOwnAccount && !$request->hasValidSignature()) {
+            return redirect()->route('login')
+                ->with('error', 'Invalid or expired restoration link.');
+        }
+
+        // Check if within 30-day grace period
+        $deleteDate = $user->deleted_at;
+        if ($deleteDate) {
+            $thirtyDaysAfterDelete = Carbon::parse($deleteDate)->addDays(30);
 
             if (now()->lessThan($thirtyDaysAfterDelete)) {
                 $user->restore();
                 $user->deleted_reason = null;
                 $user->save();
 
-                return redirect()->route('profile.show')
+                // If user wasn't logged in, log them in now
+                if (!Auth::check()) {
+                    Auth::login($user);
+                }
+
+                return redirect()->route('docs.index')
                     ->with('status', 'Your account has been successfully restored.');
             }
-
-            return back()->with('error', 'Account restoration is only available within 30 days of deletion.');
         }
 
-        return back()->with('error', 'You do not have permission to restore this account.');
+        return redirect()->route('login')
+            ->with('error', 'Account restoration is only available within 30 days of deletion.');
     }
 }

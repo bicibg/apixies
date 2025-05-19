@@ -73,7 +73,7 @@ Route::middleware('web')->group(function () {
         return view('account.deactivated');
     })->name('account.deactivated');
 
-    // Account restoration
+    // Account restoration - Don't require auth, allow via signed URL
     Route::get('/account/restore/{id}', [ProfileController::class, 'restore'])
         ->name('profile.restore')
         ->middleware('signed');

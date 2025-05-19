@@ -33,7 +33,10 @@ $app = Application::configure(basePath: dirname(__DIR__))
 
 
         // Set up auth middleware
-        $mw->alias(['auth' => \App\Http\Middleware\Authenticate::class]);
+        $mw->alias([
+            'auth' => \App\Http\Middleware\Authenticate::class,
+            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
+        ]);
 
         // API middleware group - IMPORTANT: Keep EnsureApiKey before ApiEndpointCounter
         $mw->group('api', [

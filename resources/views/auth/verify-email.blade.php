@@ -10,6 +10,10 @@
             <div class="mb-4 p-3 bg-green-100 border border-green-400 text-green-800 rounded">
                 A new verification link has been sent to your email address.
             </div>
+        @elseif (session('status'))
+            <div class="mb-4 p-3 bg-green-100 border border-green-400 text-green-800 rounded">
+                {{ session('status') }}
+            </div>
         @endif
 
         <p class="mb-4">
@@ -21,7 +25,7 @@
             @csrf
             <button
                 type="submit"
-                class="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition"
+                class="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition text-white"
             >
                 Resend Verification Email
             </button>
@@ -31,7 +35,7 @@
             @csrf
             <button
                 type="submit"
-                class="px-4 py-2 bg-gray-600 rounded hover:bg-gray-700 transition border"
+                class="px-4 py-2 bg-gray-600 rounded hover:bg-gray-700 transition border text-white"
             >
                 Logout
             </button>
