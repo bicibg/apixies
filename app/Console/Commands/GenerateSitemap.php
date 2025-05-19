@@ -5,8 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Spatie\Sitemap\Sitemap;
 use Spatie\Sitemap\Tags\Url;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
+use Symfony\Component\Console\Command\Command as CommandAlias;
 
 class GenerateSitemap extends Command
 {
@@ -63,7 +62,13 @@ class GenerateSitemap extends Command
             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
             ->setPriority(0.8));
 
-        // API-specific endpoint pages from configuration
+        // OpenAPI documentation
+        $sitemap->add(Url::create('/api/documentation')
+            ->setLastModificationDate(now())
+            ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
+            ->setPriority(0.9));
+
+        // API-specific pages from config
         $apiExamples = config('api_endpoints', []);
         foreach ($apiExamples as $key => $endpoint) {
             $sitemap->add(Url::create("/docs/{$key}")
@@ -112,6 +117,6 @@ class GenerateSitemap extends Command
 
         $this->info('Sitemap generated successfully at public/sitemap.xml');
 
-        return Command::SUCCESS;
+        return yCommandAlias::SUCCESS;
     }
 }
