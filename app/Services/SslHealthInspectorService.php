@@ -2,18 +2,37 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class SslHealthInspectorService
 {
     /**
+     * Cache duration in seconds (30 minutes)
+     * Short enough to be useful for debugging but long enough to prevent abuse
+     */
+    protected const CACHE_DURATION = 1800;
+
+    /**
+     * Timeout for socket operations in seconds (very aggressive timeout)
+     */
+    protected const SOCKET_TIMEOUT = 2;
+
+    /**
+     * Connection timeout in seconds
+     */
+    protected const CONNECT_TIMEOUT = 1.5;
+
+    /**
      * Check the SSL configuration for a domain
      *
      * @param string $domain
+     * @param int $port
+     * @param bool $bypassCache Force a fresh check bypassing the cache
      * @return array
      */
-    public function inspect(string $domain): array
+    public function inspect(string $domain, int $port = 443, bool $bypassCache = false): array
     {
         // Validate domain
         $domain = $this->sanitizeDomain($domain);
@@ -25,62 +44,110 @@ class SslHealthInspectorService
             ];
         }
 
+        // Check cache first unless bypass is requested
+        $cacheKey = "ssl_inspection:{$domain}:{$port}";
+
+        if (!$bypassCache && Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        // Start processing timer
+        $startTime = microtime(true);
+
         try {
-            // Log the request
-            Log::info('Starting SSL inspection for domain: ' . $domain);
+            // Use a much more aggressive approach with a non-blocking socket connection
+            // Create socket context with very short timeouts
+            $context = stream_context_create([
+                'ssl' => [
+                    'capture_peer_cert' => true,
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true,
+                ],
+                'socket' => [
+                    'tcp_nodelay' => true,
+                    'bindto' => '0:0',
+                ]
+            ]);
 
-            // Initialize cURL to check SSL certificate
-            $ch = curl_init("https://{$domain}");
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HEADER, true);
-            curl_setopt($ch, CURLOPT_NOBODY, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-            curl_setopt($ch, CURLOPT_CERTINFO, true);
+            // Use a non-blocking connection to improve speed
+            $socket = @stream_socket_client(
+                "tcp://{$domain}:{$port}",
+                $errno,
+                $errstr,
+                self::CONNECT_TIMEOUT,
+                STREAM_CLIENT_CONNECT,
+                $context
+            );
 
-            // Execute request
-            $response = curl_exec($ch);
-            $certInfo = curl_getinfo($ch, CURLINFO_CERTINFO);
-            $info = curl_getinfo($ch);
-            $error = curl_error($ch);
-            $errno = curl_errno($ch);
-
-            curl_close($ch);
-
-            // If there was an error, handle it
-            if ($errno !== 0) {
-                Log::warning('SSL inspection failed for domain: ' . $domain . ' with error: ' . $error);
-
-                return [
+            if (!$socket) {
+                $errorResult = [
                     'status' => 'error',
-                    'message' => 'SSL check failed: ' . $error,
-                    'domain' => $domain,
+                    'message' => "Cannot connect to {$domain}:{$port}: {$errstr}",
                     'error_code' => $errno,
-                ];
-            }
-
-            // Process certificate info
-            $cert = $certInfo[0] ?? [];
-
-            // Check if certificate information was obtained
-            if (empty($cert)) {
-                return [
-                    'status' => 'error',
-                    'message' => 'Could not retrieve SSL certificate information',
                     'domain' => $domain,
                 ];
+                // Cache errors for a shorter time (5 minutes)
+                Cache::put($cacheKey, $errorResult, 300);
+                return $errorResult;
             }
 
-            // Validate dates
-            $validFrom = strtotime($cert['Start date'] ?? '');
-            $validTo = strtotime($cert['Expire date'] ?? '');
+            stream_set_timeout($socket, self::SOCKET_TIMEOUT);
+
+            // Enable crypto with short timeout
+            $cryptoResult = @stream_socket_enable_crypto(
+                $socket,
+                true,
+                STREAM_CRYPTO_METHOD_ANY_CLIENT
+            );
+
+            if (!$cryptoResult) {
+                fclose($socket);
+                $cryptoError = [
+                    'status' => 'error',
+                    'message' => "SSL/TLS handshake failed with {$domain}:{$port}",
+                    'domain' => $domain,
+                ];
+                Cache::put($cacheKey, $cryptoError, 300);
+                return $cryptoError;
+            }
+
+            // Get certificate
+            $certData = stream_context_get_options($context);
+            if (empty($certData['ssl']['peer_certificate'])) {
+                fclose($socket);
+                $noCertResult = [
+                    'status' => 'error',
+                    'message' => 'Could not retrieve SSL certificate',
+                    'domain' => $domain,
+                ];
+                Cache::put($cacheKey, $noCertResult, 300);
+                return $noCertResult;
+            }
+
+            // Parse the certificate
+            $cert = openssl_x509_parse($certData['ssl']['peer_certificate']);
+            fclose($socket);
+
+            if (empty($cert)) {
+                $parseError = [
+                    'status' => 'error',
+                    'message' => 'Could not parse SSL certificate',
+                    'domain' => $domain,
+                ];
+                Cache::put($cacheKey, $parseError, 300);
+                return $parseError;
+            }
+
+            // Extract basic certificate data
+            $validFrom = $cert['validFrom_time_t'] ?? 0;
+            $validTo = $cert['validTo_time_t'] ?? 0;
             $currentTime = time();
 
             $isValid = true;
             $validationIssues = [];
 
-            // Check if certificate is expired or not yet valid
+            // Check validity period
             if ($validTo < $currentTime) {
                 $isValid = false;
                 $validationIssues[] = 'Certificate is expired';
@@ -91,21 +158,22 @@ class SslHealthInspectorService
                 $validationIssues[] = 'Certificate is not yet valid';
             }
 
-            // Get certificate details
-            $issuer = $cert['Issuer'] ?? '';
-            $subject = $cert['Subject'] ?? '';
+            // Get certificate subject
+            $subject = isset($cert['subject']) ? $this->formatDN($cert['subject']) : '';
+            $issuer = isset($cert['issuer']) ? $this->formatDN($cert['issuer']) : '';
 
-            // Extract common name and alternative names
-            $commonName = '';
-            if (preg_match('/CN=([^,]+)/', $subject, $matches)) {
-                $commonName = $matches[1];
-            }
+            // Extract common name
+            $commonName = $cert['subject']['CN'] ?? '';
 
-            $altNames = [];
-            if (isset($cert['Subject Alternative Name'])) {
-                $altNamesStr = $cert['Subject Alternative Name'];
-                preg_match_all('/DNS:([^,]+)/', $altNamesStr, $matches);
-                $altNames = $matches[1] ?? [];
+            // Get subject alternative names
+            $sanNames = [];
+            if (!empty($cert['extensions']['subjectAltName'])) {
+                $sans = explode(', ', $cert['extensions']['subjectAltName']);
+                foreach ($sans as $san) {
+                    if (strpos($san, 'DNS:') === 0) {
+                        $sanNames[] = substr($san, 4);
+                    }
+                }
             }
 
             // Check domain match
@@ -113,7 +181,7 @@ class SslHealthInspectorService
             if (strtolower($commonName) === strtolower($domain)) {
                 $domainMatches = true;
             } else {
-                foreach ($altNames as $altName) {
+                foreach ($sanNames as $altName) {
                     // Support wildcard certificates
                     $pattern = '/^' . str_replace('\*', '.*', preg_quote($altName, '/')) . '$/i';
                     if (preg_match($pattern, $domain) || strtolower($altName) === strtolower($domain)) {
@@ -128,28 +196,31 @@ class SslHealthInspectorService
                 $validationIssues[] = 'Domain does not match certificate';
             }
 
-            // Enhanced metrics about the SSL certificate
+            // Calculate days until expiry
             $daysUntilExpiry = floor(($validTo - $currentTime) / 86400);
 
+            // Format the result
             $result = [
                 'status' => 'success',
                 'message' => 'SSL inspection successful',
                 'data' => [
                     'domain' => $domain,
-                    'port' => $info['primary_port'] ?? 443,
+                    'port' => $port,
                     'valid' => $isValid,
                     'issuer' => $issuer,
                     'subject' => $subject,
-                    'subject_alt' => $cert['Subject Alternative Name'] ?? '',
+                    'common_name' => $commonName,
+                    'alt_names' => $sanNames,
                     'valid_from' => date('Y-m-d H:i:s', $validFrom),
                     'valid_to' => date('Y-m-d H:i:s', $validTo),
                     'days_until_expiry' => $daysUntilExpiry,
-                    'cipher' => $info['ssl_cipher'] ?? '',
-                    'version' => $cert['Version'] ?? '',
-                    'signature_type' => $cert['Signature Algorithm'] ?? '',
+                    'signature_algorithm' => $cert['signatureTypeSN'] ?? '',
                     'validation_issues' => $validationIssues,
                 ]
             ];
+
+            // Cache successful results
+            Cache::put($cacheKey, $result, self::CACHE_DURATION);
 
             return $result;
 
@@ -159,12 +230,32 @@ class SslHealthInspectorService
                 'exception' => $e
             ]);
 
-            return [
+            $exceptionResult = [
                 'status' => 'error',
                 'message' => 'SSL check failed: ' . $e->getMessage(),
                 'domain' => $domain,
             ];
+
+            // Cache error results for a shorter time (5 minutes)
+            Cache::put($cacheKey, $exceptionResult, 300);
+
+            return $exceptionResult;
         }
+    }
+
+    /**
+     * Format Distinguished Name from array to string
+     *
+     * @param array $dn
+     * @return string
+     */
+    private function formatDN(array $dn): string
+    {
+        $parts = [];
+        foreach ($dn as $key => $value) {
+            $parts[] = "$key=$value";
+        }
+        return implode(', ', $parts);
     }
 
     /**
