@@ -37,10 +37,11 @@ class IpGeolocationController extends Controller
         ]);
 
         if ($validator->fails()) {
+            // Convert MessageBag to array for ApiResponse::error
             return ApiResponse::error(
                 'Validation failed',
                 400,
-                $validator->errors(),
+                $validator->errors()->toArray()
             );
         }
 
@@ -51,7 +52,7 @@ class IpGeolocationController extends Controller
             return ApiResponse::error(
                 'Invalid IP address',
                 400,
-                ['ip' => 'The provided IP address is not valid'],
+                ['ip' => ['The provided IP address is not valid']]
             );
         }
 
@@ -63,7 +64,7 @@ class IpGeolocationController extends Controller
             return ApiResponse::error(
                 $geolocationData['error'],
                 500,
-                ['ip' => 'Unable to retrieve geolocation data'],
+                ['ip' => ['Unable to retrieve geolocation data']]
             );
         }
 

@@ -43,6 +43,12 @@ class IpGeolocationService
             if ($response->successful()) {
                 $data = $response->json();
 
+                // Get languages for the country if the feature is enabled
+                $languages = [];
+                if (Config::get('ip_geolocation.include_languages', true)) {
+                    $languages = $this->getLanguagesForCountry($data['countryCode'] ?? null);
+                }
+
                 // Format the response
                 $result = [
                     'ip' => $ip,
@@ -59,6 +65,11 @@ class IpGeolocationService
                     'org' => $data['org'] ?? null,
                     'as' => $data['as'] ?? null,
                 ];
+
+                // Add languages if available
+                if (!empty($languages)) {
+                    $result['languages'] = $languages;
+                }
 
                 // Cache the result
                 Cache::put($cacheKey, $result, now()->addHours($cacheDuration));
@@ -88,5 +99,103 @@ class IpGeolocationService
                 'error' => 'An error occurred while processing the request',
             ];
         }
+    }
+
+    /**
+     * Get languages for a country based on country code.
+     *
+     * @param string|null $countryCode
+     * @return array
+     */
+    protected function getLanguagesForCountry(?string $countryCode): array
+    {
+        if (!$countryCode) {
+            return [];
+        }
+
+        // Get the language data source from config
+        $dataSource = Config::get('ip_geolocation.language_data_source', 'rest_countries');
+
+        if ($dataSource === 'internal') {
+            // Get language map from config
+            $languageMap = Config::get('ip_geolocation.language_map', []);
+
+            // Check if we have language data for this country
+            if (isset($languageMap[$countryCode])) {
+                return $languageMap[$countryCode];
+            }
+        } elseif ($dataSource === 'rest_countries') {
+            return $this->getLanguagesFromRestCountries($countryCode);
+        } elseif ($dataSource === 'database') {
+            return $this->getLanguagesFromDatabase($countryCode);
+        }
+
+        // Return an empty array if no language data is available
+        return [];
+    }
+
+    /**
+     * Get languages from REST Countries API
+     *
+     * @param string $countryCode
+     * @return array
+     */
+    protected function getLanguagesFromRestCountries(string $countryCode): array
+    {
+        $cacheKey = 'languages_rest_countries_' . $countryCode;
+
+        // Try to get from cache first
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        try {
+            $apiUrl = Config::get('ip_geolocation.rest_countries_url', 'https://restcountries.com/v3.1/all');
+            $response = Http::get("{$apiUrl}{$countryCode}");
+
+            if ($response->successful()) {
+                $data = $response->json();
+
+                if (isset($data[0]['languages'])) {
+                    $languages = [];
+                    $languageData = $data[0]['languages'];
+
+                    foreach ($languageData as $code => $name) {
+                        $languages[] = [
+                            'code' => $code,
+                            'name' => $name,
+                            'native_name' => $name, // REST Countries doesn't provide native names
+                            'official' => true // Can't determine this from REST Countries
+                        ];
+                    }
+
+                    // Cache the result for 30 days (language data rarely changes)
+                    Cache::put($cacheKey, $languages, now()->addDays(30));
+
+                    return $languages;
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error fetching language data from REST Countries', [
+                'country_code' => $countryCode,
+                'exception' => $e->getMessage()
+            ]);
+        }
+
+        return [];
+    }
+
+    /**
+     * Get languages from database
+     * This is a placeholder for a potential database implementation
+     *
+     * @param string $countryCode
+     * @return array
+     */
+    protected function getLanguagesFromDatabase(string $countryCode): array
+    {
+        // This would be implemented if you create a countries_languages table
+        // For now, it returns an empty array
+        return [];
     }
 }
