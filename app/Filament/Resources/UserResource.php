@@ -108,25 +108,51 @@ class UserResource extends Resource
                                         ->label('Send Verification Email')
                                         ->visible(fn ($record) => $record && !$record->hasVerifiedEmail())
                                         ->action(function ($record) {
-                                            $success = DirectMailService::sendEmailVerification($record);
+                                            \Log::info('Filament verification action started', ['user_id' => $record->id]);
 
-                                            Notification::make()
-                                                ->title($success ? 'Verification email sent successfully' : 'Failed to send verification email')
-                                                ->color($success ? 'success' : 'danger')
-                                                ->send();
+                                            try {
+                                                $success = \App\Services\DirectMailService::sendEmailVerification($record);
+                                                \Log::info('DirectMailService verification result', ['success' => $success, 'user_id' => $record->id]);
+
+                                                Notification::make()
+                                                    ->title($success ? 'Verification email sent successfully' : 'Failed to send verification email')
+                                                    ->color($success ? 'success' : 'danger')
+                                                    ->send();
+
+                                            } catch (\Exception $e) {
+                                                \Log::error('Filament verification action error', ['error' => $e->getMessage(), 'user_id' => $record->id]);
+
+                                                Notification::make()
+                                                    ->title('Error: ' . $e->getMessage())
+                                                    ->color('danger')
+                                                    ->send();
+                                            }
                                         }),
 
                                     Forms\Components\Actions\Action::make('sendPasswordReset')
                                         ->label('Send Password Reset')
                                         ->color('warning')
                                         ->action(function ($record) {
-                                            $token = Password::broker()->createToken($record);
-                                            $success = DirectMailService::sendPasswordReset($record, $token);
+                                            \Log::info('Filament password reset action started', ['user_id' => $record->id]);
 
-                                            Notification::make()
-                                                ->title($success ? 'Password reset email sent successfully' : 'Failed to send password reset email')
-                                                ->color($success ? 'success' : 'danger')
-                                                ->send();
+                                            try {
+                                                $token = Password::broker()->createToken($record);
+                                                $success = \App\Services\DirectMailService::sendPasswordReset($record, $token);
+                                                \Log::info('DirectMailService password reset result', ['success' => $success, 'user_id' => $record->id]);
+
+                                                Notification::make()
+                                                    ->title($success ? 'Password reset email sent successfully' : 'Failed to send password reset email')
+                                                    ->color($success ? 'success' : 'danger')
+                                                    ->send();
+
+                                            } catch (\Exception $e) {
+                                                \Log::error('Filament password reset action error', ['error' => $e->getMessage(), 'user_id' => $record->id]);
+
+                                                Notification::make()
+                                                    ->title('Error: ' . $e->getMessage())
+                                                    ->color('danger')
+                                                    ->send();
+                                            }
                                         }),
 
                                     Forms\Components\Actions\Action::make('getRestorationLink')

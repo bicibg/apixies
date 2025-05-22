@@ -22,9 +22,6 @@ class EnsureApiKey
         $request->attributes->set('sandbox_mode', false);
         $path = $request->path();
 
-        // Log for debugging
-        Log::debug("EnsureApiKey handling request for path: {$path}");
-
         if ($request->route() && $request->route()->getAction('middleware') &&
             in_array('public', (array) $request->route()->getAction('middleware'))) {
             return $next($request);
@@ -37,8 +34,6 @@ class EnsureApiKey
 
         $sandboxToken = $request->header('X-Sandbox-Token');
         if ($sandboxToken) {
-            Log::debug("Found sandbox token for path: {$path}");
-
             try {
                 $token = DB::table('sandbox_tokens')
                     ->where('token', $sandboxToken)
@@ -60,8 +55,6 @@ class EnsureApiKey
                 $isQuotaExceeded = $token->calls >= $token->quota;
 
                 $request->attributes->set('sandbox_mode', true);
-                Log::debug("Set sandbox_mode=true for path: {$path}");
-
                 $request->attributes->set('token_info', [
                     'remaining_calls' => max(0, $token->quota - $token->calls),
                     'expires_at' => $token->expires_at,
@@ -100,8 +93,6 @@ class EnsureApiKey
                     ->increment('calls', 1, [
                         'updated_at' => now()
                     ]);
-
-                Log::debug("Incremented usage count for sandbox token");
                 return $next($request);
             } catch (\Exception $e) {
                 Log::error('Error processing sandbox token: ' . $e->getMessage());

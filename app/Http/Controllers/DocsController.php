@@ -17,8 +17,6 @@ class DocsController extends Controller
     {
         $apiRoutes = config('api_endpoints');
 
-        Log::debug('API Routes Keys: ' . implode(', ', array_keys($apiRoutes)));
-
         $categorizedRoutes = [];
         foreach ($apiRoutes as $key => $route) {
             $category = $route['category'] ?? 'general';
@@ -74,8 +72,6 @@ class DocsController extends Controller
     {
         $categorizedRoutes = $this->getCategorizedRoutes();
 
-        Log::debug('Endpoint Categories: ' . implode(', ', array_keys($categorizedRoutes)));
-
         return view('docs.endpoints.index', [
             'categories' => $categorizedRoutes,
             'activeSection' => 'endpoints'
@@ -91,16 +87,11 @@ class DocsController extends Controller
     public function endpoint(string $key)
     {
         $apiRoutes = config('api_endpoints');
-
-        Log::debug('Endpoint request for key: ' . $key);
-        Log::debug('Available keys: ' . implode(', ', array_keys($apiRoutes)));
-
         // If numeric key is passed, redirect to the named key
         if (is_numeric($key)) {
             $routeKeys = array_keys($apiRoutes);
             if (isset($routeKeys[(int)$key])) {
                 $namedKey = $routeKeys[(int)$key];
-                Log::debug('Redirecting numeric key to named key: ' . $namedKey);
                 return redirect()->route('docs.show', ['key' => $namedKey]);
             }
         }

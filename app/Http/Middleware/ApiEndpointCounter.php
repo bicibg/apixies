@@ -41,7 +41,6 @@ class ApiEndpointCounter
                     $accessToken = PersonalAccessToken::findToken($token);
                     if ($accessToken) {
                         $tokenId = $accessToken->id;
-                        Log::debug("Found token ID: {$tokenId} for user {$user->id}");
                     }
                 } catch (\Exception $e) {
                     Log::warning("Error finding token: " . $e->getMessage());
@@ -153,14 +152,11 @@ class ApiEndpointCounter
                     // Use the token ID we captured at the beginning
                     if ($tokenId && in_array('api_key_id', $columns)) {
                         $logEntry['api_key_id'] = $tokenId;
-                        Log::debug("Setting api_key_id = {$tokenId} for log entry");
                     }
                 } else {
                     // Attempt to find the user from API key
                     $apiKey = $request->header('X-API-Key');
                     if ($apiKey) {
-                        Log::debug("Attempting to find user from X-API-Key header");
-
                         try {
                             // Look for the key in personal_access_tokens
                             // Note: This approach might not work if Sanctum uses a different hashing method
@@ -169,8 +165,6 @@ class ApiEndpointCounter
                             if ($accessToken) {
                                 $logEntry['user_id'] = $accessToken->tokenable_id;
                                 $logEntry['api_key_id'] = $accessToken->id;
-
-                                Log::debug("Found user ID {$accessToken->tokenable_id} and token ID {$accessToken->id} from API key");
                             }
                         } catch (\Exception $e) {
                             Log::warning("Error finding token from API key: " . $e->getMessage());
@@ -244,16 +238,7 @@ class ApiEndpointCounter
 
             // Only insert if we have data to insert
             if (!empty($filteredEntry)) {
-                $log = ApiEndpointLog::create($filteredEntry);
-
-                // Debug log detailed info about what was stored
-                Log::debug("API log entry created", [
-                    'id' => $log->id,
-                    'endpoint' => $log->endpoint,
-                    'user_id' => $log->user_id ?? null,
-                    'api_key_id' => $log->api_key_id ?? null,
-                    'sandbox_token_id' => $log->sandbox_token_id ?? null,
-                ]);
+                ApiEndpointLog::create($filteredEntry);
             }
         } catch (\Exception $e) {
             Log::error("Error in createApiEndpointLog: " . $e->getMessage());
