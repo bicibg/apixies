@@ -3,14 +3,12 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
-use App\Models\User;
 use App\Services\DirectMailService;
 use Filament\Actions;
 use Filament\Forms\Components\Select;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\HtmlString;
 
 class EditUser extends EditRecord
