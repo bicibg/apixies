@@ -13,7 +13,7 @@ use Carbon\Carbon;
 
 class ProfileController extends Controller
 {
-    public function show()
+    public function show(): \Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\Contracts\View\Factory
     {
         $apiRequestCount = ApiEndpointLog::where('user_id', Auth::id())->count();
 
@@ -22,7 +22,7 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function update(Request $request)
+    public function update(Request $request): RedirectResponse
     {
         $user = Auth::user();
 
@@ -36,7 +36,7 @@ class ProfileController extends Controller
         return redirect()->route('profile.show')->with('status', 'Profile updated successfully.');
     }
 
-    public function updatePassword(Request $request)
+    public function updatePassword(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
@@ -56,7 +56,7 @@ class ProfileController extends Controller
      * @param  Request  $request
      * @return RedirectResponse
      */
-    public function destroy(Request $request)
+    public function destroy(Request $request): RedirectResponse
     {
         $request->validate([
             'delete_confirmation' => ['required', 'string', 'in:DELETE'],
@@ -69,9 +69,9 @@ class ProfileController extends Controller
         $user->deleted_reason = 'User requested account deletion';
         $user->save();
 
-        // Send deactivation notification with restoration link
+        // Send deactivation notification using direct mail service
         // BEFORE logging out and soft deleting to ensure email delivery
-        $user->notify(new \App\Notifications\AccountDeactivated());
+        $user->sendAccountDeactivatedNotification();
 
         // Process soft delete - this will set deleted_at but keep the record
         $user->delete();
@@ -91,7 +91,7 @@ class ProfileController extends Controller
      * @param $id
      * @return RedirectResponse
      */
-    public function restore(Request $request, $id)
+    public function restore(Request $request, $id): RedirectResponse
     {
         // Find the soft-deleted user
         $user = User::withTrashed()->findOrFail($id);

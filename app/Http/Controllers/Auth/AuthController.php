@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
@@ -49,10 +51,10 @@ class AuthController extends Controller
             'password' => $request->password,
         ]);
 
-        // Send email verification
-        $user->sendEmailVerificationNotification();
-
         Auth::login($user);
+
+        // Send email verification using direct mail (bypassing notification system)
+        $this->sendVerificationEmailDirectly($user);
 
         return redirect()->route('docs.index')
             ->with('status', 'Registration successful. Please verify your email.');
@@ -111,7 +113,7 @@ class AuthController extends Controller
     /**
      * Manually verify a user's email (for admins/debugging).
      */
-    public function manualVerify(Request $request)
+    public function manualVerify(Request $request): \Illuminate\Http\RedirectResponse
     {
         // Add security checks here
         if (!$request->user() || !$request->user()->is_admin) {
@@ -137,5 +139,13 @@ class AuthController extends Controller
         }
 
         return back()->with('status', 'User email was already verified');
+    }
+
+    /**
+     * Send verification email directly using DirectMailService
+     */
+    private function sendVerificationEmailDirectly($user)
+    {
+        \App\Services\DirectMailService::sendEmailVerification($user);
     }
 }

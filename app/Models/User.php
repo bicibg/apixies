@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use App\Notifications\ResetPassword;
+use App\Services\DirectMailService;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -51,22 +52,47 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
 
     /**
      * Send the password reset notification.
+     * Override to use direct mail instead of notification system
      *
      * @param  string  $token
      * @return void
      */
     public function sendPasswordResetNotification($token)
     {
-        $this->notify(new ResetPassword($token));
+        // Use direct mail service instead of notification
+        DirectMailService::sendPasswordReset($this, $token);
+    }
+
+    /**
+     * Send the email verification notification.
+     * Override to use direct mail instead of notification system
+     *
+     * @return void
+     */
+    public function sendEmailVerificationNotification()
+    {
+        // Use direct mail service instead of notification
+        DirectMailService::sendEmailVerification($this);
+    }
+
+    /**
+     * Send account deactivated notification
+     * Custom method using direct mail
+     *
+     * @return void
+     */
+    public function sendAccountDeactivatedNotification(): void
+    {
+        DirectMailService::sendAccountDeactivated($this);
     }
 
     /**
      * Check if the user can access the Filament admin panel.
      *
-     * @param  \Filament\Panel  $panel
+     * @param  Panel  $panel
      * @return bool
      */
-    public function canAccessPanel(\Filament\Panel $panel): bool
+    public function canAccessPanel(Panel $panel): bool
     {
         return $this->is_admin;
     }
