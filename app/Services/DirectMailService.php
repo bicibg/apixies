@@ -5,13 +5,95 @@ namespace App\Services;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 
 class DirectMailService
 {
     /**
      * Send email verification
+     * Automatically queues for web requests, sends directly for CLI
      */
     public static function sendEmailVerification($user)
+    {
+        if (self::shouldQueue()) {
+            return self::queueEmail('verification', $user);
+        }
+
+        return self::sendVerificationEmailNow($user);
+    }
+
+    /**
+     * Send password reset email
+     * Automatically queues for web requests, sends directly for CLI
+     */
+    public static function sendPasswordReset($user, $token)
+    {
+        if (self::shouldQueue()) {
+            return self::queueEmail('password_reset', $user, $token);
+        }
+
+        return self::sendPasswordResetNow($user, $token);
+    }
+
+    /**
+     * Send account deactivated email
+     * Automatically queues for web requests, sends directly for CLI
+     */
+    public static function sendAccountDeactivated($user)
+    {
+        if (self::shouldQueue()) {
+            return self::queueEmail('account_deactivated', $user);
+        }
+
+        return self::sendAccountDeactivatedNow($user);
+    }
+
+    /**
+     * Determine if we should queue emails based on context
+     */
+    private static function shouldQueue(): bool
+    {
+        // Queue if this is a web request, send directly if CLI
+        return php_sapi_name() !== 'cli';
+    }
+
+    /**
+     * Queue email sending
+     */
+    private static function queueEmail($type, $user, $token = null)
+    {
+        try {
+            Queue::push(function ($job) use ($type, $user, $token) {
+                switch ($type) {
+                    case 'verification':
+                        self::sendVerificationEmailNow($user);
+                        break;
+                    case 'password_reset':
+                        self::sendPasswordResetNow($user, $token);
+                        break;
+                    case 'account_deactivated':
+                        self::sendAccountDeactivatedNow($user);
+                        break;
+                }
+                $job->delete();
+            });
+
+            Log::info("Email {$type} queued", ['user_id' => $user->id, 'email' => $user->email]);
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Failed to queue {$type} email", [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Send email verification immediately (synchronous)
+     */
+    public static function sendVerificationEmailNow($user)
     {
         $verificationUrl = URL::temporarySignedRoute(
             'verification.verify',
@@ -41,9 +123,9 @@ class DirectMailService
     }
 
     /**
-     * Send password reset email
+     * Send password reset immediately (synchronous)
      */
-    public static function sendPasswordReset($user, $token)
+    public static function sendPasswordResetNow($user, $token)
     {
         $resetUrl = url(route('password.reset', [
             'token' => $token,
@@ -73,9 +155,9 @@ class DirectMailService
     }
 
     /**
-     * Send account deactivated email
+     * Send account deactivated immediately (synchronous)
      */
-    public static function sendAccountDeactivated($user)
+    public static function sendAccountDeactivatedNow($user)
     {
         $restoreUrl = URL::temporarySignedRoute(
             'profile.restore',
