@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use App\Services\DirectMailService;
 use Filament\Forms;
 use Filament\Forms\Components\Card;
 use Filament\Forms\Components\Checkbox;
@@ -20,6 +21,8 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\URL;
 
 class UserResource extends Resource
 {
@@ -105,10 +108,11 @@ class UserResource extends Resource
                                         ->label('Send Verification Email')
                                         ->visible(fn ($record) => $record && !$record->hasVerifiedEmail())
                                         ->action(function ($record) {
-                                            $record->sendEmailVerificationNotification();
+                                            $success = DirectMailService::sendEmailVerification($record);
+
                                             Notification::make()
-                                                ->title('Verification email sent')
-                                                ->success()
+                                                ->title($success ? 'Verification email sent successfully' : 'Failed to send verification email')
+                                                ->color($success ? 'success' : 'danger')
                                                 ->send();
                                         }),
 
@@ -116,12 +120,12 @@ class UserResource extends Resource
                                         ->label('Send Password Reset')
                                         ->color('warning')
                                         ->action(function ($record) {
-                                            $record->sendPasswordResetNotification(
-                                                \Illuminate\Support\Facades\Password::broker()->createToken($record)
-                                            );
+                                            $token = Password::broker()->createToken($record);
+                                            $success = DirectMailService::sendPasswordReset($record, $token);
+
                                             Notification::make()
-                                                ->title('Password reset email sent')
-                                                ->success()
+                                                ->title($success ? 'Password reset email sent successfully' : 'Failed to send password reset email')
+                                                ->color($success ? 'success' : 'danger')
                                                 ->send();
                                         }),
 
@@ -133,7 +137,7 @@ class UserResource extends Resource
                                         ->modalContent(fn ($record) => new \Illuminate\Support\HtmlString('
                                             <div class="py-4">
                                                 <textarea id="restoration-link" rows="3" class="w-full border border-gray-300 rounded p-2 text-sm" readonly>' .
-                                            \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                                            URL::temporarySignedRoute(
                                                 'profile.restore',
                                                 now()->addDays(30),
                                                 ['id' => $record->id]
@@ -148,10 +152,11 @@ class UserResource extends Resource
                                         ->label('Resend Deactivation Email')
                                         ->visible(fn ($record) => $record->trashed())
                                         ->action(function ($record) {
-                                            $record->notify(new \App\Notifications\AccountDeactivated());
+                                            $success = DirectMailService::sendAccountDeactivated($record);
+
                                             Notification::make()
-                                                ->title('Deactivation email sent')
-                                                ->success()
+                                                ->title($success ? 'Deactivation email sent successfully' : 'Failed to send deactivation email')
+                                                ->color($success ? 'success' : 'danger')
                                                 ->send();
                                         }),
                                 ]),

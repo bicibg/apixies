@@ -4,11 +4,13 @@ namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
 use App\Models\User;
+use App\Services\DirectMailService;
 use Filament\Actions;
 use Filament\Forms\Components\Select;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\HtmlString;
 
 class EditUser extends EditRecord
@@ -34,15 +36,15 @@ class EditUser extends EditRecord
                 $user->deleted_reason = $data['reason'];
                 $user->save();
 
-                // Send notification to user
-                $user->notify(new \App\Notifications\AccountDeactivated());
+                // Send notification to user using DirectMailService
+                $success = DirectMailService::sendAccountDeactivated($user);
 
                 // Soft delete the user
                 $user->delete();
 
                 Notification::make()
-                    ->title('Account deactivated successfully')
-                    ->success()
+                    ->title('Account deactivated successfully' . ($success ? '' : ' (email failed to send)'))
+                    ->color($success ? 'success' : 'warning')
                     ->send();
 
                 $this->redirect($this->getResource()::getUrl('edit', ['record' => $user]));
@@ -94,37 +96,5 @@ class EditUser extends EditRecord
             $reactivateAction,
             $getRestorationLinkAction,
         ];
-    }
-
-    public function sendVerificationEmail()
-    {
-        $this->record->sendEmailVerificationNotification();
-
-        Notification::make()
-            ->title('Verification email sent')
-            ->success()
-            ->send();
-    }
-
-    public function sendPasswordReset()
-    {
-        $this->record->sendPasswordResetNotification(
-            \Illuminate\Support\Facades\Password::broker()->createToken($this->record)
-        );
-
-        Notification::make()
-            ->title('Password reset email sent')
-            ->success()
-            ->send();
-    }
-
-    public function resendDeactivationEmail()
-    {
-        $this->record->notify(new \App\Notifications\AccountDeactivated());
-
-        Notification::make()
-            ->title('Deactivation email sent')
-            ->success()
-            ->send();
     }
 }
