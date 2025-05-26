@@ -231,8 +231,6 @@ $html
 HTML;
 
         $pdfContent = Browsershot::html($fullHtml)
-            ->setNodeBinary('/home/bugra/.nvm/versions/node/v20.19.1/bin/node')
-            ->setNpmBinary('/home/bugra/.nvm/versions/node/v20.19.1/bin/npm')
             ->noSandbox()
             ->timeout(45)
             ->waitUntilNetworkIdle(false)
