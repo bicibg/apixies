@@ -81,104 +81,39 @@ class HtmlToPdfController extends Controller
      */
     private function generateApiPdf(string $html): \Illuminate\Http\Response
     {
-        $fullHtml = <<<HTML
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Document</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.5;
-            color: #333;
-            background-color: white;
-        }
-        .header {
-            background: linear-gradient(to right, #2e51a2, #6e8cd5);
-            color: white;
-            padding: 20px;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 1.8em;
-        }
-        .container {
-            padding: 20px;
-        }
-        .nav {
-            margin-top: 15px;
-        }
-        .nav a {
-            color: white;
-            margin-right: 15px;
-            text-decoration: none;
-        }
-        .card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h2 {
-            color: #333;
-            margin-top: 0;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        th {
-            background-color: #4c6eaf;
-            color: white;
-            text-align: left;
-            padding:.75rem;
-        }
-        td {
-            padding: .75rem;
-            border-top: 1px solid #dee2e6;
-        }
-        tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        .btn {
-            display: inline-block;
-            background-color: #f96052;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            text-decoration: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Apixies.io PDF Converter Test</h1>
-        <div class="nav">
-            <a href="#">Home</a>
-            <a href="#">Docs</a>
-            <a href="#">API</a>
-            <a href="#">Contact</a>
-        </div>
-    </div>
-    <div class="container">
-        $html
-    </div>
-</body>
-</html>
-HTML;
+        // Detect if it's a complete HTML document
+        $isCompleteHtml = str_contains(strtolower($html), '<!doctype') || str_contains(strtolower($html), '<html');
 
-        $pdfContent = Browsershot::html($fullHtml)
+        if ($isCompleteHtml) {
+            // Use original HTML with centering wrapper
+            $processedHtml = $this->centerInvoiceHtml($html);
+        } else {
+            // For fragments, use template
+            $processedHtml = $this->wrapInTemplate($html);
+        }
+
+        $pdfContent = Browsershot::html($processedHtml)
+            ->setNodeBinary('/home/bugra/.nvm/versions/node/v20.19.1/bin/node')
+            ->setNpmBinary('/home/bugra/.nvm/versions/node/v20.19.1/bin/npm')
             ->noSandbox()
-            ->waitUntilNetworkIdle()
+            ->setOption('args', [
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--disable-web-security',
+                '--disable-extensions',
+                '--no-first-run',
+                '--disable-default-apps',
+                '--single-process'
+            ])
+            ->timeout(60)
+            ->waitUntilNetworkIdle(false)
+            ->setDelay(2000)
             ->emulateMedia('screen')
             ->showBackground()
             ->format('A4')
+            ->margins(0, 0, 0, 0)
+            ->setOption('viewport', ['width' => 892, 'height' => 1262]) // Match the original design
             ->pdf();
 
         return response($pdfContent, 200, [
@@ -190,7 +125,7 @@ HTML;
     }
 
     /**
-     * Generate PDF for sandbox mode with proper CSS
+     * Generate PDF for sandbox mode
      */
     private function generateSandboxPdf(string $html): \Illuminate\Http\Response
     {
@@ -202,7 +137,6 @@ HTML;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Document</title>
     <style>
-        /* CSS Reset to remove Apixies global styles */
         html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym,
         address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var,
         b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead,
@@ -299,8 +233,12 @@ $html
 HTML;
 
         $pdfContent = Browsershot::html($fullHtml)
+            ->setNodeBinary('/home/bugra/.nvm/versions/node/v20.19.1/bin/node')
+            ->setNpmBinary('/home/bugra/.nvm/versions/node/v20.19.1/bin/npm')
             ->noSandbox()
-            ->waitUntilNetworkIdle()
+            ->timeout(45)
+            ->waitUntilNetworkIdle(false)
+            ->setDelay(1000)
             ->emulateMedia('screen')
             ->showBackground()
             ->format('A4')
@@ -312,5 +250,177 @@ HTML;
             'X-Frame-Options' => 'ALLOWALL',
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
         ]);
+    }
+
+    /**
+     * Wrap invoice HTML with centering container
+     */
+    private function centerInvoiceHtml(string $html): string
+    {
+        // Fix fonts first
+        $html = $this->fixFontsOnly($html);
+
+        // Wrap the entire content in a centering container
+        $centeredHtml = <<<HTML
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+    <title>Payment Confirmation</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <style>
+        /* Reset and centering styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .pdf-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px 0;
+            background: white;
+        }
+
+        .invoice-wrapper {
+            width: 892px;
+            min-height: 1262px;
+            position: relative;
+            background: white;
+            margin: 0 auto;
+            /* Scale down if needed */
+            transform: scale(0.85);
+            transform-origin: top center;
+        }
+
+        /* Preserve all original positioning */
+        .invoice-wrapper * {
+            font-family: Arial, sans-serif !important;
+        }
+
+        @media print {
+            .pdf-container {
+                width: 100%;
+                height: 100%;
+                padding: 0;
+            }
+            .invoice-wrapper {
+                transform: scale(1);
+                margin: 0;
+            }
+        }
+    </style>
+HTML;
+
+        // Extract the content between <body> tags from the original HTML
+        preg_match('/<body[^>]*>(.*?)<\/body>/s', $html, $bodyMatch);
+        $bodyContent = $bodyMatch[1] ?? $html;
+
+        // Extract styles from the original HTML
+        preg_match_all('/<style[^>]*>(.*?)<\/style>/s', $html, $styleMatches);
+        $originalStyles = implode("\n", $styleMatches[1] ?? []);
+
+        $centeredHtml .= "<style>\n" . $originalStyles . "\n</style>";
+        $centeredHtml .= <<<HTML
+</head>
+<body>
+    <div class="pdf-container">
+        <div class="invoice-wrapper">
+            $bodyContent
+        </div>
+    </div>
+</body>
+</html>
+HTML;
+
+        return $centeredHtml;
+    }
+
+    /**
+     * Only fix fonts, keep everything else intact
+     */
+    private function fixFontsOnly(string $html): string
+    {
+        // Replace font URLs with fallback
+        $html = str_replace(
+            "font-family: 'GT Walsheim';",
+            "font-family: Arial, sans-serif;",
+            $html
+        );
+
+        // Remove @font-face declarations that might cause loading issues
+        $html = preg_replace('/@font-face\s*\{[^}]*\}/s', '', $html);
+
+        return $html;
+    }
+
+    /**
+     * Simple template wrapper
+     */
+    private function wrapInTemplate(string $html): string
+    {
+        return <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>PDF Document</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.5;
+            color: #333;
+            background-color: white;
+        }
+        .header {
+            background: linear-gradient(to right, #2e51a2, #6e8cd5);
+            color: white;
+            padding: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        .container {
+            padding: 20px;
+        }
+        .nav {
+            margin-top: 15px;
+        }
+        .nav a {
+            color: white;
+            margin-right: 15px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Apixies.io PDF Converter</h1>
+        <div class="nav">
+            <a href="#">Home</a>
+            <a href="#">API</a>
+        </div>
+    </div>
+    <div class="container">
+        $html
+    </div>
+</body>
+</html>
+HTML;
     }
 }
