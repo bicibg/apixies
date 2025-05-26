@@ -93,8 +93,6 @@ class HtmlToPdfController extends Controller
         }
 
         $pdfContent = Browsershot::html($processedHtml)
-            ->setNodeBinary('/home/bugra/.nvm/versions/node/v20.19.1/bin/node')
-            ->setNpmBinary('/home/bugra/.nvm/versions/node/v20.19.1/bin/npm')
             ->noSandbox()
             ->setOption('args', [
                 '--disable-setuid-sandbox',
