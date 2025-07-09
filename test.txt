@@ -1,0 +1,1 @@
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Http/Middleware/SanitizeInputMiddleware.php
