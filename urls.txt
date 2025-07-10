@@ -1,0 +1,101 @@
+Frontend Repository URLs (hotelcard-frontend)Controllershttps://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Adapters/Payrexx/PayrexxAdapter.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Adapters/Payrexx/PayrexxCommunicatorAdapter.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Api/App/V1/BookingsController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Api/App/V1/HotelsController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Api/App/V1/OrdersController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Api/App/V1/RegionsController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Api/App/V1/UserController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Api/ChannelManagerController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Api/EmailTemplateController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Api/Extranet/V1/BookingRequestsController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Api/Extranet/V1/HotelsController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Api/Extranet/V1/OrdersController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Api/Extranet/V2/UserController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Api/HotelSpiderController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Api/Server/V1/EmailController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Api/Server/V1/HotelsController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Api/Server/V1/OrdersController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Api/Server/V1/UserController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Auth/LoginController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Auth/RegisterController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Auth/ForgotPasswordController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/Controller.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/GeneralController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/HomeController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/PaymentController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/PdfController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Http/Controllers/RegionsController.phpServices & Corehttps://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Services/AmenityService.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Services/BaseApiService.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Services/ContactService.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Services/CountryService.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Services/CurrencyService.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Services/LocalesService.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Services/MailchimpService.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Services/MediaService.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Services/PDFService.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Services/PayrexxService.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Services/PdfMediaService.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Services/RegionService.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Services/TranslateService.phpModelshttps://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Models/Amenity.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Models/Config.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Models/EmailTemplate.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Models/Feature.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Models/Hotel.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Models/Page.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Models/Region.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Models/User.phpTraitshttps://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Traits/MailTrait.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Traits/NewsletterTrait.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Traits/RESTActions.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Traits/ResponseTrait.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Traits/SeoTrait.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Traits/TranslateTrait.phpConfigurationhttps://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/config/app.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/config/auth.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/config/api-services.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/config/cache.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/config/database.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/config/filesystems.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/config/mail.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/config/queue.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/config/services.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/config/session.phpRouteshttps://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/routes/api.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/routes/channels.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/routes/console.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/routes/web.phpModules - Userhttps://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/User/Http/Controllers/UserController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/User/Models/User.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/User/Models/UserProfile.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/User/Services/UserService.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/User/Repositories/UserRepository.phpModules - Orderhttps://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/Order/Http/Controllers/OrdersController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/Order/Models/Order.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/Order/Services/OrderService.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/Order/Services/OrderServiceV2.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/Order/Repositories/OrdersRepository.phpModules - Hotelhttps://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/Hotel/Models/Hotel.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/Hotel/Models/Room.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/Hotel/Services/HotelService.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/Hotel/Repositories/HotelRepository.phpModules - Bookinghttps://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/Booking/Http/Controllers/BookingController.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/Booking/Models/BookingRequest.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/Booking/Services/BookingRequestService.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/modules/Booking/Repositories/BookingRequestRepository.phpMail Classeshttps://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Mail/Hotelcards/OrderMail.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Mail/Hotelcards/WelcomeMail.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Mail/Booking/BookingConfirmation.php
+https://bitbucket.org/hotelcardag/hotelcard-frontend/raw/HD-667-use-media-service-endpoints-via-a/app/Mail/Booking/BookingCancellation.phpMedia Service Repository URLs (hotelcard-media-service)Controllershttps://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Http/Controllers/Controller.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Http/Controllers/PdfController.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Http/Controllers/ServiceInfoController.phpMiddlewarehttps://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Http/Middleware/ApiTokenMiddleware.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Http/Middleware/CorsMiddleware.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Http/Middleware/ForceJsonResponseMiddleware.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Http/Middleware/LogRequests.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Http/Middleware/SanitizeInputMiddleware.phpRequestshttps://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Http/Requests/PdfDeleteRequest.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Http/Requests/PdfGenerateRequest.phpModelshttps://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Models/PdfDocument.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Models/User.phpServiceshttps://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Services/PdfService.phpRepositorieshttps://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Repositories/PdfDocumentRepository.phpTraitshttps://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Traits/ApiResponse.phpConfigurationhttps://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/config/app.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/config/auth.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/config/browsershot.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/config/cache.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/config/database.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/config/filesystems.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/config/logging.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/config/mail.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/config/media.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/config/queue.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/config/services.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/config/session.phpRouteshttps://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/routes/api.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/routes/console.php
+https://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/routes/web.phpException Handlinghttps://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Exceptions/Handler.phpProvidershttps://bitbucket.org/hotelcardag/hotelcard-media-service/raw/HD-665-media-service-endpoints/app/Providers/AppServiceProvider.phpYou can copy all of these URLs into your GitHub file at https://raw.githubusercontent.com/bicibg/apixies/main/test.txt and then I'll be able to access them all!
